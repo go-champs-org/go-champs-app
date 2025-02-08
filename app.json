@@ -36,6 +36,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "07a87e62-c99e-4ceb-b2c4-0ff27a5544d5"
+      }
+    },
+    "owner": "wagnerassis"
   }
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
-import { RouteProp } from '@react-navigation/native';
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
+import { RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 import { useTournamentHistoryViewModel } from '../viewmodels/TournamentHistoryViewModel';
 
@@ -13,6 +13,7 @@ type Props = {
 const TournamentHistoryScreen: React.FC<Props> = ({ route }) => {
   const { id } = route.params;
   const { tournament, loading } = useTournamentHistoryViewModel(id);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   if (loading) {
     return (
@@ -29,9 +30,17 @@ const TournamentHistoryScreen: React.FC<Props> = ({ route }) => {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.title}>{item.title}</Text>
-          </View>
+          <TouchableOpacity
+            onPress={() => {
+              if (item.title.toLowerCase().includes('playoff')) {
+                navigation.navigate('PlayoffsView', { tournamentId: item.id });
+              }
+            }}
+          >
+            <View style={styles.card}>
+              <Text style={styles.title}>{item.title}</Text>
+            </View>
+          </TouchableOpacity>
         )}
       />
     </View>

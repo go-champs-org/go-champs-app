@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OrganizationScreen from './src/views/OrganizationScreen';
 import TournamentsScreen from './src/views/TournamentsScreen';
 import TournamentHistoryScreen from './src/views/TournamentHistoryScreen'; // Import the screen
+import PlayoffsView from './src/views/PlayoffsView'; // Import the PlayoffsScreen
 import { RootStackParamList } from './src/navigation/types'; // Import the types
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -34,6 +35,13 @@ export default function App() {
           title: 'Fases',
           
         }}/> 
+      <Stack.Screen
+        name="PlayoffsView"
+        component={PlayoffsView}
+        options={{
+          title: 'Playoffs',
+        }}
+      />
     </Stack.Navigator>
   );
 }

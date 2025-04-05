@@ -7,6 +7,7 @@ class TournamentsService {
     try {
       const response = await fetch(API_URL);
       const jsonData = await response.json();
+      console.log('Tournaments fetched successfully:', jsonData);
       return jsonData.data.map((item: any) => item.tournament);
     } catch (error) {
       console.error('Error fetching tournaments:', error);

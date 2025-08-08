@@ -6,44 +6,51 @@ import TournamentsScreen from './src/views/TournamentsScreen';
 import TournamentHistoryScreen from './src/views/TournamentHistoryScreen'; // Import the screen
 import PlayoffsView from './src/views/PlayoffsView'; // Import the PlayoffsScreen
 import { RootStackParamList } from './src/navigation/types'; // Import the types
+import { WebView } from 'react-native-webview';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: '#c22' },
-        headerTintColor: '#fff',
-        headerTitleAlign: 'center',
-        headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
-      }}
-    >
-      <Stack.Screen
-        name="TournamentsScreen"
-        component={TournamentsScreen}
-        options={{
-          title: 'Go Champs!',
-          headerRight: () => (
-            <TouchableOpacity onPress={() => alert('Menu')}>
-              <Text style={styles.headerRight}>☰</Text>
-            </TouchableOpacity>
-          ),
-        }}
-      />
-      <Stack.Screen name="TournamentHistoryScreen" component={TournamentHistoryScreen} options={{
-          title: 'Fases',
-          
-        }}/> 
-      <Stack.Screen
-        name="PlayoffsView"
-        component={PlayoffsView}
-        options={{
-          title: 'Playoffs',
-        }}
-      />
-    </Stack.Navigator>
-  );
+    <WebView
+      source={{ uri: 'https://go-champs.com' }}
+      style={{ flex: 1, marginTop: 60 }}
+    />
+  )
+  // return (
+  //   <Stack.Navigator
+  //     screenOptions={{
+  //       headerStyle: { backgroundColor: '#c22' },
+  //       headerTintColor: '#fff',
+  //       headerTitleAlign: 'center',
+  //       headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+  //     }}
+  //   >
+  //     <Stack.Screen
+  //       name="TournamentsScreen"
+  //       component={TournamentsScreen}
+  //       options={{
+  //         title: 'Go Champs!',
+  //         headerRight: () => (
+  //           <TouchableOpacity onPress={() => alert('Menu')}>
+  //             <Text style={styles.headerRight}>☰</Text>
+  //           </TouchableOpacity>
+  //         ),
+  //       }}
+  //     />
+  //     <Stack.Screen name="TournamentHistoryScreen" component={TournamentHistoryScreen} options={{
+  //         title: 'Fases',
+
+  //       }}/> 
+  //     <Stack.Screen
+  //       name="PlayoffsView"
+  //       component={PlayoffsView}
+  //       options={{
+  //         title: 'Playoffs',
+  //       }}
+  //     />
+  //   </Stack.Navigator>
+  // );
 }
 
 const styles = StyleSheet.create({

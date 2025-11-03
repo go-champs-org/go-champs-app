@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
+import { theme } from '../theme/theme';
 import { RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 import { useTournamentHistoryViewModel } from '../viewmodels/TournamentHistoryViewModel';
@@ -18,7 +19,7 @@ const TournamentHistoryScreen: React.FC<Props> = ({ route }) => {
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={theme.colors.textSecondary} />
       </View>
     );
   }
@@ -72,8 +73,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: 'normal',
+    color: theme.colors.textSecondary,
   },
   phaseTitle: {
     fontSize: 20,

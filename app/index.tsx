@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { theme } from './src/theme/theme';
 import OrganizationScreen from './src/views/OrganizationScreen';
 import TournamentsScreen from './src/views/TournamentsScreen';
 import TournamentHistoryScreen from './src/views/TournamentHistoryScreen'; // Import the screen
@@ -13,19 +14,28 @@ export default function App() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#c22' },
+        headerStyle: { backgroundColor: theme.colors.primary },
         headerTintColor: '#fff',
         headerTitleAlign: 'center',
-        headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+        headerTitleStyle: { fontWeight: 'normal', fontSize: 16 },
       }}
     >
       <Stack.Screen
         name="TournamentsScreen"
         component={TournamentsScreen}
         options={{
-          title: 'Go Champs!',
+          title: 'Go Champs',
+          headerLeft: () => (
+            <View style={styles.headerButton}>
+              <Image
+                source={require('../assets/images/logo-green.png')}
+                style={styles.headerLogo}
+                resizeMode="contain"
+              />
+            </View>
+          ),
           headerRight: () => (
-            <TouchableOpacity onPress={() => alert('Menu')}>
+            <TouchableOpacity style={styles.headerButton} onPress={() => alert('Menu')}>
               <Text style={styles.headerRight}>☰</Text>
             </TouchableOpacity>
           ),
@@ -47,9 +57,18 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerLogo: {
+    width: 28,
+    height: 28,
+  },
   headerRight: {
     color: '#fff',
-    marginRight: 16,
     fontSize: 20,
     fontWeight: 'bold',
   },

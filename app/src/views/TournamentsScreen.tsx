@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { theme } from '../theme/theme';
 import { useTournamentsViewModel } from '../viewmodels/TournamentsViewModel';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types'; // Adjust the path as necessary
@@ -26,7 +27,7 @@ const TournamentsScreen = () => {
 
       {/* Loader enquanto os dados carregam */}
       {loading ? (
-        <ActivityIndicator size="large" color="#c22" style={styles.loader} />
+        <ActivityIndicator size="large" color={theme.colors.textSecondary} style={styles.loader} />
       ) : (
         <FlatList
           data={filteredTournaments} // Mostra apenas os resultados filtrados
@@ -49,7 +50,7 @@ const TournamentsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   searchBar: {
     height: 40,
@@ -63,12 +64,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   card: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: theme.colors.card,
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
     marginHorizontal: 16,
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadow,
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
@@ -76,10 +77,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: theme.colors.textSecondary,
   },
   subtitle: {
     fontSize: 14,
-    color: '#555',
+    color: theme.colors.mutedText,
   },
 });
 

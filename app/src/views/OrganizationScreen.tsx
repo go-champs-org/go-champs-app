@@ -1,6 +1,7 @@
 // src/views/TorneiosScreen.tsx
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, ActivityIndicator } from 'react-native';
+import { theme } from '../theme/theme';
 import { useOrganizationViewModel } from '../viewmodels/OrganizationViewModel';
 
 const TorneiosScreen = () => {
@@ -24,7 +25,7 @@ const TorneiosScreen = () => {
 
       {/* Loader enquanto os dados carregam */}
       {loading ? (
-        <ActivityIndicator size="large" color="#c22" style={styles.loader} />
+        <ActivityIndicator size="large" color={theme.colors.textSecondary} style={styles.loader} />
       ) : (
         <FlatList
           data={filteredOrganizations} // Mostra apenas os resultados filtrados
@@ -44,16 +45,16 @@ const TorneiosScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   customHeader: {
     height: 60,
-    backgroundColor: '#c22',
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    color: '#fff',
+    color: theme.colors.background,
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -69,12 +70,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   card: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: theme.colors.card,
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
     marginHorizontal: 16,
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadow,
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
@@ -82,10 +83,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: theme.colors.textPrimary,
   },
   subtitle: {
     fontSize: 14,
-    color: '#555',
+    color: theme.colors.mutedText,
   },
 });
 

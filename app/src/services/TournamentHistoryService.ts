@@ -11,7 +11,14 @@ const getTournamentHistory = async (id: string): Promise<TournamentHistory> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const jsonData = await response.json();
-    return jsonData;
+    // TournamentHistory interface expects { data: Data }
+    // If API returns { data: {...} }, return as is
+    // If API returns {...} directly, wrap it in { data: {...} }
+    if (jsonData.data) {
+      return jsonData as TournamentHistory;
+    } else {
+      return { data: jsonData } as TournamentHistory;
+    }
   } catch (error: any) {
     console.error('Error fetching tournament history:', error);
     // Re-throw with more context but don't wrap in generic error

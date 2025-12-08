@@ -8,6 +8,7 @@ import {
   Dimensions,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
@@ -175,7 +176,7 @@ const GroupPhaseView: React.FC<Props> = ({ route }) => {
         <View style={styles.teamRow}>
           <View style={styles.teamInfo}>
             {game.home_team?.logo_url ? (
-              <View style={styles.logoPlaceholder} />
+              <Image source={{ uri: game.home_team.logo_url }} style={styles.teamLogo} />
             ) : (
               <View style={styles.logoPlaceholder} />
             )}
@@ -189,7 +190,7 @@ const GroupPhaseView: React.FC<Props> = ({ route }) => {
         <View style={styles.teamRow}>
           <View style={styles.teamInfo}>
             {game.away_team?.logo_url ? (
-              <View style={styles.logoPlaceholder} />
+              <Image source={{ uri: game.away_team.logo_url }} style={styles.teamLogo} />
             ) : (
               <View style={styles.logoPlaceholder} />
             )}
@@ -336,6 +337,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginRight: 8,
     backgroundColor: 'transparent',
+  },
+  teamLogo: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 8,
+    backgroundColor: '#ddd',
   },
   teamNameText: {
     color: theme.colors.textPrimary,

@@ -6,6 +6,8 @@ import OrganizationScreen from './src/views/OrganizationScreen';
 import TournamentsScreen from './src/views/TournamentsScreen';
 import TournamentHistoryScreen from './src/views/TournamentHistoryScreen'; // Import the screen
 import PlayoffsView from './src/views/PlayoffsView'; // Import the PlayoffsScreen
+import ClassificationView from './src/views/ClassificationView'; // Import ClassificationView
+import GroupPhaseView from './src/views/GroupPhaseView'; // Import GroupPhaseView
 import { RootStackParamList } from './src/navigation/types'; // Import the types
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -50,6 +52,20 @@ export default function App() {
         component={PlayoffsView}
         options={{
           title: 'Playoffs',
+        }}
+      />
+      <Stack.Screen
+        name="ClassificationView"
+        component={ClassificationView}
+        options={{
+          title: 'Classificação',
+        }}
+      />
+      <Stack.Screen
+        name="GroupPhaseView"
+        component={GroupPhaseView}
+        options={{
+          title: 'Fase',
         }}
       />
     </Stack.Navigator>

@@ -13,7 +13,7 @@ type Props = {
 
 const TournamentHistoryScreen: React.FC<Props> = ({ route }) => {
   const { id } = route.params;
-  const { tournament, loading } = useTournamentHistoryViewModel(id);
+  const { tournament, loading, error } = useTournamentHistoryViewModel(id);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   if (loading) {
@@ -24,6 +24,56 @@ const TournamentHistoryScreen: React.FC<Props> = ({ route }) => {
     );
   }
 
+  if (error) {
+    return (
+      <View style={styles.loaderContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
+  const handlePhasePress = (phase: any) => {
+    const titleLower = (phase.title || '').toLowerCase();
+    const typeLower = (phase.type || '').toLowerCase();
+
+    // Navegação baseada no tipo e título da fase
+    if (typeLower === 'draw' || titleLower.includes('playoff')) {
+      // Playoffs - usar phase.id como tournamentId (compatibilidade com código existente)
+      // O PlayoffViewModel busca a fase dentro do tournament
+      navigation.navigate('PlayoffsView', { tournamentId: id });
+    } else if (typeLower === 'elimination') {
+      // Verificar se é classificação ou grupos
+      if (titleLower.includes('classificação') || titleLower.includes('classificacao')) {
+        // Classificação
+        navigation.navigate('ClassificationView', { 
+          phaseId: phase.id, 
+          tournamentId: id 
+        });
+      } else if (
+        titleLower.includes('primeira fase') || 
+        titleLower.includes('segunda fase') ||
+        titleLower.includes('1ª fase') ||
+        titleLower.includes('2ª fase')
+      ) {
+        // Grupos (Primeira/Segunda Fase)
+        navigation.navigate('GroupPhaseView', { 
+          phaseId: phase.id, 
+          tournamentId: id 
+        });
+      } else {
+        // Fallback: se tem eliminations com múltiplos grupos, é GroupPhase
+        // Se tem apenas uma elimination, pode ser Classification
+        // Por padrão, vamos tentar GroupPhase se não for classificação
+        if (!titleLower.includes('classificação') && !titleLower.includes('classificacao')) {
+          navigation.navigate('GroupPhaseView', { 
+            phaseId: phase.id, 
+            tournamentId: id 
+          });
+        }
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -31,13 +81,7 @@ const TournamentHistoryScreen: React.FC<Props> = ({ route }) => {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => {
-              if (item.title.toLowerCase().includes('playoff')) {
-                navigation.navigate('PlayoffsView', { tournamentId: item.id });
-              }
-            }}
-          >
+          <TouchableOpacity onPress={() => handlePhasePress(item)}>
             <View style={styles.card}>
               <Text style={styles.title}>{item.title}</Text>
             </View>
@@ -79,6 +123,12 @@ const styles = StyleSheet.create({
   },
   phaseTitle: {
     fontSize: 20,
+  },
+  errorText: {
+    color: theme.colors.textSecondary,
+    fontSize: 16,
+    textAlign: 'center',
+    padding: 20,
   },
 });
 

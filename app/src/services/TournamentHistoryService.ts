@@ -1,17 +1,21 @@
 import { TournamentHistory } from '../models/TournamentHistory';
-
-const API_URL = 'https://go-champs-api-staging.herokuapp.com/v1/tournaments';
+import { apiFetch } from './apiHelper';
 
 const getTournamentHistory = async (id: string): Promise<TournamentHistory> => {
   try {
-    console.log('Fetching tournament history for ID:', id);
-    console.log('Fetching URL:', `${API_URL}/${id}`);
-    const response = await fetch(`${API_URL}/${id}`);
+    const response = await apiFetch(`/tournaments/${id}`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Tournament not found`);
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const jsonData = await response.json();
     return jsonData;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching tournament history:', error);
-    throw new Error('Error fetching tournament history');
+    // Re-throw with more context but don't wrap in generic error
+    throw error;
   }
 };
 

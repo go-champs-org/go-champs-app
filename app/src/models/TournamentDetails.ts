@@ -1,4 +1,5 @@
 import { Organization } from './Organization';
+import { Team } from './GameModel';
 
 export type TournamentPhase = {
   id: string;
@@ -14,6 +15,7 @@ export type TournamentDetails = {
   phases: TournamentPhase[];
   sport_name?: string;
   sport_slug?: string;
+  teams?: Team[]; // Teams do tournament
 };
 
 export type TournamentDetailsResponse = {

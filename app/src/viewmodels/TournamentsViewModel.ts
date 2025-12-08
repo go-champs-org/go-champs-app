@@ -23,3 +23,6 @@ export const useTournamentsViewModel = () => {
 
   return { tournaments, loading };
 };
+
+// Default export for Expo Router compatibility
+export default useTournamentsViewModel;

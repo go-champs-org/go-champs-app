@@ -2,15 +2,17 @@ import { PlayoffResponse } from '../models/PlayoffModel';
 import { Game } from '../models/GameModel';
 import { TournamentDetails, TournamentDetailsResponse } from '../models/TournamentDetails';
 import { SportConfig, SportResponse } from '../models/Sport';
-
-const API_BASE = 'https://api.go-champs.com/v1';
+import { apiFetch } from './apiHelper';
 
 // Fetch tournament details (phases, sport info, etc.)
 export const fetchTournamentDetails = async (
   tournamentId: string
 ): Promise<TournamentDetails> => {
   try {
-    const response = await fetch(`${API_BASE}/tournaments/${tournamentId}`);
+    const response = await apiFetch(`/tournaments/${tournamentId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const jsonData: TournamentDetailsResponse = await response.json();
     return jsonData.data;
   } catch (error) {
@@ -25,7 +27,10 @@ export const fetchTournamentDetails = async (
 // Fetch bracket/draw data for a given phase
 export const fetchPlayoffData = async (phaseId: string): Promise<PlayoffResponse> => {
   try {
-    const response = await fetch(`${API_BASE}/phases/${phaseId}`);
+    const response = await apiFetch(`/phases/${phaseId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const jsonData = await response.json();
     return jsonData as PlayoffResponse;
   } catch (error) {
@@ -39,7 +44,10 @@ export const fetchPlayoffData = async (phaseId: string): Promise<PlayoffResponse
 // Fetch games for a given phase
 export const fetchGamesByPhaseId = async (phaseId: string): Promise<Game[]> => {
   try {
-    const response = await fetch(`${API_BASE}/games?where[phase_id]=${phaseId}`);
+    const response = await apiFetch(`/games?where[phase_id]=${phaseId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const jsonData = await response.json();
     return jsonData.data as Game[];
   } catch (error) {

@@ -8,11 +8,36 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "jest --watchAll",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run test:coverage",
     "lint": "expo lint"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.ts"
+    ],
+    "collectCoverageFrom": [
+      "src/core/**/*.{ts,tsx}",
+      "src/data/**/*.{ts,tsx}",
+      "src/domain/**/*.{ts,tsx}",
+      "!src/data/dto/**",
+      "!src/domain/repositories/**",
+      "!src/core/http/HttpClient.ts",
+      "!src/**/__tests__/**",
+      "!src/test/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 60,
+        "functions": 60,
+        "lines": 60,
+        "statements": 60
+      }
+    }
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

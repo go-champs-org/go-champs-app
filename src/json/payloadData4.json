@@ -1,0 +1,471 @@
+{
+  "data": {
+    "coach_types": [
+      {
+        "type": "head_coach"
+      },
+      {
+        "type": "assistant_coach"
+      }
+    ],
+    "name": "Basketball 5x5",
+    "player_statistics": [
+      {
+        "level": "game",
+        "name": "Assists",
+        "scope": "aggregate",
+        "slug": "assists",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Blocks",
+        "scope": "aggregate",
+        "slug": "blocks",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Disqualifications",
+        "scope": "aggregate",
+        "slug": "disqualifications",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Ejections",
+        "scope": "aggregate",
+        "slug": "ejections",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Efficiency",
+        "scope": "aggregate",
+        "slug": "efficiency",
+        "value_type": "calculated"
+      },
+      {
+        "level": "game",
+        "name": "Field Goal Percentage",
+        "scope": "aggregate",
+        "slug": "field_goal_percentage",
+        "value_type": "calculated"
+      },
+      {
+        "level": "game",
+        "name": "Field Goals Attempted",
+        "scope": "aggregate",
+        "slug": "field_goals_attempted",
+        "value_type": "calculated"
+      },
+      {
+        "level": "game",
+        "name": "Field Goals Made",
+        "scope": "aggregate",
+        "slug": "field_goals_made",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Field Goals Missed",
+        "scope": "aggregate",
+        "slug": "field_goals_missed",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Fouls",
+        "scope": "aggregate",
+        "slug": "fouls",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Disqualifying Fouls (D)",
+        "scope": "aggregate",
+        "slug": "fouls_disqualifying",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Disqualifying Fighting Fouls (F)",
+        "scope": "aggregate",
+        "slug": "fouls_disqualifying_fighting",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Flagrant Fouls",
+        "scope": "aggregate",
+        "slug": "fouls_flagrant",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Personal Fouls (P)",
+        "scope": "aggregate",
+        "slug": "fouls_personal",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Technical Fouls (T)",
+        "scope": "aggregate",
+        "slug": "fouls_technical",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Unsportsmanlike Foul (U)",
+        "scope": "aggregate",
+        "slug": "fouls_unsportsmanlike",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Game Disqualifying Fouls (GD)",
+        "scope": "aggregate",
+        "slug": "fouls_game_disqualifying",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Free Throw Percentage",
+        "scope": "aggregate",
+        "slug": "free_throw_percentage",
+        "value_type": "calculated"
+      },
+      {
+        "level": "game",
+        "name": "Free Throws Attempted",
+        "scope": "aggregate",
+        "slug": "free_throws_attempted",
+        "value_type": "calculated"
+      },
+      {
+        "level": "game",
+        "name": "Free Throws Made",
+        "scope": "aggregate",
+        "slug": "free_throws_made",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Free Throws Missed",
+        "scope": "aggregate",
+        "slug": "free_throws_missed",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Game Played",
+        "scope": "aggregate",
+        "slug": "game_played",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Game Started",
+        "scope": "aggregate",
+        "slug": "game_started",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Minutes Played",
+        "scope": "aggregate",
+        "slug": "minutes_played",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Plus Minus",
+        "scope": "aggregate",
+        "slug": "plus_minus",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Points",
+        "scope": "aggregate",
+        "slug": "points",
+        "value_type": "calculated"
+      },
+      {
+        "level": "game",
+        "name": "Rebounds",
+        "scope": "aggregate",
+        "slug": "rebounds",
+        "value_type": "calculated"
+      },
+      {
+        "level": "game",
+        "name": "Defensive Rebounds",
+        "scope": "aggregate",
+        "slug": "rebounds_defensive",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Offensive Rebounds",
+        "scope": "aggregate",
+        "slug": "rebounds_offensive",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Steals",
+        "scope": "aggregate",
+        "slug": "steals",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Three Point Field Goal Percentage",
+        "scope": "aggregate",
+        "slug": "three_point_field_goal_percentage",
+        "value_type": "calculated"
+      },
+      {
+        "level": "game",
+        "name": "Three Point Field Goals Attempted",
+        "scope": "aggregate",
+        "slug": "three_point_field_goals_attempted",
+        "value_type": "calculated"
+      },
+      {
+        "level": "game",
+        "name": "Three Point Field Goals Made",
+        "scope": "aggregate",
+        "slug": "three_point_field_goals_made",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Three Point Field Goals Missed",
+        "scope": "aggregate",
+        "slug": "three_point_field_goals_missed",
+        "value_type": "manual"
+      },
+      {
+        "level": "game",
+        "name": "Turnovers",
+        "scope": "aggregate",
+        "slug": "turnovers",
+        "value_type": "manual"
+      },
+      {
+        "level": "tournament",
+        "name": "Assists Per Game",
+        "scope": "per_game",
+        "slug": "assists_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Blocks Per Game",
+        "scope": "per_game",
+        "slug": "blocks_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Disqualifications Per Game",
+        "scope": "per_game",
+        "slug": "disqualifications_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Ejections Per Game",
+        "scope": "per_game",
+        "slug": "ejections_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Efficiency Per Game",
+        "scope": "per_game",
+        "slug": "efficiency_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Field Goal Percentage Per Game",
+        "scope": "per_game",
+        "slug": "field_goal_percentage_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Field Goals Attempted Per Game",
+        "scope": "per_game",
+        "slug": "field_goals_attempted_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Field Goals Made Per Game",
+        "scope": "per_game",
+        "slug": "field_goals_made_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Field Goals Missed Per Game",
+        "scope": "per_game",
+        "slug": "field_goals_missed_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Fouls Per Game",
+        "scope": "per_game",
+        "slug": "fouls_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Flagrant Fouls Per Game",
+        "scope": "per_game",
+        "slug": "fouls_flagrant_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Personal Fouls Per Game",
+        "scope": "per_game",
+        "slug": "fouls_personal_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Technical Fouls Per Game",
+        "scope": "per_game",
+        "slug": "fouls_technical_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Free Throw Percentage Per Game",
+        "scope": "per_game",
+        "slug": "free_throw_percentage_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Free Throws Attempted Per Game",
+        "scope": "per_game",
+        "slug": "free_throws_attempted_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Free Throws Made Per Game",
+        "scope": "per_game",
+        "slug": "free_throws_made_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Free Throws Missed Per Game",
+        "scope": "per_game",
+        "slug": "free_throws_missed_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Game Started Per Game",
+        "scope": "per_game",
+        "slug": "game_started_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Minutes Played Per Game",
+        "scope": "per_game",
+        "slug": "minutes_played_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Plus Minus Per Game",
+        "scope": "per_game",
+        "slug": "plus_minus_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Points Per Game",
+        "scope": "per_game",
+        "slug": "points_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Rebounds Per Game",
+        "scope": "per_game",
+        "slug": "rebounds_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Defensive Rebounds Per Game",
+        "scope": "per_game",
+        "slug": "rebounds_defensive_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Offensive Rebounds Per Game",
+        "scope": "per_game",
+        "slug": "rebounds_offensive_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Steals Per Game",
+        "scope": "per_game",
+        "slug": "steals_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Three Point Field Goal Percentage Per Game",
+        "scope": "per_game",
+        "slug": "three_point_field_goal_percentage_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Three Point Field Goals Attempted Per Game",
+        "scope": "per_game",
+        "slug": "three_point_field_goals_attempted_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Three Point Field Goals Made Per Game",
+        "scope": "per_game",
+        "slug": "three_point_field_goals_made_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Three Point Field Goals Missed Per Game",
+        "scope": "per_game",
+        "slug": "three_point_field_goals_missed_per_game",
+        "value_type": "calculated"
+      },
+      {
+        "level": "tournament",
+        "name": "Turnovers Per Game",
+        "scope": "per_game",
+        "slug": "turnovers_per_game",
+        "value_type": "calculated"
+      }
+    ],
+    "slug": "basketball_5x5"
+  }
+}

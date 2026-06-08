@@ -1,0 +1,92 @@
+{
+  "data": {
+    "draws": [
+      {
+        "id": "8f40d921-30d2-45ab-84d9-f28c7dece0b4",
+        "matches": [
+          {
+            "first_team_id": "b8d14096-4a15-4462-a564-2586219022fc",
+            "first_team_parent_id": null,
+            "first_team_placeholder": null,
+            "first_team_score": "1",
+            "id": "36e3a1fb-bd00-4d1a-9342-2731e57db582",
+            "info": null,
+            "name": "SF!",
+            "second_team_id": "91578142-9c00-4563-9397-0eefd80da3fc",
+            "second_team_parent_id": null,
+            "second_team_placeholder": null,
+            "second_team_score": "0"
+          }
+        ],
+        "order": 2,
+        "title": "Semi final"
+      },
+      {
+        "id": "970c86f0-8823-4a34-bb81-201cdcf34fa0",
+        "matches": [
+          {
+            "first_team_id": "b8d14096-4a15-4462-a564-2586219022fc",
+            "first_team_parent_id": null,
+            "first_team_placeholder": null,
+            "first_team_score": "2",
+            "id": "625b5756-ef13-4b71-9ab7-ce53dc083bae",
+            "info": null,
+            "name": "QF1: 1º X 8º",
+            "second_team_id": "f27cf98e-c088-47bf-a777-87698b81f355",
+            "second_team_parent_id": null,
+            "second_team_placeholder": null,
+            "second_team_score": "0"
+          },
+          {
+            "first_team_id": "91578142-9c00-4563-9397-0eefd80da3fc",
+            "first_team_parent_id": null,
+            "first_team_placeholder": null,
+            "first_team_score": "2",
+            "id": "bbf6dac6-26ca-4eb4-9a61-80600e253b1b",
+            "info": null,
+            "name": "QF2: 4º X 5º",
+            "second_team_id": "0f09938f-65b1-495d-a80f-dca6600ec969",
+            "second_team_parent_id": null,
+            "second_team_placeholder": null,
+            "second_team_score": "0"
+          },
+          {
+            "first_team_id": "ba0b269e-f5ee-4b6e-86e1-1eb177081d65",
+            "first_team_parent_id": null,
+            "first_team_placeholder": null,
+            "first_team_score": "0",
+            "id": "b5cba66f-63f3-40a3-90ff-31cb344d398b",
+            "info": null,
+            "name": "QF3: 2º X 7º",
+            "second_team_id": "427df64f-2134-4785-aae7-3959b0872051",
+            "second_team_parent_id": null,
+            "second_team_placeholder": null,
+            "second_team_score": "2"
+          },
+          {
+            "first_team_id": "4c94e187-3603-449e-b443-017c4ca25e60",
+            "first_team_parent_id": null,
+            "first_team_placeholder": null,
+            "first_team_score": "1",
+            "id": "e1c70891-0bc8-42eb-949e-18ce1ebdd16f",
+            "info": null,
+            "name": "QF4: 3º X 6º",
+            "second_team_id": "2f87eab1-44a5-48e7-b680-1bdc4732253c",
+            "second_team_parent_id": null,
+            "second_team_placeholder": null,
+            "second_team_score": "2"
+          }
+        ],
+        "order": 1,
+        "title": "Quartas de Finais"
+      }
+    ],
+    "elimination_stats": [],
+    "eliminations": [],
+    "id": "c5b71c3b-23be-4ef3-9a26-573ed634f16c",
+    "is_in_progress": true,
+    "order": 3,
+    "title": "Playoffs",
+    "type": "draw"
+  }
+}

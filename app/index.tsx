@@ -1,16 +1,67 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { theme } from './src/theme/theme';
-import OrganizationScreen from './src/views/OrganizationScreen';
-import TournamentsScreen from './src/views/TournamentsScreen';
-import TournamentHistoryScreen from './src/views/TournamentHistoryScreen'; // Import the screen
-import PlayoffsView from './src/views/PlayoffsView'; // Import the PlayoffsScreen
-import ClassificationView from './src/views/ClassificationView'; // Import ClassificationView
-import GroupPhaseView from './src/views/GroupPhaseView'; // Import GroupPhaseView
-import { RootStackParamList } from './src/navigation/types'; // Import the types
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../src/theme/theme';
+import TournamentsScreen from '../src/views/TournamentsScreen';
+import TournamentHistoryScreen from '../src/views/TournamentHistoryScreen';
+import PlayoffsView from '../src/views/PlayoffsView';
+import ClassificationView from '../src/views/ClassificationView';
+import GroupPhaseView from '../src/views/GroupPhaseView';
+import MyGamesScreen from '../src/views/MyGamesScreen';
+import ProfileScreen from '../src/views/ProfileScreen';
+import { MainTabParamList, RootStackParamList } from '../src/navigation/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
+
+function MainTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.textSecondary,
+        tabBarInactiveTintColor: theme.colors.inactive,
+        tabBarStyle: {
+          height: 76,
+          paddingTop: 8,
+          paddingBottom: 12,
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.border,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '800',
+        },
+      }}
+    >
+      <Tab.Screen
+        name="HomeTab"
+        component={TournamentsScreen}
+        options={{
+          title: 'Início',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="MyGamesTab"
+        component={MyGamesScreen}
+        options={{
+          title: 'Meus jogos',
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileScreen}
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
 
 export default function App() {
   return (
@@ -22,70 +73,11 @@ export default function App() {
         headerTitleStyle: { fontWeight: 'normal', fontSize: 16 },
       }}
     >
-      <Stack.Screen
-        name="TournamentsScreen"
-        component={TournamentsScreen}
-        options={{
-          title: 'Go Champs',
-          headerLeft: () => (
-            <View style={styles.headerButton}>
-              <Image
-                source={require('../assets/images/logo-green.png')}
-                style={styles.headerLogo}
-                resizeMode="contain"
-              />
-            </View>
-          ),
-          headerRight: () => (
-            <TouchableOpacity style={styles.headerButton} onPress={() => alert('Menu')}>
-              <Text style={styles.headerRight}>☰</Text>
-            </TouchableOpacity>
-          ),
-        }}
-      />
-      <Stack.Screen name="TournamentHistoryScreen" component={TournamentHistoryScreen} options={{
-          title: 'Fases',
-          
-        }}/> 
-      <Stack.Screen
-        name="PlayoffsView"
-        component={PlayoffsView}
-        options={{
-          title: 'Playoffs',
-        }}
-      />
-      <Stack.Screen
-        name="ClassificationView"
-        component={ClassificationView}
-        options={{
-          title: 'Classificação',
-        }}
-      />
-      <Stack.Screen
-        name="GroupPhaseView"
-        component={GroupPhaseView}
-        options={{
-          title: 'Fase',
-        }}
-      />
+      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="TournamentHistoryScreen" component={TournamentHistoryScreen} options={{ title: 'Fases' }} />
+      <Stack.Screen name="PlayoffsView" component={PlayoffsView} options={{ title: 'Playoffs' }} />
+      <Stack.Screen name="ClassificationView" component={ClassificationView} options={{ title: 'Classificação' }} />
+      <Stack.Screen name="GroupPhaseView" component={GroupPhaseView} options={{ title: 'Fase' }} />
     </Stack.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  headerButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerLogo: {
-    width: 28,
-    height: 28,
-  },
-  headerRight: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-});

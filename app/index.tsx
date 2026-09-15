@@ -10,6 +10,7 @@ import ClassificationView from '../src/views/ClassificationView';
 import GroupPhaseView from '../src/views/GroupPhaseView';
 import MyGamesScreen from '../src/views/MyGamesScreen';
 import ProfileScreen from '../src/views/ProfileScreen';
+import AuthScreen from '../src/views/AuthScreen';
 import { MainTabParamList, RootStackParamList } from '../src/navigation/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -21,17 +22,20 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.colors.textSecondary,
-        tabBarInactiveTintColor: theme.colors.inactive,
+        tabBarInactiveTintColor: '#d1d4ca',
         tabBarStyle: {
-          height: 76,
-          paddingTop: 8,
-          paddingBottom: 12,
-          backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.border,
+          minHeight: 70,
+          paddingTop: 7,
+          paddingBottom: 8,
+          backgroundColor: theme.colors.primary,
+          borderTopWidth: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '800',
+        },
+        tabBarItemStyle: {
+          minHeight: 56,
         },
       }}
     >
@@ -40,7 +44,7 @@ function MainTabs() {
         component={TournamentsScreen}
         options={{
           title: 'Início',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={22} color={color} />,
         }}
       />
       <Tab.Screen
@@ -48,7 +52,7 @@ function MainTabs() {
         component={MyGamesScreen}
         options={{
           title: 'Meus jogos',
-          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="calendar-clear-outline" size={22} color={color} />,
         }}
       />
       <Tab.Screen
@@ -56,7 +60,7 @@ function MainTabs() {
         component={ProfileScreen}
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={22} color={color} />,
         }}
       />
     </Tab.Navigator>
@@ -70,7 +74,8 @@ export default function App() {
         headerStyle: { backgroundColor: theme.colors.primary },
         headerTintColor: '#fff',
         headerTitleAlign: 'center',
-        headerTitleStyle: { fontWeight: 'normal', fontSize: 16 },
+        headerTitleStyle: { fontWeight: '800', fontSize: 16 },
+        headerBackTitle: 'Voltar',
       }}
     >
       <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
@@ -78,6 +83,7 @@ export default function App() {
       <Stack.Screen name="PlayoffsView" component={PlayoffsView} options={{ title: 'Playoffs' }} />
       <Stack.Screen name="ClassificationView" component={ClassificationView} options={{ title: 'Classificação' }} />
       <Stack.Screen name="GroupPhaseView" component={GroupPhaseView} options={{ title: 'Fase' }} />
+      <Stack.Screen name="AuthScreen" component={AuthScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

@@ -78,8 +78,8 @@ export const useTournamentEntryViewModel = (navigation: NavigationProp<RootStack
         }
 
         setError('Este campeonato ainda não possui fases disponíveis.');
-      } catch (entryError: any) {
-        setError(entryError?.message || 'Não foi possível abrir o campeonato.');
+      } catch {
+        setError('Não foi possível abrir o campeonato. Tente novamente.');
       } finally {
         setLoadingTournamentId(null);
       }

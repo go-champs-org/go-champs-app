@@ -51,4 +51,69 @@ describe('GoChampsApiClient', () => {
 
     await expect(apiClient.get('/missing')).rejects.toEqual(new AppError('HTTP error! status: 404', 404));
   });
+
+  it('sends Bearer token from TokenProvider on get', async () => {
+    const httpClient = createHttpClient({ ok: true, status: 200, data: { data: [] } });
+    const client = new GoChampsApiClient(httpClient, { getToken: () => 'abc' });
+
+    await client.get('/users/lucas');
+
+    expect(httpClient.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: expect.objectContaining({ authorization: 'Bearer abc' }),
+      })
+    );
+  });
+
+  it('sends Bearer null when no token', async () => {
+    const httpClient = createHttpClient({ ok: true, status: 200, data: { data: [] } });
+    const client = new GoChampsApiClient(httpClient, { getToken: () => null });
+
+    await client.get('/recently-view');
+
+    expect(httpClient.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: expect.objectContaining({ authorization: 'Bearer null' }),
+      })
+    );
+  });
+
+  it('supports patch method', async () => {
+    const httpClient = createHttpClient({ ok: true, status: 200, data: { data: {} } });
+    const client = new GoChampsApiClient(httpClient, { getToken: () => 'abc' });
+
+    await client.patch('/athlete-profiles/1', { athlete_profile: { name: 'L' } });
+
+    expect(httpClient.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'PATCH',
+        body: { athlete_profile: { name: 'L' } },
+      })
+    );
+  });
+
+  it('supports post put and delete methods', async () => {
+    const httpClient = createHttpClient({ ok: true, status: 200, data: { data: {} } });
+    const client = new GoChampsApiClient(httpClient, { getToken: () => 'abc' });
+
+    await client.post('/athlete-profiles', { athlete_profile: { name: 'L' } });
+    await client.put('/athlete-profiles/1', { athlete_profile: { name: 'L' } });
+    await client.delete('/athlete-profiles/1');
+
+    expect(httpClient.request).toHaveBeenNthCalledWith(1, expect.objectContaining({ method: 'POST' }));
+    expect(httpClient.request).toHaveBeenNthCalledWith(2, expect.objectContaining({ method: 'PUT' }));
+    expect(httpClient.request).toHaveBeenNthCalledWith(3, expect.objectContaining({ method: 'DELETE' }));
+  });
+
+  it('prefers API error detail when present', async () => {
+    const apiClient = new GoChampsApiClient(
+      createHttpClient({
+        ok: false,
+        status: 401,
+        data: { errors: { detail: 'Unauthorized' } },
+      })
+    );
+
+    await expect(apiClient.get('/users/ana')).rejects.toEqual(new AppError('Unauthorized', 401));
+  });
 });

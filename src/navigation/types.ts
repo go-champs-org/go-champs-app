@@ -5,6 +5,7 @@ export type RootStackParamList = {
   PlayoffsView: { tournamentId: string; phaseId?: string; apiBaseUrl?: string };
   ClassificationView: { phaseId: string; tournamentId?: string; apiBaseUrl?: string };
   GroupPhaseView: { phaseId: string; tournamentId?: string; apiBaseUrl?: string };
+  AuthScreen: { initialMode?: 'signIn' | 'signUp' | 'recovery' };
 };
 
 export type MainTabParamList = {

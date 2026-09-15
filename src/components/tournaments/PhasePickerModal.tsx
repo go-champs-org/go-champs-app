@@ -63,16 +63,19 @@ export const PhasePickerModal = ({ phases, tournament, visible, onClose, onSelec
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.42)',
+    backgroundColor: theme.colors.overlay,
     justifyContent: 'flex-end',
   },
   backdropTapArea: {
     flex: 1,
   },
   sheet: {
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
     backgroundColor: theme.colors.background,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
+    borderTopLeftRadius: theme.radius.lg,
+    borderTopRightRadius: theme.radius.lg,
     paddingHorizontal: theme.spacing.md,
     paddingTop: theme.spacing.sm,
     paddingBottom: theme.spacing.lg,
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
   },
   phaseCard: {
     minHeight: 72,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.card,
@@ -137,10 +140,10 @@ const styles = StyleSheet.create({
   phaseIcon: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.accent,
+    backgroundColor: theme.colors.accentSoft,
     marginRight: theme.spacing.md,
   },
   phaseContent: {
@@ -158,4 +161,3 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 });
-

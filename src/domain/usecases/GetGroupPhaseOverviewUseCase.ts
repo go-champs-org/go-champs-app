@@ -6,10 +6,10 @@ import { buildTeamMap, sortGamesByDate, sortStatsByRanking, TeamInfo, TeamMap } 
 
 export type GroupRow = {
   group: Elimination;
-  rows: Array<{
+  rows: {
     team: TeamInfo;
     stats: Record<string, string | number>;
-  }>;
+  }[];
 };
 
 export type GroupPhaseOverview = {

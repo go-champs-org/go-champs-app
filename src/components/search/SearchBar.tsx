@@ -24,9 +24,9 @@ export const SearchBar = ({ value, onChangeText }: Props) => (
 
 const styles = StyleSheet.create({
   container: {
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#2b2b2b',
+    height: 44,
+    borderRadius: theme.radius.md,
+    backgroundColor: '#262a21',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
@@ -35,7 +35,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: theme.typography.body,
   },
 });
-

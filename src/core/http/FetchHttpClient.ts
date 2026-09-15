@@ -1,10 +1,11 @@
 import { HttpClient, HttpRequest, HttpResponse } from './HttpClient';
 
 export class FetchHttpClient implements HttpClient {
-  async request<T = unknown>({ endpoint, method = 'GET', headers }: HttpRequest): Promise<HttpResponse<T>> {
+  async request<T = unknown>({ endpoint, method = 'GET', headers, body }: HttpRequest): Promise<HttpResponse<T>> {
     const response = await fetch(endpoint, {
       method,
       headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
 
     const data = (await response.json()) as T;
@@ -16,4 +17,3 @@ export class FetchHttpClient implements HttpClient {
     };
   }
 }
-

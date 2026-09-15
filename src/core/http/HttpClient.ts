@@ -2,8 +2,9 @@ export type HttpHeaders = Record<string, string>;
 
 export type HttpRequest = {
   endpoint: string;
-  method?: 'GET';
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   headers?: HttpHeaders;
+  body?: unknown;
 };
 
 export type HttpResponse<T = unknown> = {
@@ -15,4 +16,3 @@ export type HttpResponse<T = unknown> = {
 export interface HttpClient {
   request<T = unknown>(request: HttpRequest): Promise<HttpResponse<T>>;
 }
-

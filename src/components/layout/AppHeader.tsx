@@ -1,92 +1,59 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme/theme';
+import { useAuthSession } from '../../auth/AuthSessionContext';
 
 type Props = {
-  greeting?: string;
-  initials?: string;
   onProfilePress?: () => void;
 };
 
-export const AppHeader = ({ greeting, initials, onProfilePress }: Props) => (
-  <SafeAreaView style={styles.safeArea}>
-    <View style={styles.container}>
-      <View style={styles.identity}>
-        {initials ? (
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-        ) : (
-          <Text style={styles.logo}>
-            GO <Text style={styles.logoDot}>•</Text> CHAMPS
-          </Text>
-        )}
-        {greeting ? <Text style={styles.greeting}>{greeting}</Text> : null}
-      </View>
+export const AppHeader = ({ onProfilePress }: Props) => {
+  const { user } = useAuthSession();
 
-      <TouchableOpacity
-        accessibilityRole="button"
-        accessibilityLabel="Abrir perfil"
-        onPress={onProfilePress}
-        style={styles.profileButton}
-      >
-        <Ionicons name="person-circle-outline" size={30} color="#ffffff" />
-      </TouchableOpacity>
-    </View>
-  </SafeAreaView>
-);
+  return (
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <View style={[styles.container, user ? styles.containerAuthenticated : styles.containerGuest]}>
+        <Image accessibilityLabel="Logo Go Champs" source={require('../../../assets/images/logo-white-name.png')} style={styles.logo} />
+        {!user ? (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Abrir perfil"
+            onPress={onProfilePress}
+            style={styles.profileButton}
+          >
+            <Ionicons name="person-outline" size={22} color="#ffffff" />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: theme.colors.primary,
   },
   container: {
-    minHeight: 72,
+    minHeight: 68,
     backgroundColor: theme.colors.primary,
     paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  identity: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
+  containerGuest: { justifyContent: 'space-between' },
+  containerAuthenticated: { justifyContent: 'center' },
   logo: {
-    color: '#ffffff',
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
-  logoDot: {
-    color: theme.colors.accent,
-  },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.accent,
-  },
-  avatarText: {
-    color: theme.colors.primary,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  greeting: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
+    height: 52,
+    width: 72,
+    resizeMode: 'contain',
   },
   profileButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: theme.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },

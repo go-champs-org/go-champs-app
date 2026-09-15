@@ -40,8 +40,8 @@ export const TournamentCard = ({ loading = false, tournament, onPress }: Props) 
       <ActivityIndicator size="small" color={theme.colors.textSecondary} style={styles.loading} />
     ) : (
       <View style={styles.followButton}>
-        <Ionicons name="lock-closed-outline" size={14} color={theme.colors.mutedText} />
-        <Text style={styles.followText}>Seguir</Text>
+        <Ionicons name="pin-outline" size={13} color={theme.colors.success} />
+        <Text style={styles.followText}>Fixar</Text>
       </View>
     )}
   </TouchableOpacity>
@@ -49,25 +49,21 @@ export const TournamentCard = ({ loading = false, tournament, onPress }: Props) 
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 88,
+    minHeight: 96,
     backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: theme.colors.shadow,
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    ...theme.shadow.card,
   },
   badge: {
     width: 52,
     height: 52,
-    borderRadius: 12,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.surfaceMuted,
@@ -94,7 +90,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   subtitle: {
-    color: theme.colors.mutedText,
+    color: theme.colors.textSecondary,
     fontSize: 13,
     marginTop: 2,
   },
@@ -102,7 +98,8 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.surfaceStrong,
+    backgroundColor: theme.colors.accentSoft,
     paddingHorizontal: theme.spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -111,7 +108,7 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.sm,
   },
   followText: {
-    color: theme.colors.mutedText,
+    color: theme.colors.success,
     fontSize: 12,
     fontWeight: '700',
   },

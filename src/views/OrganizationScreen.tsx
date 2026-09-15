@@ -1,39 +1,38 @@
-// src/views/TorneiosScreen.tsx
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme/theme';
 import { useOrganizationViewModel } from '../viewmodels/OrganizationViewModel';
+import { AppHeader } from '../components/layout/AppHeader';
+import { SearchBar } from '../components/search/SearchBar';
+import { EmptyState } from '../components/feedback/EmptyState';
 
-const TorneiosScreen = () => {
+const OrganizationScreen = () => {
   const { organizations, loading } = useOrganizationViewModel();
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Filtrar organizações com base no searchQuery
-  const filteredOrganizations = organizations.filter((org) =>
-    org.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filtered = organizations.filter((organization) => organization.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <View style={styles.container}>
-      {/* Barra de Pesquisa */}
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Pesquisar organizações..."
-        value={searchQuery}
-        onChangeText={setSearchQuery} // Atualiza o estado ao digitar
-      />
-
-      {/* Loader enquanto os dados carregam */}
+    <View style={styles.screen}>
+      <AppHeader />
+      <View style={styles.searchWrap}><SearchBar value={searchQuery} onChangeText={setSearchQuery} /></View>
       {loading ? (
-        <ActivityIndicator size="large" color={theme.colors.textSecondary} style={styles.loader} />
+        <View style={styles.loader}><ActivityIndicator size="large" color={theme.colors.accent} /></View>
       ) : (
         <FlatList
-          data={filteredOrganizations} // Mostra apenas os resultados filtrados
+          data={filtered}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          ListHeaderComponent={<Text style={styles.pageTitle}>Organizações</Text>}
+          ListEmptyComponent={<EmptyState icon="people-outline" title="Nenhuma organização encontrada" />}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <Text style={styles.title}>{item.name}</Text>
-              <Text style={styles.subtitle}>{item.slug}</Text>
+              <View style={styles.icon}><Ionicons name="people-outline" size={20} color={theme.colors.success} /></View>
+              <View style={styles.cardContent}>
+                <Text style={styles.title}>{item.name}</Text>
+                <Text style={styles.subtitle}>{item.slug}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
             </View>
           )}
         />
@@ -43,52 +42,16 @@ const TorneiosScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  customHeader: {
-    height: 60,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    color: theme.colors.background,
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  searchBar: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    margin: 16,
-  },
-  loader: {
-    marginTop: 20,
-  },
-  card: {
-    backgroundColor: theme.colors.card,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    marginHorizontal: 16,
-    shadowColor: theme.colors.shadow,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.textPrimary,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: theme.colors.mutedText,
-  },
+  screen: { flex: 1, backgroundColor: theme.colors.background },
+  searchWrap: { paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.sm, backgroundColor: theme.colors.primary },
+  loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  list: { width: '100%', maxWidth: theme.layout.contentMaxWidth, alignSelf: 'center', padding: theme.spacing.md },
+  pageTitle: { marginBottom: theme.spacing.md, color: theme.colors.textPrimary, fontSize: theme.typography.title, fontWeight: '900' },
+  card: { minHeight: 76, marginBottom: theme.spacing.sm, padding: theme.spacing.md, borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.card, flexDirection: 'row', alignItems: 'center', ...theme.shadow.card },
+  icon: { width: 40, height: 40, borderRadius: theme.radius.md, backgroundColor: theme.colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  cardContent: { flex: 1, minWidth: 0, marginHorizontal: theme.spacing.md },
+  title: { color: theme.colors.textPrimary, fontSize: theme.typography.body, fontWeight: '800' },
+  subtitle: { marginTop: 2, color: theme.colors.mutedText, fontSize: theme.typography.bodySmall },
 });
 
-export default TorneiosScreen;
+export default OrganizationScreen;

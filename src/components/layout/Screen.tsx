@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
-import { SafeAreaView, StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, ViewStyle } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme/theme';
 
 type Props = {
@@ -7,9 +8,7 @@ type Props = {
   style?: ViewStyle;
 };
 
-export const Screen = ({ children, style }: Props) => (
-  <SafeAreaView style={[styles.container, style]}>{children}</SafeAreaView>
-);
+export const Screen = ({ children, style }: Props) => <SafeAreaView edges={['left', 'right']} style={[styles.container, style]}>{children}</SafeAreaView>;
 
 const styles = StyleSheet.create({
   container: {
@@ -17,4 +16,3 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
 });
-

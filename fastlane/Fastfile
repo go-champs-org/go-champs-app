@@ -1,0 +1,142 @@
+require 'json'
+require 'base64'
+require 'tmpdir'
+require 'fileutils'
+require 'securerandom'
+require 'open3'
+require 'plist'
+require 'fastlane_core/provisioning_profile'
+
+def required(name)
+  value = ENV[name]
+  UI.user_error!("Missing #{name}") if value.to_s.strip.empty?
+  value
+end
+
+def capture!(*command)
+  output, error, status = Open3.capture3(*command)
+  UI.user_error!("#{command.first} failed: #{error}") unless status.success?
+  output
+end
+
+def profile_data(path)
+  FastlaneCore::ProvisioningProfile.parse(path)
+end
+
+def check_profile!(profile, bundle_id, team)
+  UI.user_error!('Profile does not match bundle identifier/team') unless
+    profile.fetch('TeamIdentifier').include?(team) &&
+    profile.fetch('Entitlements').fetch('application-identifier') == "#{team}.#{bundle_id}"
+  UI.user_error!('An App Store distribution profile is required') if
+    profile['ProvisionedDevices'] || profile['ProvisionsAllDevices'] ||
+    profile.fetch('Entitlements')['get-task-allow']
+  UI.user_error!('Provisioning profile has expired') unless profile.fetch('ExpirationDate').to_time > Time.now
+end
+
+def next_build_number(latest)
+  value = latest.to_s
+  UI.user_error!('Existing build number is not an integer; agree on a migration before uploading') unless value.match?(/\A\d+\z/)
+  number = value.to_i + 1
+  UI.user_error!('Build number exceeds this pipeline integer policy (9999); bump marketing version') if number > 9999
+  number
+end
+
+def verify_ipa!(ipa, bundle_id, version, number, team)
+  Dir.mktmpdir('gochamps-ipa-') do |directory|
+    capture!('unzip', '-q', ipa, '-d', directory)
+    apps = Dir.glob(File.join(directory, 'Payload', '*.app'))
+    UI.user_error!('Expected exactly one application in IPA') unless apps.length == 1
+    info = JSON.parse(capture!('plutil', '-convert', 'json', '-o', '-', File.join(apps.first, 'Info.plist')))
+    UI.user_error!('IPA identity/version mismatch') unless
+      info['CFBundleIdentifier'] == bundle_id && info['CFBundleShortVersionString'] == version &&
+      info['CFBundleVersion'] == number.to_s
+    check_profile!(profile_data(File.join(apps.first, 'embedded.mobileprovision')), bundle_id, team)
+  end
+end
+
+def distribution
+  UI.user_error!('Uploads disabled: initial setup and explicit authorization required') unless ENV['IOS_UPLOAD_ENABLED'] == 'true'
+  root = File.expand_path('..', __dir__)
+  variants = JSON.parse(File.read(File.join(root, 'config/ios-environments.json')))
+  variant = variants.fetch(required('IOS_APP_ENV'))
+  bundle_id = variant.fetch('bundleIdentifier')
+  team = required('APPLE_TEAM_ID')
+  version = JSON.parse(File.read(File.join(root, 'app.json'))).fetch('expo').fetch('version')
+  keychain_name = "gochamps-#{SecureRandom.hex(8)}"
+  keychain_password = SecureRandom.hex(32)
+  puts "::add-mask::#{keychain_password}" if ENV['GITHUB_ACTIONS']
+  installed_profile = nil
+  profile_installed = false
+  keychain_created = false
+
+  Dir.mktmpdir('gochamps-signing-') do |directory|
+    begin
+      api_key = app_store_connect_api_key(
+        key_id: required('ASC_KEY_ID'), issuer_id: required('ASC_ISSUER_ID'),
+        key_content: required('ASC_API_PRIVATE_KEY'), duration: 1200, in_house: false
+      )
+      app = Spaceship::ConnectAPI::App.find(bundle_id)
+      UI.user_error!('Existing ASC app ID does not match bundle identifier') unless app && app.id == required('ASC_APP_ID')
+
+      # The workflow serializes the complete allocation/build/upload/processing cycle per app.
+      latest = latest_testflight_build_number(api_key: api_key, app_identifier: bundle_id,
+        version: version, initial_build_number: 0)
+      number = next_build_number(latest)
+
+      p12 = File.join(directory, 'distribution.p12')
+      profile_path = File.join(directory, 'app.mobileprovision')
+      File.write(p12, Base64.strict_decode64(required('IOS_DISTRIBUTION_P12_BASE64')), mode: 'wb', perm: 0600)
+      File.write(profile_path, Base64.strict_decode64(required('IOS_PROVISIONING_PROFILE_BASE64')), mode: 'wb', perm: 0600)
+      profile = profile_data(profile_path)
+      check_profile!(profile, bundle_id, team)
+      UI.user_error!('Invalid profile UUID') unless profile.fetch('UUID').match?(/\A[0-9A-Fa-f-]+\z/)
+      profile_directory = FastlaneCore::ProvisioningProfile.profiles_path
+      installed_profile = File.join(profile_directory, "#{profile.fetch('UUID')}.mobileprovision")
+      UI.user_error!('Refusing to overwrite an existing provisioning profile') if File.exist?(installed_profile)
+      FileUtils.cp(profile_path, installed_profile)
+      profile_installed = true
+      create_keychain(name: keychain_name, password: keychain_password, default_keychain: false,
+        unlock: true, timeout: 7200, lock_when_sleeps: true)
+      keychain_created = true
+      import_certificate(certificate_path: p12, certificate_password: required('IOS_DISTRIBUTION_P12_PASSWORD'),
+        keychain_name: keychain_name, keychain_password: keychain_password)
+
+      projects = Dir.glob(File.join(root, 'ios/*.xcodeproj'))
+      UI.user_error!('Expected one generated Xcode project') unless projects.length == 1
+      project = projects.first
+      project_name = File.basename(project, '.xcodeproj')
+      workspace = File.join(root, 'ios', "#{project_name}.xcworkspace")
+      increment_build_number(build_number: number, xcodeproj: project)
+      increment_version_number(version_number: version, xcodeproj: project)
+      update_code_signing_settings(path: project, use_automatic_signing: false,
+        team_id: team, code_sign_identity: 'Apple Distribution',
+        profile_name: profile.fetch('Name'), bundle_identifier: bundle_id, build_configurations: ['Release'])
+      ipa = build_app(workspace: workspace, scheme: project_name, configuration: 'Release',
+        clean: true, export_method: 'app-store', output_directory: File.join(root, 'build/ios'),
+        output_name: "#{ENV.fetch('IOS_APP_ENV')}.ipa",
+        export_options: { signingStyle: 'manual', teamID: team,
+          provisioningProfiles: { bundle_id => profile.fetch('Name') } })
+      verify_ipa!(ipa, bundle_id, version, number, team)
+      upload_to_testflight(api_key: api_key, app_identifier: bundle_id, apple_id: app.id,
+        ipa: ipa, skip_submission: true, skip_waiting_for_build_processing: false,
+        wait_processing_timeout_duration: 1800)
+      if ENV['GITHUB_STEP_SUMMARY']
+        File.open(ENV['GITHUB_STEP_SUMMARY'], 'a') do |file|
+          file.puts "Uploaded and processed: #{bundle_id} #{version} (#{number}). Commit: #{ENV['GITHUB_SHA']}."
+          file.puts 'Backend routing is unchanged and is not isolated. App Review submission remains manual.'
+        end
+      end
+    ensure
+      FileUtils.rm_f(installed_profile) if profile_installed
+      delete_keychain(name: keychain_name) if keychain_created
+    end
+  end
+end
+
+default_platform(:ios)
+platform :ios do
+  desc 'Archive and upload the selected iOS variant; never submit for review'
+  lane :distribute do
+    distribution
+  end
+end

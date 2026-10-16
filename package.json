@@ -15,7 +15,8 @@
     "e2e:build": "expo export --platform web --output-dir .e2e-dist",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run test:coverage",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "check:ios-config": "node --test scripts/ios/config.test.cjs && node scripts/ios/validate-config.cjs"
   },
   "jest": {
     "preset": "jest-expo",
@@ -146,5 +147,5 @@
     "node": ">=22.13.0"
   },
   "private": true,
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "npm@10.9.2"
 }

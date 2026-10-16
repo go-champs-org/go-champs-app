@@ -40,3 +40,14 @@ test-results/
 *.tsbuildinfo
 
 app-example
+
+# Generated iOS project (Expo Prebuild); local files are preserved.
+/ios/
+/build/
+/vendor/bundle/
+/.bundle/
+/fastlane/report.xml
+/fastlane/README.md
+/fastlane/test_output/
+*.ipa
+*.dSYM.zip

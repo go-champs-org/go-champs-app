@@ -1,0 +1,12 @@
+{
+  "staging": {
+    "name": "Go Champs Preprod",
+    "bundleIdentifier": "com.gochamps.app.staging",
+    "scheme": "gochamps-staging"
+  },
+  "production": {
+    "name": "Go Champs",
+    "bundleIdentifier": "com.gochamps.app",
+    "scheme": "gochamps"
+  }
+}

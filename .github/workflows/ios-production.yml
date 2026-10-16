@@ -1,0 +1,13 @@
+name: iOS production
+on:
+  push:
+    tags: ['ios-v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  production:
+    uses: ./.github/workflows/ios-distribution.yml
+    with:
+      environment: production

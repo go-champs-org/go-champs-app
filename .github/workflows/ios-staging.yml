@@ -1,0 +1,14 @@
+name: iOS staging
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '**/*.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  staging:
+    uses: ./.github/workflows/ios-distribution.yml
+    with:
+      environment: staging

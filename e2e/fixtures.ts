@@ -31,6 +31,72 @@ export const test = base.extend({
       }] }] } };
       else if (path === '/games') payload = { data: gamesFixture.map((game) => ({ ...game, phase_id: url.searchParams.get('where[phase_id]'), home_team: { ...game.home_team!, logo_url: logo }, away_team: { ...game.away_team!, logo_url: logo } })) };
       else if (path.startsWith('/sports/')) payload = { data: { slug: 'basketball', name: 'Basquete' } };
+      else if (path.startsWith('/games/')) {
+        const gameId = path.split('/')[2];
+        const base = gamesFixture.find((game) => game.id === gameId) || gamesFixture[0];
+        payload = {
+          data: {
+            ...base,
+            id: gameId,
+            city: 'São Paulo',
+            court: '1',
+            number: '1',
+            result_type: 'automatic',
+            assets: [
+              { id: 'asset-1', type: 'fiba-boxscore', url: 'https://example.com/boxscore.pdf' },
+            ],
+            officials: [],
+            web_url: null,
+            phase: {
+              id: 'table',
+              title: 'Classificação',
+              type: 'elimination',
+              tournament: { id: 't-1', name: 'Copa Classificação', slug: 'copa' },
+            },
+            home_team: {
+              ...base.home_team,
+              logo_url: logo,
+              players: [{ id: 'player-a', name: 'Ana Silva', shirt_number: '5' }],
+            },
+            away_team: {
+              ...base.away_team,
+              logo_url: logo,
+              players: [{ id: 'player-b', name: 'Bia Costa', shirt_number: '10' }],
+            },
+          },
+        };
+      }
+      else if (path === '/player-stats-logs') payload = {
+        data: [{
+          id: 'log-1',
+          game_id: url.searchParams.get('where[game_id]') || 'game-1',
+          phase_id: 'table',
+          player_id: 'player-a',
+          team_id: 'team-a',
+          tournament_id: 't-1',
+          stats: {
+            minutes_played: '2070',
+            points: '20',
+            rebounds: '5',
+            assists: '3',
+            blocks: '1',
+            steals: '2',
+            turnovers: '1',
+            efficiency: '25',
+            plus_minus: '4',
+            free_throws_made: '2',
+            free_throws_attempted: '2',
+            free_throw_percentage: '100',
+            field_goals_made: '4',
+            field_goals_attempted: '8',
+            field_goal_percentage: '50',
+            three_point_field_goals_made: '2',
+            three_point_field_goals_attempted: '4',
+            three_point_field_goal_percentage: '50',
+            game_played: '1',
+          },
+        }],
+      };
       else if (path === '/accounts/signin') payload = { data: { email: 'ana@example.com', token: 'token', username: 'ana' } };
       else if (path.startsWith('/users/')) payload = {
         data: {
@@ -39,6 +105,20 @@ export const test = base.extend({
           organizations: [{ id: 'org-1', name: 'Org Ana', slug: 'org-ana', logo_url: null }],
         },
       };
+      else if (path.startsWith('/athlete-profiles/username/') && route.request().method() === 'PATCH') {
+        const body = route.request().postDataJSON?.() as { athlete_profile?: { name?: string; instagram?: string } } | null;
+        payload = {
+          data: {
+            id: 'athlete-1',
+            username: 'ana',
+            name: body?.athlete_profile?.name || 'Ana Silva',
+            photo_url: null,
+            facebook: null,
+            instagram: body?.athlete_profile?.instagram || null,
+            twitter: null,
+          },
+        };
+      }
       else if (path.startsWith('/athlete-profiles/username/')) payload = {
         data: {
           id: 'athlete-1',

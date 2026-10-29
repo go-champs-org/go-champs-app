@@ -12,38 +12,44 @@ export const useMyGamesViewModel = (isAuthenticated: boolean) => {
   const [games, setGames] = useState<ScheduleGame[]>([]);
   const [needsAthleteProfile, setNeedsAthleteProfile] = useState(false);
 
-  const refresh = useCallback(async () => {
-    if (!isAuthenticated) {
-      setGames([]);
-      setNeedsAthleteProfile(false);
-      setError(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setNeedsAthleteProfile(false);
-
-    try {
-      const nextGames = await container.getAthleteSchedules.execute();
-      setGames(nextGames);
-    } catch (requestError) {
-      const message = messageFromError(requestError, 'Não foi possível carregar sua agenda.');
-      if (requestError instanceof AppError && requestError.status === 401) {
-        setNeedsAthleteProfile(true);
-        setGames([]);
-        setError(null);
-      } else {
-        setError(message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
+  const [refreshVersion, setRefreshVersion] = useState(0);
+  const refresh = useCallback(() => setRefreshVersion((version) => version + 1), []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let mounted = true;
+    const load = async () => {
+      if (!isAuthenticated) {
+        setGames([]);
+        setNeedsAthleteProfile(false);
+        setError(null);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+      setNeedsAthleteProfile(false);
+
+      try {
+        const nextGames = await container.getAthleteSchedules.execute();
+        if (!mounted) return;
+        setGames(nextGames);
+      } catch (requestError) {
+        if (!mounted) return;
+        const message = messageFromError(requestError, 'Não foi possível carregar sua agenda.');
+        if (requestError instanceof AppError && requestError.status === 401) {
+          setNeedsAthleteProfile(true);
+          setGames([]);
+          setError(null);
+        } else {
+          setError(message);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    void load();
+    return () => { mounted = false; };
+  }, [isAuthenticated, refreshVersion]);
 
   return {
     loading,

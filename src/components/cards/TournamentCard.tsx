@@ -6,8 +6,10 @@ import { theme } from '../../theme/theme';
 
 type Props = {
   loading?: boolean;
+  pinned?: boolean;
   tournament: Tournament;
   onPress: () => void;
+  onPinPress?: () => void;
 };
 
 const initialsFromName = (name: string) =>
@@ -19,7 +21,13 @@ const initialsFromName = (name: string) =>
     .join('')
     .toUpperCase();
 
-export const TournamentCard = ({ loading = false, tournament, onPress }: Props) => (
+export const TournamentCard = ({
+  loading = false,
+  pinned = false,
+  tournament,
+  onPress,
+  onPinPress,
+}: Props) => (
   <TouchableOpacity accessibilityRole="button" disabled={loading} onPress={onPress} style={styles.card}>
     <View style={styles.badge}>
       {tournament.organization.logo_url ? (
@@ -39,10 +47,25 @@ export const TournamentCard = ({ loading = false, tournament, onPress }: Props) 
     {loading ? (
       <ActivityIndicator size="small" color={theme.colors.textSecondary} style={styles.loading} />
     ) : (
-      <View style={styles.followButton}>
-        <Ionicons name="pin-outline" size={13} color={theme.colors.success} />
-        <Text style={styles.followText}>Fixar</Text>
-      </View>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={pinned ? 'Desafixar campeonato' : 'Fixar campeonato'}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        onPress={(event) => {
+          event.stopPropagation?.();
+          onPinPress?.();
+        }}
+        style={[styles.followButton, pinned && styles.followButtonPinned]}
+      >
+        <Ionicons
+          name={pinned ? 'pin' : 'pin-outline'}
+          size={13}
+          color={pinned ? theme.colors.primary : theme.colors.success}
+        />
+        <Text style={[styles.followText, pinned && styles.followTextPinned]}>
+          {pinned ? 'Fixado' : 'Fixar'}
+        </Text>
+      </TouchableOpacity>
     )}
   </TouchableOpacity>
 );
@@ -107,10 +130,17 @@ const styles = StyleSheet.create({
     gap: 4,
     marginLeft: theme.spacing.sm,
   },
+  followButtonPinned: {
+    borderColor: theme.colors.accent,
+    backgroundColor: theme.colors.accent,
+  },
   followText: {
     color: theme.colors.success,
     fontSize: 12,
     fontWeight: '700',
+  },
+  followTextPinned: {
+    color: theme.colors.primary,
   },
   loading: {
     marginLeft: theme.spacing.md,

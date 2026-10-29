@@ -1,0 +1,56 @@
+name: iOS Production Build
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lint
+      - name: Check Expo credentials
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo 'Configure EXPO_TOKEN for the production environment.'
+            exit 1
+          fi
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: 27.1.0
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Verify Expo project access
+        run: eas project:info
+      - name: Build signed iOS app and submit to TestFlight
+        run: eas build --platform ios --profile production --auto-submit --non-interactive --wait

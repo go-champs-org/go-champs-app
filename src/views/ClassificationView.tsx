@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useClassificationViewModel } from '../viewmodels/ClassificationViewModel';
 import { theme } from '../theme/theme';
@@ -14,6 +15,7 @@ type Props = { route: RouteProp<RootStackParamList, 'ClassificationView'> };
 const tabs = ['Classificação', 'Partidas'] as const;
 
 const ClassificationView: React.FC<Props> = ({ route }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { phaseId, tournamentId, apiBaseUrl } = route.params;
   const viewModel = useClassificationViewModel(phaseId, tournamentId, apiBaseUrl);
 
@@ -44,6 +46,7 @@ const ClassificationView: React.FC<Props> = ({ route }) => {
             selectedDate={viewModel.selectedDate}
             onSelectDate={viewModel.setSelectedDate}
             games={viewModel.gamesForSelectedDate}
+            onPressGame={(gameId) => navigation.navigate('GameDetailScreen', { gameId, apiBaseUrl })}
           />
         )}
       </ContentShell>

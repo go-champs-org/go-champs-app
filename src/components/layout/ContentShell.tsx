@@ -8,7 +8,7 @@ type Props = {
 };
 
 export const ContentShell = ({ children, style }: Props) => (
-  <View style={[styles.shell, style]}>{children}</View>
+  <View style={[styles.shell, style] as never}>{children}</View>
 );
 
 const styles = StyleSheet.create({

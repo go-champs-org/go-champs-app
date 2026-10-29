@@ -22,7 +22,13 @@ const formatDate = (value: string | null) => {
   });
 };
 
-const GameCard = ({ game }: { game: ScheduleGame }) => {
+const GameCard = ({
+  game,
+  onPress,
+}: {
+  game: ScheduleGame;
+  onPress: () => void;
+}) => {
   const home = game.home_team?.name || game.home_placeholder || 'A definir';
   const away = game.away_team?.name || game.away_placeholder || 'A definir';
   const score =
@@ -31,7 +37,12 @@ const GameCard = ({ game }: { game: ScheduleGame }) => {
       : 'vs';
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`Abrir jogo ${home} versus ${away}`}
+      onPress={onPress}
+      style={styles.card}
+    >
       <Text style={styles.tournament}>{game.tournament?.name || 'Torneio'}</Text>
       <Text style={styles.match}>
         {home} {score} {away}
@@ -42,7 +53,7 @@ const GameCard = ({ game }: { game: ScheduleGame }) => {
           {[game.location, game.city, game.court].filter(Boolean).join(' · ')}
         </Text>
       ) : null}
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -102,7 +113,7 @@ const MyGamesScreen = () => {
           <EmptyState
             icon="calendar-outline"
             title="Nenhum jogo na sua agenda ainda"
-            description="Quando houver partidas vinculadas ao seu perfil, elas aparecem aqui."
+            description="Meus jogos não é um favorito manual: a agenda vem da API quando o seu perfil de atleta está vinculado a partidas nos campeonatos. Peça à organização para associar seu username ao elenco."
           />
         ) : null}
 
@@ -111,7 +122,12 @@ const MyGamesScreen = () => {
             data={games}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
-            renderItem={({ item }) => <GameCard game={item} />}
+            renderItem={({ item }) => (
+              <GameCard
+                game={item}
+                onPress={() => navigation.navigate('GameDetailScreen', { gameId: item.id })}
+              />
+            )}
           />
         ) : null}
       </ContentShell>

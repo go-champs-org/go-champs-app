@@ -11,7 +11,7 @@ export const usePlayoffViewModel = (tournamentId: string, apiBaseUrl?: string, p
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>('Playoffs');
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [requestedDate, setSelectedDate] = useState<string | null>(null);
   const [teamMap, setTeamMap] = useState<Record<string, { name: string; logo_url: string | null }>>({});
 
   useEffect(() => {
@@ -53,12 +53,9 @@ export const usePlayoffViewModel = (tournamentId: string, apiBaseUrl?: string, p
     return arr;
   }, [games]);
 
-  // Initialize selected date
-  useEffect(() => {
-    if (!selectedDate && dateKeys.length > 0) {
-      setSelectedDate(dateKeys[0]);
-    }
-  }, [dateKeys, selectedDate]);
+  const selectedDate = requestedDate && dateKeys.includes(requestedDate)
+    ? requestedDate
+    : dateKeys[0] ?? null;
 
   const gamesForSelectedDate = useMemo(() => {
     if (!selectedDate) return [] as Game[];

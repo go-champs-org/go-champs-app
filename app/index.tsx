@@ -1,5 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { NavigationIndependentTree } from '@react-navigation/core';
+import { NavigationContainer } from '@react-navigation/native';
+import type { LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../src/theme/theme';
@@ -11,10 +14,28 @@ import GroupPhaseView from '../src/views/GroupPhaseView';
 import MyGamesScreen from '../src/views/MyGamesScreen';
 import ProfileScreen from '../src/views/ProfileScreen';
 import AuthScreen from '../src/views/AuthScreen';
+import GameDetailScreen from '../src/views/GameDetailScreen';
+import WebAuthFlowScreen from '../src/webauth/WebAuthFlowScreen';
 import { MainTabParamList, RootStackParamList } from '../src/navigation/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: [],
+  config: {
+    screens: {
+      MainTabs: { path: '', screens: { HomeTab: '', MyGamesTab: 'my-games', ProfileTab: 'profile' } },
+      TournamentHistoryScreen: 'tournament/:id',
+      PlayoffsView: 'playoffs/:tournamentId',
+      ClassificationView: 'classification/:phaseId',
+      GroupPhaseView: 'groups/:phaseId',
+      GameDetailScreen: 'game/:gameId',
+      AuthScreen: 'auth',
+      WebAuthFlowScreen: 'account/:purpose',
+    },
+  },
+};
 
 function MainTabs() {
   return (
@@ -69,21 +90,27 @@ function MainTabs() {
 
 export default function App() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: theme.colors.primary },
-        headerTintColor: '#fff',
-        headerTitleAlign: 'center',
-        headerTitleStyle: { fontWeight: '800', fontSize: 16 },
-        headerBackTitle: 'Voltar',
-      }}
-    >
-      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen name="TournamentHistoryScreen" component={TournamentHistoryScreen} options={{ title: 'Fases' }} />
-      <Stack.Screen name="PlayoffsView" component={PlayoffsView} options={{ title: 'Playoffs' }} />
-      <Stack.Screen name="ClassificationView" component={ClassificationView} options={{ title: 'Classificação' }} />
-      <Stack.Screen name="GroupPhaseView" component={GroupPhaseView} options={{ title: 'Fase' }} />
-      <Stack.Screen name="AuthScreen" component={AuthScreen} options={{ headerShown: false }} />
-    </Stack.Navigator>
+    <NavigationIndependentTree>
+      <NavigationContainer linking={linking}>
+        <Stack.Navigator
+          screenOptions={{
+            headerStyle: { backgroundColor: theme.colors.primary },
+            headerTintColor: '#fff',
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontWeight: '800', fontSize: 16 },
+            headerBackTitle: 'Voltar',
+          }}
+        >
+          <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+          <Stack.Screen name="TournamentHistoryScreen" component={TournamentHistoryScreen} options={{ title: 'Fases' }} />
+          <Stack.Screen name="PlayoffsView" component={PlayoffsView} options={{ title: 'Playoffs' }} />
+          <Stack.Screen name="ClassificationView" component={ClassificationView} options={{ title: 'Classificação' }} />
+          <Stack.Screen name="GroupPhaseView" component={GroupPhaseView} options={{ title: 'Fase' }} />
+          <Stack.Screen name="GameDetailScreen" component={GameDetailScreen} options={{ title: 'Jogo' }} />
+          <Stack.Screen name="AuthScreen" component={AuthScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="WebAuthFlowScreen" component={WebAuthFlowScreen} options={{ headerShown: false }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </NavigationIndependentTree>
   );
 }

@@ -8,8 +8,9 @@
     "scheme": "myapp",
     "userInterfaceStyle": "light",
     "backgroundColor": "#FAFAEE",
-    "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.gochamps.app",
+      "appleTeamId": "H859MRQ6UP",
       "supportsTablet": true
     },
     "android": {

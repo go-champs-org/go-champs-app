@@ -9,14 +9,17 @@
     "userInterfaceStyle": "light",
     "backgroundColor": "#FAFAEE",
     "ios": {
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.gochamps.app",
       "appleTeamId": "H859MRQ6UP",
       "supportsTablet": true
     },
     "android": {
+      "icon": "./assets/images/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "monochromeImage": "./assets/images/adaptive-icon-monochrome.png",
+        "backgroundColor": "#1D1D1B"
       }
     },
     "web": {

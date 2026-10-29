@@ -4,9 +4,16 @@ Atualizado em: 2026-10-29
 
 ## Preparacao para App Store
 
-PR EAS: https://github.com/go-champs-org/go-champs-app/pull/4, branch `ci/eas-ios-main-release`, commits separados e enviados. Secret GitHub `EXPO_TOKEN` validado pelo job `Expo access` na execucao 40930365833. Main protegida com PR/checks obrigatorios `Quality` e `Expo access`, strict, sem force-push/exclusao (admins com bypass). Workflow iOS escuta CI aprovado de push main e usa SHA testado; build EAS remoto + auto-submit ao TestFlight. `.npmrc` resolve peers do RN RC exigido pelo SDK atual. Falta o usuario autenticar a CLI no Expo correto e configurar distribuicao Apple + App Store Connect API Key; comandos em `docs/IOS_RELEASE.md`. Nao mergear antes dessas credenciais. PR #3 Fastlane e alternativa separada; nao foi modificado.
-
-Configuracao local adicionada em `eas.json`, `.github/workflows/ci.yml` e `.github/workflows/ios-production.yml`. Detalhes e pendencias em `docs/IOS_RELEASE.md`. Nenhum merge/push/build de loja executado. EAS local autenticado como `comerciallucar`, sem acesso ao projeto `wagnerassis/go-champs-app`. Usuario confirmou Bundle ID `com.gochamps.app`, equipe Apple `H859MRQ6UP` ativa e App Store Connect ID `6822873868`; configurados em `app.json`/EAS Submit. Falta acesso autorizado Expo/Apple. Validacao atual: TypeScript, lint e 165 testes unitarios passaram; cobertura 98.82% linhas, 98.51% statements, 100% funcoes, 90.79% branches. E2E: 87/87 testes e 28/28 jornadas nas tres plataformas. Corrigidos sincronizacao de datas, inicializacao do formulario de perfil, lifecycle de requisicoes, imports e seletores E2E. Linking tipado do navegador interno restaura historico web. Testes de lifecycle cobrem respostas obsoletas apos refresh.
+- PRs #4 (automacao EAS) e #5 (fingerprint) mergeados. Main em `2bf0202` antes do PR de icones.
+- Build iOS 1.0.0 (2) `271444d1-70d5-4611-9482-decc0f9639b9` concluido e enviado ao App Store Connect com sucesso pelo workflow 40950067924.
+- Projeto EAS `wagnerassis/go-champs-app`, ID `07a87e62-c99e-4ceb-b2c4-0ff27a5544d5`. Sessao local e secret GitHub EXPO_TOKEN validados.
+- Bundle `com.gochamps.app`, equipe `H859MRQ6UP`, App Store Connect `6822873868`. Certificado/provisioning ativos ate outubro/2027; chave APP_MANAGER associada ao EAS Submit.
+- Main protegida por PR, Quality e Expo access. Merge -> CI aprovado -> build EAS do SHA testado -> auto-submit ao TestFlight. Publicacao publica ainda depende de revisao Apple.
+- Override global de brace-expansion removido pelo PR #5; `check:fingerprint` no CI evita a falha da primeira tentativa. `.npmrc` resolve os peers do RN RC exigido pelo SDK atual.
+- Icones novos gerados a partir de `assets/branding/source-logo.png`: iOS/legacy 1024 opaco, Android adaptativo + monocromatico transparentes e Google Play 512. Regenerar com `npm run icons:generate`. Area segura e canais verificados; lint passou.
+- Trabalho atual: branch `feat/branded-app-icons`, publicar PR, aguardar CI, squash merge e acompanhar nova build iOS.
+- Ultima matriz completa aprovada: 165 unitarios, 87 E2E, 28/28 jornadas nas tres plataformas; cobertura configurada acima de 90%.
+- Nao fazer pushes documentais extras na main durante release: cada push aprovado inicia outro build. Detalhes em `docs/IOS_RELEASE.md`.
 
 ## Objetivo em andamento
 

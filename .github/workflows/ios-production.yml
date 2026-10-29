@@ -38,6 +38,7 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run lint
+      - run: npm run check:fingerprint
       - name: Check Expo credentials
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

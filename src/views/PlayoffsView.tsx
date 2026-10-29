@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { usePlayoffViewModel } from '../viewmodels/PlayoffViewModel';
 import { theme } from '../theme/theme';
@@ -14,6 +15,7 @@ type Props = { route: RouteProp<RootStackParamList, 'PlayoffsView'> };
 const tabs = ['Playoffs', 'Partidas'] as const;
 
 const PlayoffsView: React.FC<Props> = ({ route }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { tournamentId, apiBaseUrl, phaseId } = route.params;
   const viewModel = usePlayoffViewModel(tournamentId, apiBaseUrl, phaseId);
 
@@ -30,7 +32,7 @@ const PlayoffsView: React.FC<Props> = ({ route }) => {
             data={viewModel.draws}
             keyExtractor={(draw) => draw.id}
             contentContainerStyle={styles.list}
-            ListHeaderComponent={viewModel.draws.length ? <Text style={styles.pageTitle}>Chaveamento</Text> : null}
+            ListHeaderComponent={viewModel.draws.length ? <Text style={styles.pageTitle}>Chaveamento</Text> : undefined}
             ListEmptyComponent={<EmptyState icon="git-branch-outline" title="Playoffs indisponíveis" description="O chaveamento aparecerá quando a fase for publicada." />}
             renderItem={({ item }) => (
               <View style={styles.round}>
@@ -73,6 +75,7 @@ const PlayoffsView: React.FC<Props> = ({ route }) => {
             selectedDate={viewModel.selectedDate}
             onSelectDate={viewModel.setSelectedDate}
             games={viewModel.gamesForSelectedDate}
+            onPressGame={(gameId) => navigation.navigate('GameDetailScreen', { gameId, apiBaseUrl })}
           />
         )}
       </ContentShell>

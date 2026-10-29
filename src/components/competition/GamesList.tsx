@@ -11,6 +11,7 @@ type Props = {
   selectedDate: string | null;
   onSelectDate: (value: string) => void;
   games: Game[];
+  onPressGame?: (gameId: string) => void;
 };
 
 const formatTime = (iso: string) => {
@@ -23,7 +24,7 @@ const formatDate = (value: string) => {
   return `${day}/${month}`;
 };
 
-export const GamesList = ({ dateKeys, selectedDate, onSelectDate, games }: Props) => {
+export const GamesList = ({ dateKeys, selectedDate, onSelectDate, games, onPressGame }: Props) => {
   const index = selectedDate ? dateKeys.indexOf(selectedDate) : -1;
   const previous = index > 0 ? dateKeys[index - 1] : null;
   const next = index >= 0 && index < dateKeys.length - 1 ? dateKeys[index + 1] : null;
@@ -49,29 +50,46 @@ export const GamesList = ({ dateKeys, selectedDate, onSelectDate, games }: Props
         data={games}
         keyExtractor={(game) => game.id}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.metaRow}>
-              <Text style={styles.time}>{formatTime(item.datetime)}</Text>
-              <Text numberOfLines={1} style={styles.location}>{item.location || 'Local a definir'}</Text>
-              {item.is_finished ? <Text style={styles.status}>FINAL</Text> : null}
-            </View>
-            <View style={styles.teamRow}>
-              <View style={styles.teamIdentity}>
-                <TeamBadge logoUrl={item.home_team?.logo_url} name={item.home_team?.name} />
-                <Text numberOfLines={2} style={styles.teamName}>{item.home_team?.name || item.home_placeholder}</Text>
+        renderItem={({ item }) => {
+          const content = (
+            <>
+              <View style={styles.metaRow}>
+                <Text style={styles.time}>{formatTime(item.datetime)}</Text>
+                <Text numberOfLines={1} style={styles.location}>{item.location || 'Local a definir'}</Text>
+                {item.is_finished ? <Text style={styles.status}>FINAL</Text> : null}
               </View>
-              <Text style={styles.score}>{item.home_score ?? '-'}</Text>
-            </View>
-            <View style={styles.teamRow}>
-              <View style={styles.teamIdentity}>
-                <TeamBadge logoUrl={item.away_team?.logo_url} name={item.away_team?.name} />
-                <Text numberOfLines={2} style={styles.teamName}>{item.away_team?.name || item.away_placeholder}</Text>
+              <View style={styles.teamRow}>
+                <View style={styles.teamIdentity}>
+                  <TeamBadge logoUrl={item.home_team?.logo_url} name={item.home_team?.name} />
+                  <Text numberOfLines={2} style={styles.teamName}>{item.home_team?.name || item.home_placeholder}</Text>
+                </View>
+                <Text style={styles.score}>{item.home_score ?? '-'}</Text>
               </View>
-              <Text style={styles.score}>{item.away_score ?? '-'}</Text>
-            </View>
-          </View>
-        )}
+              <View style={styles.teamRow}>
+                <View style={styles.teamIdentity}>
+                  <TeamBadge logoUrl={item.away_team?.logo_url} name={item.away_team?.name} />
+                  <Text numberOfLines={2} style={styles.teamName}>{item.away_team?.name || item.away_placeholder}</Text>
+                </View>
+                <Text style={styles.score}>{item.away_score ?? '-'}</Text>
+              </View>
+            </>
+          );
+
+          if (onPressGame) {
+            return (
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Abrir jogo ${item.home_team?.name || 'casa'} versus ${item.away_team?.name || 'visitante'}`}
+                onPress={() => onPressGame(item.id)}
+                style={styles.card}
+              >
+                {content}
+              </TouchableOpacity>
+            );
+          }
+
+          return <View style={styles.card}>{content}</View>;
+        }}
         ListEmptyComponent={<EmptyState icon="calendar-outline" title="Sem partidas para esta data" description="Navegue pelas datas para consultar os próximos jogos." />}
       />
     </View>

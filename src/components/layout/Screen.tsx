@@ -8,7 +8,11 @@ type Props = {
   style?: ViewStyle;
 };
 
-export const Screen = ({ children, style }: Props) => <SafeAreaView edges={['left', 'right']} style={[styles.container, style]}>{children}</SafeAreaView>;
+export const Screen = ({ children, style }: Props) => (
+  <SafeAreaView edges={['left', 'right']} style={[styles.container, style] as never}>
+    {children}
+  </SafeAreaView>
+);
 
 const styles = StyleSheet.create({
   container: {

@@ -2,6 +2,7 @@ import { CreateAthleteProfileUseCase } from '../CreateAthleteProfileUseCase';
 import { GetAccountProfileUseCase } from '../GetAccountProfileUseCase';
 import { GetAthleteProfileByUsernameUseCase } from '../GetAthleteProfileByUsernameUseCase';
 import { GetAthleteSchedulesUseCase } from '../GetAthleteSchedulesUseCase';
+import { GetGameOverviewUseCase } from '../GetGameOverviewUseCase';
 import { GetOrganizationsUseCase } from '../GetOrganizationsUseCase';
 import { GetRecentTournamentsUseCase } from '../GetRecentTournamentsUseCase';
 import { GetTournamentHistoryUseCase } from '../GetTournamentHistoryUseCase';
@@ -37,6 +38,43 @@ describe('simple use cases', () => {
     } as unknown as OrganizationRepository;
 
     await expect(new GetOrganizationsUseCase(repository).execute()).resolves.toEqual([tournamentFixture.organization]);
+  });
+
+  it('loads game overview with box score', async () => {
+    const game = {
+      id: 'game-1',
+      phase_id: 'p1',
+      datetime: '2026-01-01T10:00:00.000Z',
+      location: 'Court',
+      city: null,
+      court: null,
+      number: null,
+      result_type: null,
+      home_score: 1,
+      away_score: 2,
+      home_placeholder: null,
+      away_placeholder: null,
+      is_finished: true,
+      live_state: 'ended',
+      live_started_at: null,
+      live_ended_at: null,
+      youtube_code: null,
+      info: null,
+      assets: [],
+      officials: [],
+      web_url: null,
+      home_team: { id: 'a', name: 'A', logo_url: null, tri_code: null, players: [] },
+      away_team: { id: 'b', name: 'B', logo_url: null, tri_code: null, players: [] },
+    };
+    const repository = {
+      getGameById: jest.fn().mockResolvedValue(game),
+      getPlayerStatsLogsByGameId: jest.fn().mockResolvedValue([]),
+    } as unknown as TournamentRepository;
+
+    const result = await new GetGameOverviewUseCase(repository).execute('game-1', 'https://api.test/v1');
+    expect(result.game).toEqual(game);
+    expect(result.boxScore).toHaveLength(2);
+    expect(repository.getGameById).toHaveBeenCalledWith('game-1', 'https://api.test/v1');
   });
 
   it('delegates account and athlete profile use cases', async () => {

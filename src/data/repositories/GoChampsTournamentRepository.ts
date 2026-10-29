@@ -1,6 +1,7 @@
 import { API_CONFIG } from '../../core/config/apiConfig';
 import { ClassificationData, ClassificationResponse } from '../../models/ClassificationModel';
 import { Game, GameResponse } from '../../models/GameModel';
+import { GameDetail, GameDetailResponse, PlayerStatsLog, PlayerStatsLogResponse } from '../../models/GameDetail';
 import { GroupPhaseData, GroupPhaseResponse } from '../../models/GroupPhaseModel';
 import { PlayoffResponse } from '../../models/PlayoffModel';
 import { SportConfig, SportResponse } from '../../models/Sport';
@@ -71,6 +72,29 @@ export class GoChampsTournamentRepository implements TournamentRepository {
     } catch {
       return this.fallbackDataSource.getGames();
     }
+  }
+
+  async getGameById(gameId: string, apiBaseUrl?: string): Promise<GameDetail> {
+    const response = await this.apiClient.get<GameDetailResponse>(`/games/${gameId}`, apiBaseUrl);
+    return {
+      ...response.data,
+      assets: response.data.assets ?? [],
+      officials: response.data.officials ?? [],
+      home_team: response.data.home_team
+        ? { ...response.data.home_team, players: response.data.home_team.players ?? [] }
+        : null,
+      away_team: response.data.away_team
+        ? { ...response.data.away_team, players: response.data.away_team.players ?? [] }
+        : null,
+    };
+  }
+
+  async getPlayerStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]> {
+    const response = await this.apiClient.get<PlayerStatsLogResponse>(
+      `/player-stats-logs?where[game_id]=${gameId}`,
+      apiBaseUrl
+    );
+    return response.data ?? [];
   }
 
   async getSportConfig(sportSlug: string, apiBaseUrl?: string): Promise<SportConfig> {

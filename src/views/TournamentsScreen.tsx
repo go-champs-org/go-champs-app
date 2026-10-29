@@ -9,10 +9,12 @@ import { TournamentCard } from '../components/cards/TournamentCard';
 import { PhasePickerModal } from '../components/tournaments/PhasePickerModal';
 import { useTournamentEntryViewModel } from '../viewmodels/TournamentEntryViewModel';
 import { MonthlyHighlights } from '../components/highlights/MonthlyHighlights';
+import { useAuthSession } from '../auth/AuthSessionContext';
 
 const TournamentsScreen = () => {
-  const { tournaments, loading } = useTournamentsViewModel();
+  const { tournaments, pinnedIds, togglePin, loading } = useTournamentsViewModel();
   const navigation = useNavigation<any>();
+  const { user } = useAuthSession();
   const tournamentEntry = useTournamentEntryViewModel(navigation);
   const [searchQuery, setSearchQuery] = useState('');
   const openAuth = (initialMode: 'signIn' | 'signUp' = 'signIn') => navigation.navigate('AuthScreen', { initialMode });
@@ -46,13 +48,34 @@ const TournamentsScreen = () => {
                 style={styles.hero}
               >
                 <View style={styles.heroOverlay}>
-                  <Text style={styles.kicker}>VEM SER</Text>
+                  <Text style={styles.kicker}>{user ? 'BEM-VINDO' : 'VEM SER'}</Text>
                   <Text style={styles.welcomeTitle}>GO CHAMPS</Text>
-                  <Text numberOfLines={2} style={styles.heroDescription}>Acompanhe campeonatos e viva cada rodada.</Text>
-                  <TouchableOpacity accessibilityRole="button" accessibilityLabel="Criar conta" style={styles.primaryButton} onPress={() => openAuth('signUp')}>
-                    <Text style={styles.primaryButtonText}>Criar conta</Text>
-                    <Text style={styles.primaryButtonArrow}>→</Text>
-                  </TouchableOpacity>
+                  <Text numberOfLines={2} style={styles.heroDescription}>
+                    {user
+                      ? `Olá, ${user.username}. Acompanhe campeonatos e viva cada rodada.`
+                      : 'Acompanhe campeonatos e viva cada rodada.'}
+                  </Text>
+                  {user ? (
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel="Ir para meus jogos"
+                      style={styles.primaryButton}
+                      onPress={() => navigation.navigate('MyGamesTab')}
+                    >
+                      <Text style={styles.primaryButtonText}>Meus jogos</Text>
+                      <Text style={styles.primaryButtonArrow}>→</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel="Criar conta"
+                      style={styles.primaryButton}
+                      onPress={() => openAuth('signUp')}
+                    >
+                      <Text style={styles.primaryButtonText}>Criar conta</Text>
+                      <Text style={styles.primaryButtonArrow}>→</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </ImageBackground>
               <View style={styles.sectionHeader}>
@@ -74,8 +97,12 @@ const TournamentsScreen = () => {
           renderItem={({ item }) => (
             <TournamentCard
               loading={tournamentEntry.loadingTournamentId === item.id}
+              pinned={pinnedIds.has(item.id)}
               tournament={item}
               onPress={() => tournamentEntry.openTournament(item)}
+              onPinPress={() => {
+                void togglePin(item.id);
+              }}
             />
           )}
         />

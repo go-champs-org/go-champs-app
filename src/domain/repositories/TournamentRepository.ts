@@ -1,5 +1,6 @@
 import { ClassificationData } from '../../models/ClassificationModel';
 import { Game } from '../../models/GameModel';
+import { GameDetail, PlayerStatsLog } from '../../models/GameDetail';
 import { GroupPhaseData } from '../../models/GroupPhaseModel';
 import { PlayoffResponse } from '../../models/PlayoffModel';
 import { SportConfig } from '../../models/Sport';
@@ -13,6 +14,8 @@ export interface TournamentRepository {
   getTournamentDetails(tournamentId: string, apiBaseUrl?: string): Promise<TournamentDetails>;
   getPlayoffData(phaseId: string, apiBaseUrl?: string): Promise<PlayoffResponse>;
   getGamesByPhaseId(phaseId: string, apiBaseUrl?: string): Promise<Game[]>;
+  getGameById(gameId: string, apiBaseUrl?: string): Promise<GameDetail>;
+  getPlayerStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]>;
   getSportConfig(sportSlug: string, apiBaseUrl?: string): Promise<SportConfig>;
   getClassificationData(phaseId: string, apiBaseUrl?: string): Promise<ClassificationData>;
   getGroupPhaseData(phaseId: string, apiBaseUrl?: string): Promise<GroupPhaseData>;

@@ -15,36 +15,42 @@ export const useProfileViewModel = (username: string | undefined) => {
   const [athlete, setAthlete] = useState<AthleteProfile | null>(null);
   const [athleteMissing, setAthleteMissing] = useState(false);
 
-  const refresh = useCallback(async () => {
-    if (!username) {
-      setAccount(null);
-      setAthlete(null);
-      setAthleteMissing(false);
-      setError(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const [accountProfile, athleteProfile] = await Promise.all([
-        container.getAccountProfile.execute(username),
-        container.getAthleteProfileByUsername.execute(username),
-      ]);
-      setAccount(accountProfile);
-      setAthlete(athleteProfile);
-      setAthleteMissing(athleteProfile === null);
-    } catch (requestError) {
-      setError(messageFromError(requestError, 'Não foi possível carregar seu perfil.'));
-    } finally {
-      setLoading(false);
-    }
-  }, [username]);
+  const [refreshVersion, setRefreshVersion] = useState(0);
+  const refresh = useCallback(() => setRefreshVersion((version) => version + 1), []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let mounted = true;
+    const load = async () => {
+      if (!username) {
+        setAccount(null);
+        setAthlete(null);
+        setAthleteMissing(false);
+        setError(null);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [accountProfile, athleteProfile] = await Promise.all([
+          container.getAccountProfile.execute(username),
+          container.getAthleteProfileByUsername.execute(username),
+        ]);
+        if (!mounted) return;
+        setAccount(accountProfile);
+        setAthlete(athleteProfile);
+        setAthleteMissing(athleteProfile === null);
+      } catch (requestError) {
+        if (!mounted) return;
+        setError(messageFromError(requestError, 'Não foi possível carregar seu perfil.'));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    void load();
+    return () => { mounted = false; };
+  }, [username, refreshVersion]);
 
   const createAthlete = async (input: AthleteProfileInput) => {
     if (!input.name.trim()) {

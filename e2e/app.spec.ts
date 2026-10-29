@@ -182,7 +182,7 @@ const signInAsAna = async (page: Page) => {
 test('[authProfile] mostra conta autenticada e permite sair', async ({ page }) => {
   await signInAsAna(page);
   await page.getByText('Perfil', { exact: true }).click();
-  await expect(page.getByText('Olá, ana')).toBeVisible();
+  await expect(page.getByText('Olá, ana', { exact: true })).toBeVisible();
   await expect(page.getByText('ana@example.com')).toBeVisible();
   await expect(page.getByText('Ana Silva')).toBeVisible();
   await page.getByRole('button', { name: 'Sair da conta' }).click();
@@ -191,7 +191,7 @@ test('[authProfile] mostra conta autenticada e permite sair', async ({ page }) =
 
 test('[authGames] mostra agenda do atleta autenticado', async ({ page }) => {
   await signInAsAna(page);
-  await page.getByText('Meus jogos', { exact: true }).click();
+  await page.getByRole('tab', { name: /Meus jogos/ }).click();
   await expect(page.getByText('Alpha vs Beta')).toBeVisible();
   await expect(page.getByText('Ginásio Central · São Paulo · 1')).toBeVisible();
 });
@@ -205,6 +205,36 @@ test('[authNavigation] navega entre entrar, cadastro e recuperação', async ({ 
   await expect(page.getByText('Recuperar conta', { exact: true }).first()).toBeVisible();
   await page.getByText('Voltar para entrar').click();
   await expect(page.getByText('Entrar na minha conta')).toBeVisible();
+});
+
+test('[webAuthSignUp] abre fluxo WebAuth de cadastro', async ({ page }) => {
+  await openHome(page);
+  await page.getByLabel('Criar conta').click();
+  await expect(page.getByText('Criar minha conta')).toBeVisible();
+  await page.getByRole('button', { name: 'Abrir cadastro' }).click();
+  await expect(page.getByText(/cadastro é feito no site da Go Champs/i)).toBeVisible();
+  await expect(page.getByLabel('Fechar')).toBeVisible();
+});
+
+test('[gameDetail] abre detalhe do jogo com súmula', async ({ page }) => {
+  await openTournament(page, 'Copa Classificação');
+  await page.getByText('Partidas', { exact: true }).click();
+  await page.getByLabel(/Abrir jogo/).first().click();
+  await expect(page.getByText('Súmula')).toBeVisible();
+  await expect(page.getByText('Ana Silva')).toBeVisible();
+  await expect(page.getByText('34:30')).toBeVisible();
+});
+
+test('[profileEdit] edita perfil de atleta autenticado', async ({ page }) => {
+  await signInAsAna(page);
+  await page.getByText('Perfil', { exact: true }).click();
+  await expect(page.getByText('Ana Silva')).toBeVisible();
+  await page.getByLabel('Editar perfil de atleta').click();
+  await page.getByLabel('Nome').fill('Ana Atualizada');
+  await page.getByLabel('Instagram').fill('@ana');
+  await page.getByRole('button', { name: 'Salvar alterações' }).click();
+  await expect(page.getByText('Perfil de atleta atualizado.')).toBeVisible();
+  await expect(page.getByText('Ana Atualizada')).toBeVisible();
 });
 
 test('[highlights] mostra destaques do mês sem estatísticas inventadas', async ({ page }) => {

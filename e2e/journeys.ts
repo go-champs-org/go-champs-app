@@ -22,6 +22,9 @@ export const journeys = {
   authProfile: 'Ver perfil autenticado e sair',
   authGames: 'Ver agenda do atleta autenticado',
   authNavigation: 'Navegar entre entrar cadastro e recuperacao',
+  webAuthSignUp: 'Abrir fluxo WebAuth de cadastro',
+  gameDetail: 'Abrir detalhe do jogo com sumula',
+  profileEdit: 'Editar perfil de atleta autenticado',
   highlights: 'Mostrar destaques do mes sem inventar estatisticas',
   pwaShell: 'Disponibilizar manifest e service worker instalavel',
 } as const;

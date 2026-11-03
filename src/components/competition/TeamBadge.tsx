@@ -9,10 +9,12 @@ type Props = {
   size?: number;
 };
 
-// A logo that is missing, or fails to load, falls back to the name's initials.
+// A logo keeps its own shape, fitted inside a square like the public site;
+// one that is missing, or fails to load, falls back to the name's initials in
+// a circle.
 export const TeamBadge = ({ logoUrl, name, size = 32 }: Props) => {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const shape = { width: size, height: size, borderRadius: size / 2 };
+  const box = { width: size, height: size };
 
   if (logoUrl && logoUrl !== failedUrl) {
     return (
@@ -20,13 +22,14 @@ export const TeamBadge = ({ logoUrl, name, size = 32 }: Props) => {
         accessibilityLabel={`Escudo ${name || 'do time'}`}
         source={{ uri: logoUrl }}
         onError={() => setFailedUrl(logoUrl)}
-        style={[styles.base, shape]}
+        resizeMode="contain"
+        style={[styles.base, box]}
       />
     );
   }
 
   return (
-    <View accessibilityLabel={`Iniciais ${name || 'do time'}`} style={[styles.base, styles.placeholder, shape]}>
+    <View accessibilityLabel={`Iniciais ${name || 'do time'}`} style={[styles.base, styles.placeholder, box, { borderRadius: size / 2 }]}>
       <Text style={[styles.initials, { fontSize: Math.max(9, size * 0.3) }]}>{initials(name || 'Time')}</Text>
     </View>
   );

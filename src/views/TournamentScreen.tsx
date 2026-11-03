@@ -66,13 +66,6 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
     <View style={styles.screen}>
       <ContentShell style={styles.content}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.breadcrumb}>
-            <TouchableOpacity accessibilityRole="link" onPress={() => navigation.navigate('MainTabs')}>
-              <Text style={styles.breadcrumbLink}>Home</Text>
-            </TouchableOpacity>
-            <Text style={styles.breadcrumbSeparator}>›</Text>
-            <Text style={styles.breadcrumbCurrent}>Campeonato</Text>
-          </View>
           <TournamentSummaryCard tournament={tournament} leaders={viewModel.leaders} />
           {selectedPhase ? (
             <>
@@ -94,10 +87,6 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.background },
   scrollContent: { padding: theme.spacing.md, paddingBottom: theme.spacing.xl, gap: theme.spacing.md },
-  breadcrumb: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
-  breadcrumbLink: { color: theme.colors.subtleText, fontSize: 12 },
-  breadcrumbSeparator: { color: theme.colors.subtleText, fontSize: 12 },
-  breadcrumbCurrent: { color: theme.colors.olive, fontSize: 12, fontWeight: '800' },
   phaseLoader: { marginVertical: theme.spacing.xl },
   retry: { padding: theme.spacing.lg, alignItems: 'center', gap: theme.spacing.md },
   retryText: { color: theme.colors.textPrimary, fontSize: theme.typography.body, textAlign: 'center' },

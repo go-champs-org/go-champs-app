@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Game } from '../../models/GameModel';
 import { isLiveGame, showsScore } from '../../domain/usecases/shared/liveScore';
@@ -42,12 +42,32 @@ const emphasisOf = (finished: boolean, own: number, other: number): Emphasis => 
 // it, the label stays in the text color for contrast.
 const LIVE_RED = '#ff4136';
 
-const LiveBadge = () => (
-  <View accessibilityLabel="Ao vivo" style={styles.live}>
-    <View style={styles.liveDot} />
-    <Text style={styles.liveText}>AO VIVO</Text>
-  </View>
-);
+// The public site's `animate-pulse`: the dot fades to half and back every 2s.
+const PULSE_HALF_MS = 1000;
+const PULSE_EASING = Easing.bezier(0.4, 0, 0.6, 1);
+
+const LiveBadge = () => {
+  const [opacity] = useState(() => new Animated.Value(1));
+
+  useEffect(() => {
+    const useNativeDriver = Platform.OS !== 'web';
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.5, duration: PULSE_HALF_MS, easing: PULSE_EASING, useNativeDriver }),
+        Animated.timing(opacity, { toValue: 1, duration: PULSE_HALF_MS, easing: PULSE_EASING, useNativeDriver }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [opacity]);
+
+  return (
+    <View accessibilityLabel="Ao vivo" style={styles.live}>
+      <Animated.View style={[styles.liveDot, { opacity }]} />
+      <Text style={styles.liveText}>AO VIVO</Text>
+    </View>
+  );
+};
 
 type SideProps = { name: string; logoUrl?: string | null; score: number | null; emphasis: Emphasis };
 

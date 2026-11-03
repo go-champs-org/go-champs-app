@@ -27,13 +27,12 @@ export const useTournamentViewModel = (tournamentId: string, initialPhaseId?: st
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
-    setError(null);
-    setLeaders([]);
-
-    container.getTournamentOverview
-      .execute(tournamentId, apiBaseUrl)
-      .then((overview) => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      setLeaders([]);
+      try {
+        const overview = await container.getTournamentOverview.execute(tournamentId, apiBaseUrl);
         if (!mounted) return;
         setTournament(overview);
         // Highlights are a companion: their failure leaves the card without them.
@@ -41,9 +40,13 @@ export const useTournamentViewModel = (tournamentId: string, initialPhaseId?: st
           .execute(overview, apiBaseUrl)
           .then((cards) => mounted && setLeaders(cards))
           .catch(() => undefined);
-      })
-      .catch(() => mounted && setError(TOURNAMENT_ERROR))
-      .finally(() => mounted && setLoading(false));
+      } catch {
+        if (mounted) setError(TOURNAMENT_ERROR);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    void load();
 
     return () => {
       mounted = false;
@@ -59,16 +62,21 @@ export const useTournamentViewModel = (tournamentId: string, initialPhaseId?: st
   useEffect(() => {
     if (!tournament || !selectedPhase) return;
     let mounted = true;
-    setPhaseLoading(true);
-    setPhaseError(null);
-    setPhase(null);
-    setSelectedDate(null);
-
-    container.getPhaseOverview
-      .execute(selectedPhase.id, selectedPhase.kind, tournament.teams, apiBaseUrl)
-      .then((overview) => mounted && setPhase(overview))
-      .catch(() => mounted && setPhaseError(PHASE_ERROR))
-      .finally(() => mounted && setPhaseLoading(false));
+    const load = async () => {
+      setPhaseLoading(true);
+      setPhaseError(null);
+      setPhase(null);
+      setSelectedDate(null);
+      try {
+        const overview = await container.getPhaseOverview.execute(selectedPhase.id, selectedPhase.kind, tournament.teams, apiBaseUrl);
+        if (mounted) setPhase(overview);
+      } catch {
+        if (mounted) setPhaseError(PHASE_ERROR);
+      } finally {
+        if (mounted) setPhaseLoading(false);
+      }
+    };
+    void load();
 
     return () => {
       mounted = false;

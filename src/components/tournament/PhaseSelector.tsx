@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { TournamentPhaseOption } from '../../domain/usecases/GetTournamentOverviewUseCase';
 import { theme } from '../../theme/theme';
 
@@ -9,8 +10,9 @@ type Props = {
   onSelect: (phaseId: string) => void;
 };
 
-// Collapsed it shows only the phase on screen; a tournament with a single
-// phase has nothing to expand.
+// Collapsed it shows only the phase on screen. The whole row is the trigger,
+// with a "Trocar" chip so it reads as something to change; a tournament with
+// a single phase has nothing to expand and shows no chip.
 export const PhaseSelector = ({ phases, selected, onSelect }: Props) => {
   const [open, setOpen] = useState(false);
   const others = phases.filter((phase) => phase.id !== selected.id);
@@ -18,19 +20,30 @@ export const PhaseSelector = ({ phases, selected, onSelect }: Props) => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>Fase do campeonato</Text>
+        {canExpand ? <Text style={styles.count}>{phases.length} fases</Text> : null}
+      </View>
       <TouchableOpacity
         accessibilityRole="button"
-        accessibilityLabel="Fase do campeonato"
+        accessibilityLabel={`Trocar fase do campeonato, atual: ${selected.title}`}
         accessibilityState={{ expanded: open, disabled: !canExpand }}
         disabled={!canExpand}
+        activeOpacity={0.7}
         onPress={() => setOpen((value) => !value)}
+        style={[styles.selected, canExpand && styles.selectedTappable]}
       >
-        <Text style={styles.label}>Fase do campeonato{canExpand ? (open ? '  ▴' : '  ▾') : ''}</Text>
+        <View style={styles.selectedText}>
+          <Text numberOfLines={1} style={styles.selectedTitle}>✓  {selected.title}</Text>
+          {selected.isInProgress ? <Text style={styles.current}>Fase atual</Text> : null}
+        </View>
+        {canExpand ? (
+          <View style={styles.chip}>
+            <Text style={styles.chipText}>{open ? 'Fechar' : 'Trocar'}</Text>
+            <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={theme.colors.surface} />
+          </View>
+        ) : null}
       </TouchableOpacity>
-      <View style={styles.selected}>
-        <Text numberOfLines={1} style={styles.selectedTitle}>✓  {selected.title}</Text>
-        {selected.isInProgress ? <Text style={styles.current}>Fase atual</Text> : null}
-      </View>
       {open ? (
         <View style={styles.options}>
           {others.map((phase) => (
@@ -62,31 +75,64 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.card,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   label: {
     color: theme.colors.ink,
     fontSize: 14,
     fontWeight: '800',
   },
+  count: {
+    color: theme.colors.subtleText,
+    fontSize: 12,
+  },
   selected: {
-    minHeight: 44,
-    paddingHorizontal: 10,
+    minHeight: 52,
+    paddingLeft: 12,
+    paddingRight: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: 'transparent',
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.oliveSoft,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: theme.spacing.sm,
   },
-  selectedTitle: {
+  selectedTappable: {
+    borderColor: theme.colors.olive,
+  },
+  selectedText: {
     flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  selectedTitle: {
     color: theme.colors.olive,
     fontSize: 14,
     fontWeight: '800',
   },
   current: {
-    color: theme.colors.olive,
-    fontSize: 14,
-    fontWeight: '500',
+    color: theme.colors.onOliveSoft,
+    fontSize: 12,
+  },
+  chip: {
+    minHeight: 32,
+    paddingLeft: 12,
+    paddingRight: 10,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.olive,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  chipText: {
+    color: theme.colors.surface,
+    fontSize: 13,
+    fontWeight: '800',
   },
   options: {
     flexDirection: 'row',

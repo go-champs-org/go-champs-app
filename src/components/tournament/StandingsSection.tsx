@@ -45,6 +45,7 @@ const StandingsTable = ({ group, columns }: { group: StandingsGroup; columns: St
             </Text>
           </View>
         ))}
+        <View pointerEvents="none" style={styles.fixedEdge} />
       </View>
       <ScrollView
         horizontal
@@ -124,13 +125,21 @@ const styles = StyleSheet.create({
     width: TEAM_COLUMN_WIDTH,
     zIndex: 1,
     backgroundColor: theme.colors.card,
-    borderRightWidth: 1,
-    borderRightColor: theme.colors.subtleBorder,
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 2, height: 0 },
     shadowOpacity: 0.06,
     shadowRadius: 3,
     elevation: 2,
+  },
+  // One line down the whole column, header band included, so the edge the
+  // stats slide under reads the same on green and on white.
+  fixedEdge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: theme.colors.divider,
   },
   scroll: { flex: 1 },
   scrollContent: { flexGrow: 1 },

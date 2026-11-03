@@ -28,6 +28,7 @@ export const theme = {
     subtleBorder: '#e8e9dc',
     bannerStart: '#111111',
     bannerEnd: '#2e502c',
+    divider: 'rgba(19, 31, 0, 0.14)',
   },
   spacing: {
     xs: 4,

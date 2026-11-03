@@ -29,6 +29,9 @@ export const theme = {
     bannerStart: '#111111',
     bannerEnd: '#2e502c',
     divider: 'rgba(19, 31, 0, 0.14)',
+    highlightsStart: '#12140e',
+    highlightsEnd: '#2f4419',
+    flame: '#f5a623',
   },
   spacing: {
     xs: 4,

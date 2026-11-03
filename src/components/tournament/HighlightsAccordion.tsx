@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import { LeaderCard, SCOPE_LABELS, tournamentStatsUrl } from '../../domain/usecases/shared/statLeaders';
 import { theme } from '../../theme/theme';
@@ -76,13 +77,22 @@ const StatLeaderCard = ({ card, organizationSlug, tournamentSlug }: CardProps) =
   );
 };
 
+// The public site's 115deg band, dark at the top left to green at the bottom
+// right; it stays dark whatever the theme.
+const GRADIENT_START = { x: 0, y: 0.3 };
+const GRADIENT_END = { x: 1, y: 0.7 };
+
 // Shown only when the tournament has stat leaders to rank.
 export const HighlightsAccordion = ({ cards, organizationSlug, tournamentSlug }: Props) => {
   const [open, setOpen] = useState(false);
   if (cards.length === 0) return null;
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={[theme.colors.highlightsStart, theme.colors.highlightsEnd]}
+      start={GRADIENT_START}
+      end={GRADIENT_END}
+    >
       <TouchableOpacity
         accessibilityRole="button"
         accessibilityLabel="Destaques"
@@ -90,7 +100,7 @@ export const HighlightsAccordion = ({ cards, organizationSlug, tournamentSlug }:
         onPress={() => setOpen((value) => !value)}
         style={styles.header}
       >
-        <Ionicons name="flame" size={20} color={theme.colors.lime} />
+        <Ionicons name="flame" size={20} color={theme.colors.flame} />
         <Text style={styles.title}>Destaques</Text>
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={theme.colors.surface} />
       </TouchableOpacity>
@@ -101,26 +111,22 @@ export const HighlightsAccordion = ({ cards, organizationSlug, tournamentSlug }:
           ))}
         </ScrollView>
       ) : null}
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.bannerEnd,
-  },
   header: {
     minHeight: 52,
     paddingHorizontal: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
-    backgroundColor: theme.colors.bannerStart,
   },
   title: {
     flex: 1,
     color: theme.colors.surface,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
   },
   cards: {

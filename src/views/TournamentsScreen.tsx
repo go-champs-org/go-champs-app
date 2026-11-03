@@ -6,8 +6,6 @@ import { useNavigation } from '@react-navigation/native';
 import { AppHeader } from '../components/layout/AppHeader';
 import { SearchBar } from '../components/search/SearchBar';
 import { TournamentCard } from '../components/cards/TournamentCard';
-import { PhasePickerModal } from '../components/tournaments/PhasePickerModal';
-import { useTournamentEntryViewModel } from '../viewmodels/TournamentEntryViewModel';
 import { MonthlyHighlights } from '../components/highlights/MonthlyHighlights';
 import { useAuthSession } from '../auth/AuthSessionContext';
 
@@ -15,7 +13,6 @@ const TournamentsScreen = () => {
   const { tournaments, pinnedIds, togglePin, loading } = useTournamentsViewModel();
   const navigation = useNavigation<any>();
   const { user } = useAuthSession();
-  const tournamentEntry = useTournamentEntryViewModel(navigation);
   const [searchQuery, setSearchQuery] = useState('');
   const openAuth = (initialMode: 'signIn' | 'signUp' = 'signIn') => navigation.navigate('AuthScreen', { initialMode });
 
@@ -96,10 +93,9 @@ const TournamentsScreen = () => {
           ListFooterComponent={<MonthlyHighlights />}
           renderItem={({ item }) => (
             <TournamentCard
-              loading={tournamentEntry.loadingTournamentId === item.id}
               pinned={pinnedIds.has(item.id)}
               tournament={item}
-              onPress={() => tournamentEntry.openTournament(item)}
+              onPress={() => navigation.navigate('TournamentScreen', { tournamentId: item.id, apiBaseUrl: item.apiBaseUrl })}
               onPinPress={() => {
                 void togglePin(item.id);
               }}
@@ -107,18 +103,6 @@ const TournamentsScreen = () => {
           )}
         />
       )}
-      {tournamentEntry.error ? (
-        <View style={styles.errorToast}>
-          <Text style={styles.errorToastText}>{tournamentEntry.error}</Text>
-        </View>
-      ) : null}
-      <PhasePickerModal
-        phases={tournamentEntry.selectablePhases}
-        tournament={tournamentEntry.selectedTournament}
-        visible={Boolean(tournamentEntry.selectedTournament)}
-        onClose={tournamentEntry.closePhasePicker}
-        onSelectPhase={tournamentEntry.selectPhase}
-      />
     </View>
   );
 };
@@ -239,21 +223,6 @@ const styles = StyleSheet.create({
     color: theme.colors.mutedText,
     fontSize: 14,
     marginTop: theme.spacing.sm,
-  },
-  errorToast: {
-    position: 'absolute',
-    left: theme.spacing.md,
-    right: theme.spacing.md,
-    bottom: 92,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.md,
-  },
-  errorToastText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-    textAlign: 'center',
   },
 });
 

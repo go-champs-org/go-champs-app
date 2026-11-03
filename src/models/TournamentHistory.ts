@@ -7,6 +7,7 @@ export interface Data {
   has_aggregated_player_stats: boolean;
   id:                          string;
   instagram:                   string;
+  logo_url?:                   string | null;
   name:                        string;
   organization:                Organization;
   phases:                      Phase[];

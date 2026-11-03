@@ -2,7 +2,7 @@ import { GoChampsTournamentRepository } from '../GoChampsTournamentRepository';
 import { GoChampsApiClient } from '../../datasources/remote/GoChampsApiClient';
 import { TournamentFallbackDataSource } from '../../datasources/local/TournamentFallbackDataSource';
 import { API_CONFIG } from '../../../core/config/apiConfig';
-import { gamesFixture, playoffResponseFixture, tournamentDetailsFixture, classificationDataFixture } from '../../../test/fixtures/tournamentFixtures';
+import { gamesFixture, classificationDataFixture } from '../../../test/fixtures/tournamentFixtures';
 
 const baseUrl = 'https://api.example.test/v1';
 
@@ -14,16 +14,26 @@ describe('Tournament repository contracts', () => {
   beforeEach(() => get.mockReset());
 
   it.each([
-    ['getTournamentDetails', '/tournaments/item', { data: tournamentDetailsFixture }, tournamentDetailsFixture],
-    ['getPlayoffData', '/phases/item', playoffResponseFixture, playoffResponseFixture],
     ['getGamesByPhaseId', '/games?where[phase_id]=item', { data: gamesFixture }, gamesFixture],
-    ['getSportConfig', '/sports/item', { data: { slug: 'basketball' } }, { slug: 'basketball' }],
-    ['getClassificationData', '/phases/item', { data: classificationDataFixture }, classificationDataFixture],
-    ['getGroupPhaseData', '/phases/item', { data: classificationDataFixture }, classificationDataFixture],
+    ['getPhase', '/phases/item', { data: classificationDataFixture }, classificationDataFixture],
   ] as const)('preserves the API origin for %s', async (method, endpoint, payload, result) => {
     get.mockResolvedValue(payload);
     await expect(repository[method]('item', baseUrl)).resolves.toEqual(result);
     expect(get).toHaveBeenCalledWith(endpoint, baseUrl);
+  });
+
+  it('normalizes a phase without eliminations, draws or stats', async () => {
+    get.mockResolvedValue({ data: { id: 'p', title: 'Fase', type: 'draw', is_in_progress: false, order: 1 } });
+    await expect(repository.getPhase('p', baseUrl)).resolves.toMatchObject({ elimination_stats: [], eliminations: [], draws: [] });
+  });
+
+  it('requests stat leaders for a tournament', async () => {
+    const groups = [{ stat_key: 'points', leaders: [] }];
+    get.mockResolvedValue({ data: groups });
+    await expect(repository.getStatLeaders('t1', ['points', 'assists'], baseUrl)).resolves.toEqual(groups);
+    expect(get).toHaveBeenCalledWith('/aggregated-player-stats-leaders?where[tournament_id]=t1&stats[]=points&stats[]=assists', baseUrl);
+    get.mockResolvedValue({});
+    await expect(repository.getStatLeaders('t1', [], baseUrl)).resolves.toEqual([]);
   });
 
   it('loads a single game by id', async () => {
@@ -59,19 +69,14 @@ describe('Tournament repository contracts', () => {
     expect(get).toHaveBeenCalledWith('/player-stats-logs?where[game_id]=game-1', baseUrl);
   });
 
-  it.each([
-    ['getTournamentDetails', 'getTournamentDetails'],
-    ['getPlayoffData', 'getPlayoffData'],
-    ['getGamesByPhaseId', 'getGames'],
-    ['getSportConfig', 'getSportConfig'],
-  ] as const)('loads bundled data when %s fails', async (method, fallbackMethod) => {
+  it('loads bundled games when the games request fails', async () => {
     get.mockRejectedValue(new Error('offline'));
-    const result = await repository[method]('item');
-    expect(result).toEqual(fallback[fallbackMethod]());
+    const result = await repository.getGamesByPhaseId('item');
+    expect(result).toEqual(fallback.getGames());
     expect(result).toBeDefined();
   });
 
-  it.each(['getClassificationData', 'getGroupPhaseData', 'getTournamentHistory'] as const)(
+  it.each(['getPhase', 'getTournamentHistory'] as const)(
     'propagates errors from %s', async (method) => {
       get.mockRejectedValue(new Error('not found'));
       await expect(repository[method]('missing', baseUrl)).rejects.toThrow('not found');

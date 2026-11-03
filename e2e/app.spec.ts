@@ -68,34 +68,59 @@ test('[catalogueOffline] mantém a home útil quando as APIs falham', async ({ p
   await expect(page.getByText('Nenhum campeonato encontrado')).toBeVisible();
 });
 
-test('[singleClassification] abre classificação sem tela intermediária', async ({ page }) => {
+const gamesTab = (page: Page) => page.getByRole('tab', { name: /Jogos$/ });
+
+test('[singleClassification] abre o campeonato na tabela de classificação', async ({ page }) => {
   await openTournament(page, 'Copa Classificação');
-  await expect(page.getByText('TABELA GERAL')).toBeVisible();
+  await expect(page.getByText('Tabela de classificação')).toBeVisible();
+  await expect(page.getByText('Fase do campeonato')).toBeVisible();
 });
 
-test('[singleGroups] abre grupos sem tela intermediária', async ({ page }) => {
+test('[singleGroups] abre o campeonato nos grupos', async ({ page }) => {
   await openTournament(page, 'Copa Grupos');
-  await expect(page.getByText('Grupo A', { exact: true }).last()).toBeVisible();
+  await expect(page.getByText('Grupo A', { exact: true })).toBeVisible();
+  await expect(page.getByText('2 grupos')).toBeVisible();
 });
 
-test('[singlePlayoffs] abre playoffs sem tela intermediária', async ({ page }) => {
+test('[singlePlayoffs] abre o campeonato no chaveamento', async ({ page }) => {
   await openTournament(page, 'Copa Playoffs');
   await expect(page.getByText('Chaveamento')).toBeVisible();
   await expect(page.getByText('Decisão')).toBeVisible();
 });
 
-test('[multiplePhases] permite escolher uma entre várias fases', async ({ page }) => {
+test('[multiplePhases] troca de fase pelo seletor do campeonato', async ({ page }) => {
   await openTournament(page, 'Copa Completa');
-  await expect(page.getByText('Escolha uma fase')).toBeVisible();
-  await page.getByText('Classificação', { exact: true }).last().click();
-  await expect(page.getByText('TABELA GERAL')).toBeVisible();
+  await expect(page.getByText('Tabela de classificação')).toBeVisible();
+  await page.getByLabel('Fase do campeonato').click();
+  await page.getByText('Playoffs', { exact: true }).click();
+  await expect(page.getByText('Chaveamento')).toBeVisible();
 });
 
-test('[cancelPicker] fecha o seletor de fases sem navegar', async ({ page }) => {
+test('[tournamentSummary] mostra identidade e times do campeonato', async ({ page }) => {
   await openTournament(page, 'Copa Completa');
-  await page.getByLabel('Fechar').click();
-  await expect(page.getByText('Escolha uma fase')).toBeHidden();
-  await expect(page.getByText('Copa Completa', { exact: true })).toBeVisible();
+  await expect(page.getByText('Copa Completa', { exact: true }).last()).toBeVisible();
+  await expect(page.getByText('Times · 2')).toBeVisible();
+  await expect(page.getByText('Beta', { exact: true }).first()).toBeVisible();
+  await expect(page.getByLabel('Iniciais Beta').first()).toBeVisible();
+});
+
+test('[tournamentHighlights] mostra os destaques de atletas', async ({ page }) => {
+  await page.route('**/tournaments/t-1', (route) => fulfillJson(route, {
+    data: {
+      ...historyPayload(1, [phases[0]]).data,
+      has_aggregated_player_stats: true,
+      sport_slug: 'basketball_5x5',
+      player_stats: [{ id: 's1', slug: 'points', title: 'PTS' }],
+    },
+  }));
+  await page.route('**/aggregated-player-stats-leaders?*', (route) => fulfillJson(route, {
+    data: [{ stat_key: 'points', leaders: [{ player_id: 'player-a', team_id: 'team-a', value: 31, player: { name: 'Ana Silva' } }] }],
+  }));
+  await openTournament(page, 'Copa Classificação');
+  await page.getByRole('button', { name: 'Destaques', exact: true }).click();
+  await expect(page.getByText('Pontos', { exact: true })).toBeVisible();
+  await expect(page.getByText('Ana Silva')).toBeVisible();
+  await expect(page.getByText('31', { exact: true })).toBeVisible();
 });
 
 test('[noPhases] informa campeonato sem fases', async ({ page }) => {
@@ -104,9 +129,10 @@ test('[noPhases] informa campeonato sem fases', async ({ page }) => {
 });
 
 test('[unsupportedPhase] ignora fases que ainda não têm visualização', async ({ page }) => {
-  await page.route('**/tournaments/t-0', (route) => fulfillJson(route, historyPayload(0, [phases[0], { ...phases[0], id: 'unknown', title: 'Inscrições', type: 'registration' }])));
+  await page.route('**/tournaments/t-0', (route) => fulfillJson(route, historyPayload(0, [{ ...phases[0], id: 'unknown', title: 'Inscrições', type: 'registration' }, phases[0]])));
   await openTournament(page, 'Copa Completa');
-  await expect(page.getByText('TABELA GERAL')).toBeVisible();
+  await expect(page.getByText('Tabela de classificação')).toBeVisible();
+  await expect(page.getByText('Inscrições')).toBeHidden();
 });
 
 test('[entryError] permite tentar novamente após falha ao abrir', async ({ page }) => {
@@ -117,26 +143,26 @@ test('[entryError] permite tentar novamente após falha ao abrir', async ({ page
   });
   await openTournament(page, 'Copa Classificação');
   await expect(page.getByText('Não foi possível abrir o campeonato. Tente novamente.')).toBeVisible();
-  await page.getByText('Copa Classificação', { exact: true }).click();
-  await expect(page.getByText('TABELA GERAL')).toBeVisible();
+  await page.getByRole('button', { name: 'Tentar novamente' }).click();
+  await expect(page.getByText('Tabela de classificação')).toBeVisible();
 });
 
-test('[matchDates] consulta partidas e navega entre datas', async ({ page }) => {
+test('[matchDates] consulta jogos e navega entre datas', async ({ page }) => {
   await openTournament(page, 'Copa Classificação');
-  await page.getByText('Partidas', { exact: true }).click();
-  await expect(page.getByText('Court 1')).toBeVisible();
-  await page.getByLabel('Próxima data').click();
+  await gamesTab(page).click();
   await expect(page.getByText('Court 2')).toBeVisible();
+  await page.getByLabel('Data anterior').click();
+  await expect(page.getByText('Court 1')).toBeVisible();
 });
 
 test('[emptyMatches] apresenta estado vazio de partidas', async ({ page }) => {
   await page.route('**/games?*', (route) => fulfillJson(route, { data: [] }));
   await openTournament(page, 'Copa Classificação');
-  await page.getByText('Partidas', { exact: true }).click();
+  await gamesTab(page).click();
   await expect(page.getByText('Sem partidas para esta data')).toBeVisible();
 });
 
-test('[teamLogos] carrega escudos nas tabelas e partidas', async ({ page }) => {
+test('[teamLogos] carrega escudos nas tabelas e no campeonato', async ({ page }) => {
   await openTournament(page, 'Copa Classificação');
   await expect(page.getByLabel('Escudo Alpha').first()).toBeVisible();
 });
@@ -146,7 +172,7 @@ test('[backNavigation] volta ao catálogo preservando a busca', async ({ page })
   const search = page.getByPlaceholder('Pesquisar campeonatos, times...');
   await search.fill('classificação');
   await page.getByText('Copa Classificação', { exact: true }).click();
-  await expect(page.getByText('TABELA GERAL')).toBeVisible();
+  await expect(page.getByText('Tabela de classificação')).toBeVisible();
   await page.goBack();
   await expect(search).toHaveValue('classificação');
 });
@@ -218,7 +244,8 @@ test('[webAuthSignUp] abre fluxo WebAuth de cadastro', async ({ page }) => {
 
 test('[gameDetail] abre detalhe do jogo com súmula', async ({ page }) => {
   await openTournament(page, 'Copa Classificação');
-  await page.getByText('Partidas', { exact: true }).click();
+  await gamesTab(page).click();
+  await page.getByLabel('Data anterior').click();
   await page.getByLabel(/Abrir jogo/).first().click();
   await expect(page.getByText('Súmula')).toBeVisible();
   await expect(page.getByText('Ana Silva')).toBeVisible();
@@ -260,6 +287,6 @@ test('capturas para validação visual responsiva', async ({ page }, testInfo) =
   await openHome(page);
   await page.screenshot({ path: testInfo.outputPath('home.png'), fullPage: true });
   await page.getByText('Copa Classificação', { exact: true }).click();
-  await expect(page.getByText('TABELA GERAL')).toBeVisible();
-  await page.screenshot({ path: testInfo.outputPath('classification.png'), fullPage: true });
+  await expect(page.getByText('Tabela de classificação')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('tournament.png'), fullPage: true });
 });

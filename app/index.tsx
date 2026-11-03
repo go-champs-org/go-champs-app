@@ -7,10 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../src/theme/theme';
 import TournamentsScreen from '../src/views/TournamentsScreen';
-import TournamentHistoryScreen from '../src/views/TournamentHistoryScreen';
-import PlayoffsView from '../src/views/PlayoffsView';
-import ClassificationView from '../src/views/ClassificationView';
-import GroupPhaseView from '../src/views/GroupPhaseView';
+import TournamentScreen from '../src/views/TournamentScreen';
 import MyGamesScreen from '../src/views/MyGamesScreen';
 import ProfileScreen from '../src/views/ProfileScreen';
 import AuthScreen from '../src/views/AuthScreen';
@@ -26,10 +23,7 @@ const linking: LinkingOptions<RootStackParamList> = {
   config: {
     screens: {
       MainTabs: { path: '', screens: { HomeTab: '', MyGamesTab: 'my-games', ProfileTab: 'profile' } },
-      TournamentHistoryScreen: 'tournament/:id',
-      PlayoffsView: 'playoffs/:tournamentId',
-      ClassificationView: 'classification/:phaseId',
-      GroupPhaseView: 'groups/:phaseId',
+      TournamentScreen: 'tournament/:tournamentId',
       GameDetailScreen: 'game/:gameId',
       AuthScreen: 'auth',
       WebAuthFlowScreen: 'account/:purpose',
@@ -102,10 +96,7 @@ export default function App() {
           }}
         >
           <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-          <Stack.Screen name="TournamentHistoryScreen" component={TournamentHistoryScreen} options={{ title: 'Fases' }} />
-          <Stack.Screen name="PlayoffsView" component={PlayoffsView} options={{ title: 'Playoffs' }} />
-          <Stack.Screen name="ClassificationView" component={ClassificationView} options={{ title: 'Classificação' }} />
-          <Stack.Screen name="GroupPhaseView" component={GroupPhaseView} options={{ title: 'Fase' }} />
+          <Stack.Screen name="TournamentScreen" component={TournamentScreen} options={{ title: 'Campeonato' }} />
           <Stack.Screen name="GameDetailScreen" component={GameDetailScreen} options={{ title: 'Jogo' }} />
           <Stack.Screen name="AuthScreen" component={AuthScreen} options={{ headerShown: false }} />
           <Stack.Screen name="WebAuthFlowScreen" component={WebAuthFlowScreen} options={{ headerShown: false }} />

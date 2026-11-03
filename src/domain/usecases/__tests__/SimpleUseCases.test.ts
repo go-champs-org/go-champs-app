@@ -5,13 +5,12 @@ import { GetAthleteSchedulesUseCase } from '../GetAthleteSchedulesUseCase';
 import { GetGameOverviewUseCase } from '../GetGameOverviewUseCase';
 import { GetOrganizationsUseCase } from '../GetOrganizationsUseCase';
 import { GetRecentTournamentsUseCase } from '../GetRecentTournamentsUseCase';
-import { GetTournamentHistoryUseCase } from '../GetTournamentHistoryUseCase';
 import { UpdateAthleteProfileUseCase } from '../UpdateAthleteProfileUseCase';
 import { AccountRepository } from '../../repositories/AccountRepository';
 import { AthleteProfileRepository } from '../../repositories/AthleteProfileRepository';
 import { OrganizationRepository } from '../../repositories/OrganizationRepository';
 import { TournamentRepository } from '../../repositories/TournamentRepository';
-import { tournamentFixture, tournamentHistoryFixture } from '../../../test/fixtures/tournamentFixtures';
+import { tournamentFixture } from '../../../test/fixtures/tournamentFixtures';
 
 describe('simple use cases', () => {
   it('delegates recent tournaments to repository', async () => {
@@ -20,16 +19,6 @@ describe('simple use cases', () => {
     } as unknown as TournamentRepository;
 
     await expect(new GetRecentTournamentsUseCase(repository).execute()).resolves.toEqual([tournamentFixture]);
-  });
-
-  it('delegates tournament history to repository', async () => {
-    const repository = {
-      getTournamentHistory: jest.fn().mockResolvedValue(tournamentHistoryFixture),
-    } as unknown as TournamentRepository;
-
-    await expect(new GetTournamentHistoryUseCase(repository).execute('tournament-1')).resolves.toEqual(
-      tournamentHistoryFixture
-    );
   });
 
   it('delegates organizations to repository', async () => {

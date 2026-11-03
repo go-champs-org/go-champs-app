@@ -1,17 +1,41 @@
 import { gamesFixture, tournamentDetailsFixture } from '../../../../test/fixtures/tournamentFixtures';
-import { buildDateKeys, buildTeamMap, sortGamesByDate, sortStatsByRanking } from '../phasePresentation';
+import { Game } from '../../../../models/GameModel';
+import { buildDateKeys, buildTeamMap, closestDateKey, phaseKind, sortGamesByDate } from '../phasePresentation';
 
 describe('phasePresentation', () => {
-  it('sorts games, stats, and unique date keys', () => {
+  it('sorts games and builds unique date keys', () => {
     expect(sortGamesByDate(gamesFixture).map((game) => game.id)).toEqual(['game-1', 'game-2']);
-    expect(sortStatsByRanking([{ id: 'b', title: 'B', ranking_order: 2, team_stat_source: 'manual' }, { id: 'a', title: 'A', ranking_order: 1, team_stat_source: 'manual' }]).map((stat) => stat.id)).toEqual(['a', 'b']);
     expect(buildDateKeys(gamesFixture)).toEqual(['2026-01-01', '2026-01-02']);
   });
 
-  it('builds team maps with or without logos', () => {
-    expect(buildTeamMap(gamesFixture, tournamentDetailsFixture)['team-a'].logo_url).toBe(
-      'https://example.com/alpha.png'
-    );
-    expect(buildTeamMap(gamesFixture, tournamentDetailsFixture, { includeLogos: false })['team-a'].logo_url).toBeNull();
+  it('builds team maps from the roster and the games', () => {
+    const map = buildTeamMap(gamesFixture, tournamentDetailsFixture.teams);
+    expect(map['team-a']).toEqual({ name: 'Alpha', logo_url: 'https://example.com/alpha.png' });
+    expect(map['team-b']).toEqual({ name: 'Beta', logo_url: null });
+    expect(buildTeamMap(gamesFixture)['team-a'].logo_url).toBe('https://example.com/alpha.png');
+  });
+
+  it('keeps the roster logo when a game omits it and skips undecided teams', () => {
+    const game = { ...gamesFixture[0], home_team: { ...gamesFixture[0].home_team, id: 'team-a', logo_url: null }, away_team: null } as unknown as Game;
+    expect(buildTeamMap([game], tournamentDetailsFixture.teams)['team-a'].logo_url).toBe('https://example.com/alpha.png');
+    expect(buildTeamMap([{ ...game, home_team: null } as unknown as Game])).toEqual({});
+  });
+
+  it.each([
+    ['draw', 'bracket'],
+    ['Elimination', 'standings'],
+    ['registration', null],
+    [null, null],
+  ])('reads a %s phase as %s', (type, expected) => {
+    expect(phaseKind({ type })).toBe(expected);
+  });
+
+  it('picks the match day closest to today, preferring the upcoming one on a tie', () => {
+    const keys = ['2026-01-01', '2026-01-05', '2026-01-09'];
+    expect(closestDateKey([], new Date('2026-01-04T12:00:00Z'))).toBeNull();
+    expect(closestDateKey(keys, new Date('2025-12-01T12:00:00Z'))).toBe('2026-01-01');
+    expect(closestDateKey(keys, new Date('2026-01-06T12:00:00Z'))).toBe('2026-01-05');
+    expect(closestDateKey(keys, new Date('2026-01-07T12:00:00Z'))).toBe('2026-01-09');
+    expect(closestDateKey(keys, new Date('2026-03-01T12:00:00Z'))).toBe('2026-01-09');
   });
 });

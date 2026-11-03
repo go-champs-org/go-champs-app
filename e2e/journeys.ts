@@ -16,6 +16,7 @@ export const journeys = {
   entryError: 'Falha ao abrir campeonato e nova tentativa',
   matchDates: 'Consultar partidas e navegar entre datas',
   emptyMatches: 'Fase sem partidas',
+  liveGame: 'Acompanhar partida ao vivo com placar do scoreboard',
   teamLogos: 'Carregar escudos nas tabelas e partidas',
   backNavigation: 'Voltar do campeonato para a busca preservada',
   gamesTab: 'Abrir Meus jogos como visitante',

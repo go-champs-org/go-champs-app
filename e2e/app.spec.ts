@@ -1,6 +1,6 @@
 import type { Page, Route } from '@playwright/test';
 import { test, expect, phases, tournaments } from './fixtures';
-import { tournamentDetailsFixture, tournamentHistoryFixture } from '../src/test/fixtures/tournamentFixtures';
+import { gamesFixture, tournamentDetailsFixture, tournamentHistoryFixture } from '../src/test/fixtures/tournamentFixtures';
 
 const recentPayload = (items = tournaments) => ({ data: items.map((tournament) => ({ tournament })) });
 const historyPayload = (index: number, selectedPhases = phases) => ({
@@ -171,6 +171,23 @@ test('[emptyMatches] apresenta estado vazio de partidas', async ({ page }) => {
   await openTournament(page, 'Copa Classificação');
   await gamesTab(page).click();
   await expect(page.getByText('Sem partidas para esta data')).toBeVisible();
+});
+
+test('[liveGame] mostra partida ao vivo com placar do scoreboard', async ({ page }) => {
+  const live = { ...gamesFixture[1], live_state: 'in_progress', is_finished: false, home_score: 0, away_score: 0 };
+  await page.route('**/games?*', (route) => fulfillJson(route, { data: [live] }));
+  await page.route('https://scoreboard.go-champs.com/**', (route) => fulfillJson(route, {
+    data: {
+      home_team: { total_player_stats: { points: 5 } },
+      away_team: { total_player_stats: { points: 11 } },
+      live_state: { state: 'in_progress' },
+    },
+  }));
+  await openTournament(page, 'Copa Classificação');
+  await gamesTab(page).click();
+  await expect(page.getByText('AO VIVO')).toBeVisible();
+  await expect(page.getByText('11', { exact: true })).toBeVisible();
+  await expect(page.getByText('5', { exact: true })).toBeVisible();
 });
 
 test('[teamLogos] carrega escudos nas tabelas e no campeonato', async ({ page }) => {

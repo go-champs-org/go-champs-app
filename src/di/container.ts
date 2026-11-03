@@ -5,6 +5,7 @@ import { TournamentFallbackDataSource } from '../data/datasources/local/Tourname
 import { GoChampsApiClient } from '../data/datasources/remote/GoChampsApiClient';
 import { GoChampsAccountRepository } from '../data/repositories/GoChampsAccountRepository';
 import { GoChampsAthleteProfileRepository } from '../data/repositories/GoChampsAthleteProfileRepository';
+import { GoChampsScoreboardRepository } from '../data/repositories/GoChampsScoreboardRepository';
 import { GoChampsOrganizationRepository } from '../data/repositories/GoChampsOrganizationRepository';
 import { GoChampsTournamentRepository } from '../data/repositories/GoChampsTournamentRepository';
 import { LocalPinnedTournamentsRepository } from '../data/repositories/LocalPinnedTournamentsRepository';
@@ -13,6 +14,7 @@ import { GetAccountProfileUseCase } from '../domain/usecases/GetAccountProfileUs
 import { GetAthleteProfileByUsernameUseCase } from '../domain/usecases/GetAthleteProfileByUsernameUseCase';
 import { GetAthleteSchedulesUseCase } from '../domain/usecases/GetAthleteSchedulesUseCase';
 import { GetGameOverviewUseCase } from '../domain/usecases/GetGameOverviewUseCase';
+import { GetLiveScoreUseCase } from '../domain/usecases/GetLiveScoreUseCase';
 import { GetOrganizationsUseCase } from '../domain/usecases/GetOrganizationsUseCase';
 import { GetPhaseOverviewUseCase } from '../domain/usecases/GetPhaseOverviewUseCase';
 import { GetPinnedTournamentIdsUseCase } from '../domain/usecases/GetPinnedTournamentIdsUseCase';
@@ -33,11 +35,13 @@ const tournamentRepository = new GoChampsTournamentRepository(apiClient, fallbac
 const organizationRepository = new GoChampsOrganizationRepository(apiClient);
 const accountRepository = new GoChampsAccountRepository(apiClient);
 const athleteProfileRepository = new GoChampsAthleteProfileRepository(apiClient);
+const scoreboardRepository = new GoChampsScoreboardRepository(httpClient);
 const pinnedTournamentsRepository = new LocalPinnedTournamentsRepository(pinnedTournamentsStore);
 
 export const container = {
   getRecentTournaments: new GetRecentTournamentsUseCase(tournamentRepository),
   getTournamentOverview: new GetTournamentOverviewUseCase(tournamentRepository),
+  getLiveScore: new GetLiveScoreUseCase(scoreboardRepository),
   getPhaseOverview: new GetPhaseOverviewUseCase(tournamentRepository),
   getStatLeaders: new GetStatLeadersUseCase(tournamentRepository),
   getGameOverview: new GetGameOverviewUseCase(tournamentRepository),

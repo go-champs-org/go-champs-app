@@ -53,6 +53,7 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
           onSelectDate={viewModel.setSelectedDate}
           games={viewModel.gamesForSelectedDate}
           onPressGame={(gameId) => navigation.navigate('GameDetailScreen', { gameId, apiBaseUrl })}
+          apiBaseUrl={apiBaseUrl}
         />
       );
     }

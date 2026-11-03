@@ -1,15 +1,83 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LeaderCard } from '../../domain/usecases/shared/statLeaders';
+import * as WebBrowser from 'expo-web-browser';
+import { LeaderCard, SCOPE_LABELS, tournamentStatsUrl } from '../../domain/usecases/shared/statLeaders';
 import { theme } from '../../theme/theme';
+import { PlayerAvatar } from '../competition/PlayerAvatar';
 
 type Props = {
   cards: LeaderCard[];
+  organizationSlug: string;
+  tournamentSlug: string;
+};
+
+type CardProps = {
+  card: LeaderCard;
+  organizationSlug: string;
+  tournamentSlug: string;
+};
+
+// One stat's leaders, like the public site's card: a scope toggle when the
+// stat ranks both totals and per-game averages, and a link to the full list.
+const StatLeaderCard = ({ card, organizationSlug, tournamentSlug }: CardProps) => {
+  const [scopeIndex, setScopeIndex] = useState(0);
+  const current = card.scopes[scopeIndex] ?? card.scopes[0];
+  const canSeeAll = Boolean(organizationSlug && tournamentSlug);
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text numberOfLines={1} style={styles.cardTitle}>{card.title}</Text>
+        {card.scopes.length > 1 ? (
+          <View accessibilityRole="tablist" style={styles.scopes}>
+            {card.scopes.map((scope, index) => {
+              const selected = index === scopeIndex;
+              return (
+                <TouchableOpacity
+                  key={scope.scope}
+                  accessibilityRole="tab"
+                  accessibilityLabel={`${card.title} ${SCOPE_LABELS[scope.scope]}`}
+                  accessibilityState={{ selected }}
+                  onPress={() => setScopeIndex(index)}
+                  style={[styles.scope, selected && styles.scopeSelected]}
+                >
+                  <Text style={[styles.scopeText, selected && styles.scopeTextSelected]}>{SCOPE_LABELS[scope.scope]}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : null}
+      </View>
+      <View style={styles.rows}>
+        {current.leaders.map((leader, index) => (
+          <View key={leader.playerId} style={[styles.row, index > 0 && styles.rowDivider]}>
+            <Text style={styles.position}>{index + 1}</Text>
+            <PlayerAvatar photoUrl={leader.photoUrl} name={leader.playerName} size={36} />
+            <View style={styles.playerText}>
+              <Text numberOfLines={1} style={styles.player}>{leader.playerName}</Text>
+              {leader.teamName ? <Text numberOfLines={1} style={styles.team}>{leader.teamName}</Text> : null}
+            </View>
+            <Text style={[styles.value, index === 0 && styles.valueLeader]}>{leader.value}</Text>
+          </View>
+        ))}
+      </View>
+      {canSeeAll ? (
+        <TouchableOpacity
+          accessibilityRole="link"
+          accessibilityLabel={`Ver todos: ${card.title}`}
+          onPress={() => void WebBrowser.openBrowserAsync(tournamentStatsUrl(organizationSlug, tournamentSlug, current.statKey))}
+          style={styles.footer}
+        >
+          <Text style={styles.footerText}>Ver todos →</Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
 };
 
 // Shown only when the tournament has stat leaders to rank.
-export const HighlightsAccordion = ({ cards }: Props) => {
+export const HighlightsAccordion = ({ cards, organizationSlug, tournamentSlug }: Props) => {
   const [open, setOpen] = useState(false);
   if (cards.length === 0) return null;
 
@@ -29,19 +97,7 @@ export const HighlightsAccordion = ({ cards }: Props) => {
       {open ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cards}>
           {cards.map((card) => (
-            <View key={card.slug} style={styles.card}>
-              <Text style={styles.cardTitle}>{card.title}</Text>
-              {card.leaders.map((leader, index) => (
-                <View key={leader.playerId} style={styles.leader}>
-                  <Text style={styles.rank}>{index + 1}</Text>
-                  <View style={styles.leaderText}>
-                    <Text numberOfLines={1} style={styles.player}>{leader.playerName}</Text>
-                    {leader.teamName ? <Text numberOfLines={1} style={styles.team}>{leader.teamName}</Text> : null}
-                  </View>
-                  <Text style={styles.value}>{leader.value}</Text>
-                </View>
-              ))}
-            </View>
+            <StatLeaderCard key={card.slug} card={card} organizationSlug={organizationSlug} tournamentSlug={tournamentSlug} />
           ))}
         </ScrollView>
       ) : null}
@@ -69,48 +125,108 @@ const styles = StyleSheet.create({
   },
   cards: {
     padding: theme.spacing.md,
-    gap: theme.spacing.sm,
+    gap: 12,
   },
   card: {
-    width: 220,
-    padding: 12,
+    width: 264,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colors.cardBorder,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surface,
-    gap: theme.spacing.sm,
   },
-  cardTitle: {
-    color: theme.colors.olive,
-    fontSize: theme.typography.caption,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-  },
-  leader: {
+  cardHeader: {
+    minHeight: 44,
+    paddingHorizontal: 12,
+    paddingVertical: theme.spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
+    backgroundColor: theme.colors.oliveSoft,
   },
-  rank: {
-    width: 14,
-    color: theme.colors.subtleText,
-    fontSize: theme.typography.caption,
+  cardTitle: {
+    flex: 1,
+    color: theme.colors.onOliveSoft,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  scopes: {
+    flexDirection: 'row',
+    padding: 2,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.surface,
+  },
+  scope: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.radius.pill,
+  },
+  scopeSelected: {
+    backgroundColor: theme.colors.olive,
+  },
+  scopeText: {
+    color: theme.colors.onOliveSoft,
+    fontSize: 10,
     fontWeight: '700',
   },
-  leaderText: {
+  scopeTextSelected: {
+    color: theme.colors.surface,
+  },
+  rows: {
+    paddingHorizontal: 12,
+  },
+  row: {
+    minHeight: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  rowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.subtleBorder,
+  },
+  position: {
+    width: 12,
+    color: theme.colors.subtleText,
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  playerText: {
     flex: 1,
     minWidth: 0,
   },
   player: {
     color: theme.colors.ink,
-    fontSize: theme.typography.bodySmall,
+    fontSize: 13,
     fontWeight: '800',
   },
   team: {
     color: theme.colors.subtleText,
-    fontSize: theme.typography.caption,
+    fontSize: 11,
   },
   value: {
-    color: theme.colors.lime,
+    color: theme.colors.ink,
     fontSize: 16,
+    fontWeight: '800',
+  },
+  valueLeader: {
+    color: theme.colors.olive,
     fontWeight: '900',
+  },
+  footer: {
+    minHeight: 40,
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.subtleBorder,
+  },
+  footerText: {
+    color: theme.colors.olive,
+    fontSize: 12,
+    fontWeight: '800',
   },
 });

@@ -1,6 +1,6 @@
 import { gamesFixture, tournamentDetailsFixture } from '../../../../test/fixtures/tournamentFixtures';
 import { Game } from '../../../../models/GameModel';
-import { buildDateKeys, buildTeamMap, closestDateKey, phaseKind, sortGamesByDate } from '../phasePresentation';
+import { buildDateKeys, buildTeamMap, closestDateKey, phaseKind, sortGamesByDate, teamShortName } from '../phasePresentation';
 
 describe('phasePresentation', () => {
   it('sorts games and builds unique date keys', () => {
@@ -10,8 +10,8 @@ describe('phasePresentation', () => {
 
   it('builds team maps from the roster and the games', () => {
     const map = buildTeamMap(gamesFixture, tournamentDetailsFixture.teams);
-    expect(map['team-a']).toEqual({ name: 'Alpha', logo_url: 'https://example.com/alpha.png' });
-    expect(map['team-b']).toEqual({ name: 'Beta', logo_url: null });
+    expect(map['team-a']).toEqual({ name: 'Alpha', logo_url: 'https://example.com/alpha.png', tri_code: 'ALP' });
+    expect(map['team-b']).toEqual({ name: 'Beta', logo_url: null, tri_code: 'BET' });
     expect(buildTeamMap(gamesFixture)['team-a'].logo_url).toBe('https://example.com/alpha.png');
   });
 
@@ -19,6 +19,15 @@ describe('phasePresentation', () => {
     const game = { ...gamesFixture[0], home_team: { ...gamesFixture[0].home_team, id: 'team-a', logo_url: null }, away_team: null } as unknown as Game;
     expect(buildTeamMap([game], tournamentDetailsFixture.teams)['team-a'].logo_url).toBe('https://example.com/alpha.png');
     expect(buildTeamMap([{ ...game, home_team: null } as unknown as Game])).toEqual({});
+  });
+
+  it.each([
+    [{ name: 'Alpha', logo_url: null, tri_code: 'ALP' }, null, 'ALP'],
+    [{ name: 'Alpha', logo_url: null, tri_code: null }, null, 'Alpha'],
+    [undefined, 'Vencedor A', 'Vencedor A'],
+    [undefined, null, 'A definir'],
+  ])('names %o (placeholder %s) as %s', (team, placeholder, expected) => {
+    expect(teamShortName(team, placeholder, 'A definir')).toBe(expected);
   });
 
   it.each([

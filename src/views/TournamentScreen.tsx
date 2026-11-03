@@ -58,7 +58,7 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
     }
 
     return phase.kind === 'standings'
-      ? <StandingsSection columns={phase.columns} legend={phase.legend} groups={phase.groups} />
+      ? <StandingsSection columns={phase.columns} groups={phase.groups} />
       : <DrawBracket draws={phase.draws} teamMap={phase.teamMap} />;
   };
 

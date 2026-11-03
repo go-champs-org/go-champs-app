@@ -15,10 +15,12 @@ jest.mock('../../di/container', () => ({ container: {
 const overview: TournamentOverview = {
   id: 't1',
   name: 'Copa',
+  slug: 'copa',
   logoUrl: null,
   organizationName: 'Org',
+  organizationSlug: 'org',
   isActive: true,
-  teams: [{ id: 'team-a', name: 'Alpha', logo_url: null }],
+  teams: [{ id: 'team-a', name: 'Alpha', logo_url: null, tri_code: null }],
   phases: [
     { id: 'table', title: 'Classificação', order: 1, isInProgress: false, kind: 'standings' },
     { id: 'draw', title: 'Playoffs', order: 2, isInProgress: true, kind: 'bracket' },
@@ -29,9 +31,9 @@ const overview: TournamentOverview = {
   playerStats: [],
 };
 
-const standings: PhaseOverview = { kind: 'standings', columns: [], legend: '', groups: [], games: gamesFixture, teamMap: {} };
+const standings: PhaseOverview = { kind: 'standings', columns: [], groups: [], games: gamesFixture, teamMap: {} };
 const bracket: PhaseOverview = { kind: 'bracket', draws: [], games: [], teamMap: {} };
-const leaders = [{ slug: 'points', title: 'Pontos', leaders: [] }];
+const leaders = [{ slug: 'points', title: 'Pontos', scopes: [] }];
 
 const tournamentExecute = container.getTournamentOverview.execute as jest.Mock;
 const phaseExecute = container.getPhaseOverview.execute as jest.Mock;

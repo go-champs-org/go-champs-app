@@ -74,6 +74,8 @@ test('[singleClassification] abre o campeonato na tabela de classificação', as
   await openTournament(page, 'Copa Classificação');
   await expect(page.getByText('Tabela de classificação')).toBeVisible();
   await expect(page.getByText('Fase do campeonato')).toBeVisible();
+  await expect(page.getByText('TIME', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('ALP', { exact: true }).first()).toBeVisible();
 });
 
 test('[singleGroups] abre o campeonato nos grupos', async ({ page }) => {
@@ -99,7 +101,8 @@ test('[multiplePhases] troca de fase pelo seletor do campeonato', async ({ page 
 test('[tournamentSummary] mostra identidade e times do campeonato', async ({ page }) => {
   await openTournament(page, 'Copa Completa');
   await expect(page.getByText('Copa Completa', { exact: true }).last()).toBeVisible();
-  await expect(page.getByText('Times · 2')).toBeVisible();
+  await expect(page.getByLabel('Times do campeonato')).toBeVisible();
+  await expect(page.getByText(/Times · /)).toHaveCount(0);
   await expect(page.getByText('Beta', { exact: true }).first()).toBeVisible();
   await expect(page.getByLabel('Iniciais Beta').first()).toBeVisible();
 });
@@ -110,17 +113,25 @@ test('[tournamentHighlights] mostra os destaques de atletas', async ({ page }) =
       ...historyPayload(1, [phases[0]]).data,
       has_aggregated_player_stats: true,
       sport_slug: 'basketball_5x5',
-      player_stats: [{ id: 's1', slug: 'points', title: 'PTS' }],
+      player_stats: [{ id: 's1', slug: 'points', title: 'PTS' }, { id: 's2', slug: 'points_per_game', title: 'PTS/J' }],
     },
   }));
   await page.route('**/aggregated-player-stats-leaders?*', (route) => fulfillJson(route, {
-    data: [{ stat_key: 'points', leaders: [{ player_id: 'player-a', team_id: 'team-a', value: 31, player: { name: 'Ana Silva' } }] }],
+    data: [
+      { stat_key: 'points', leaders: [{ player_id: 'player-a', team_id: 'team-a', value: 31, player: { name: 'Ana Silva' } }] },
+      { stat_key: 'points_per_game', leaders: [{ player_id: 'player-b', team_id: 'team-b', value: 15.5, player: { name: 'Bia Souza' } }] },
+    ],
   }));
   await openTournament(page, 'Copa Classificação');
   await page.getByRole('button', { name: 'Destaques', exact: true }).click();
   await expect(page.getByText('Pontos', { exact: true })).toBeVisible();
   await expect(page.getByText('Ana Silva')).toBeVisible();
+  await expect(page.getByLabel('Iniciais Ana Silva')).toBeVisible();
   await expect(page.getByText('31', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Ver todos: Pontos' })).toBeVisible();
+  await page.getByRole('tab', { name: 'Pontos Por jogo' }).click();
+  await expect(page.getByText('Bia Souza')).toBeVisible();
+  await expect(page.getByText('15.5', { exact: true })).toBeVisible();
 });
 
 test('[noPhases] informa campeonato sem fases', async ({ page }) => {

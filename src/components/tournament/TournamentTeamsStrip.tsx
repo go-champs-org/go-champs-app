@@ -12,8 +12,7 @@ export const TournamentTeamsStrip = ({ teams }: Props) => {
   if (teams.length === 0) return null;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Times · {teams.length}</Text>
+    <View accessibilityLabel="Times do campeonato" style={styles.container}>
       <FlatList
         horizontal
         data={teams}
@@ -36,13 +35,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: theme.colors.subtleBorder,
-    gap: theme.spacing.sm,
-  },
-  label: {
-    paddingHorizontal: theme.spacing.md,
-    color: theme.colors.subtleText,
-    fontSize: theme.typography.caption,
-    fontWeight: '800',
   },
   list: {
     paddingHorizontal: theme.spacing.md,

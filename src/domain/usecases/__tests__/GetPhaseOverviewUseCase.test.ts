@@ -2,7 +2,7 @@ import { TournamentRepository } from '../../repositories/TournamentRepository';
 import { GetPhaseOverviewUseCase } from '../GetPhaseOverviewUseCase';
 import { classificationDataFixture, gamesFixture, groupPhaseDataFixture, playoffResponseFixture, tournamentDetailsFixture } from '../../../test/fixtures/tournamentFixtures';
 
-const teams = tournamentDetailsFixture.teams.map((team) => ({ id: team.id, name: team.name, logo_url: team.logo_url }));
+const teams = tournamentDetailsFixture.teams.map((team) => ({ id: team.id, name: team.name, logo_url: team.logo_url, tri_code: team.tri_code ?? null }));
 
 const repositoryWith = (phase: unknown, games: Promise<unknown> = Promise.resolve(gamesFixture)) =>
   ({
@@ -19,9 +19,8 @@ describe('GetPhaseOverviewUseCase', () => {
     expect(repository.getGamesByPhaseId).toHaveBeenCalledWith('phase-group', 'https://api.test/v1');
     if (overview.kind !== 'standings') throw new Error('expected standings');
     expect(overview.groups.map((group) => group.title)).toEqual(['Grupo B', 'Grupo A']);
-    expect(overview.groups[0].rows.map((row) => [row.team.name, row.values.wins])).toEqual([['Alpha', '1'], ['Beta', '3']]);
-    expect(overview.columns).toEqual([{ id: 'wins', label: 'V', title: 'V', emphasized: true }]);
-    expect(overview.legend).toBe('');
+    expect(overview.groups[0].rows.map((row) => [row.team.name, row.shortName, row.values.wins])).toEqual([['Alpha', 'ALP', '1'], ['Beta', 'BET', '3']]);
+    expect(overview.columns).toEqual([{ id: 'wins', title: 'V' }]);
     expect(overview.games.map((game) => game.id)).toEqual(['game-1', 'game-2']);
   });
 
@@ -38,7 +37,10 @@ describe('GetPhaseOverviewUseCase', () => {
     };
     const overview = await new GetPhaseOverviewUseCase(repositoryWith(phase, Promise.resolve([]))).execute('p', 'standings', []);
     if (overview.kind !== 'standings') throw new Error('expected standings');
-    expect(overview.groups[0].rows.map((row) => [row.team.name, row.values.wins])).toEqual([['Vencedor A', '-'], ['A definir', '0']]);
+    expect(overview.groups[0].rows.map((row) => [row.team.name, row.shortName, row.values.wins])).toEqual([
+      ['Vencedor A', 'Vencedor A', '-'],
+      ['A definir', 'A definir', '0'],
+    ]);
   });
 
   it('returns a sorted bracket and survives unreachable games', async () => {

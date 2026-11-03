@@ -72,5 +72,6 @@ export interface Team {
   id:        string;
   logo_url?: string | null;
   name:      string;
+  tri_code?: string | null;
   players:   any[];
 }

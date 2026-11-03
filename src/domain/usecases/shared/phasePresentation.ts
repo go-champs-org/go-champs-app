@@ -3,6 +3,7 @@ import { Game } from '../../../models/GameModel';
 export type TeamInfo = {
   name: string;
   logo_url: string | null;
+  tri_code?: string | null;
 };
 
 export type TeamMap = Record<string, TeamInfo>;
@@ -18,23 +19,32 @@ export const phaseKind = (phase: { type?: string | null }): PhaseKind | null => 
   return null;
 };
 
+// Same label the public site puts in a standings row: the tri-code when the
+// team has one, else its name, else what the organizer wrote for the slot.
+export const teamShortName = (team: TeamInfo | undefined, placeholder: string | null, fallback: string): string =>
+  team?.tri_code || team?.name || placeholder || fallback;
+
 export const sortGamesByDate = (games: Game[]): Game[] =>
   [...games].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
 
 export const buildTeamMap = (
   games: Game[],
-  teams: { id: string; name: string; logo_url?: string | null }[] = []
+  teams: { id: string; name: string; logo_url?: string | null; tri_code?: string | null }[] = []
 ): TeamMap => {
   const map: TeamMap = {};
 
   teams.forEach((team) => {
-    map[team.id] = { name: team.name, logo_url: team.logo_url || null };
+    map[team.id] = { name: team.name, logo_url: team.logo_url || null, tri_code: team.tri_code || null };
   });
 
   games.forEach((game) => {
     [game.home_team, game.away_team].forEach((team) => {
       if (!team) return;
-      map[team.id] = { name: team.name, logo_url: team.logo_url || map[team.id]?.logo_url || null };
+      map[team.id] = {
+        name: team.name,
+        logo_url: team.logo_url || map[team.id]?.logo_url || null,
+        tri_code: team.tri_code || map[team.id]?.tri_code || null,
+      };
     });
   });
 

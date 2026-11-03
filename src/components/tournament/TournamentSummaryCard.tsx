@@ -39,7 +39,11 @@ export const TournamentSummaryCard = ({ tournament, leaders }: Props) => (
       ) : null}
     </View>
     <TournamentTeamsStrip teams={tournament.teams} />
-    <HighlightsAccordion cards={leaders} />
+    <HighlightsAccordion
+      cards={leaders}
+      organizationSlug={tournament.organizationSlug}
+      tournamentSlug={tournament.slug}
+    />
   </View>
 );
 

@@ -20,7 +20,7 @@ describe('GetTournamentOverviewUseCase', () => {
       has_aggregated_player_stats: true,
       sport_slug: 'basketball_5x5',
       phases: [phase('playoffs', 'draw', 3, true), phase('table', 'elimination', 1, false, null), phase('signup', 'registration', 0)],
-      teams: [{ id: 'b', name: 'Zebra', players: [] }, { id: 'a', name: 'Águias', logo_url: 'https://example.com/a.png', players: [] }],
+      teams: [{ id: 'b', name: 'Zebra', players: [] }, { id: 'a', name: 'Águias', logo_url: 'https://example.com/a.png', tri_code: 'AGU', players: [] }],
     });
     const overview = await run();
 
@@ -33,10 +33,11 @@ describe('GetTournamentOverviewUseCase', () => {
     expect(overview.isActive).toBe(true);
     expect(overview.logoUrl).toBe('https://example.com/logo.png');
     expect(overview.organizationName).toBe('Go Champs');
+    expect([overview.organizationSlug, overview.slug]).toEqual(['go-champs', 'copa-go-champs']);
     expect(overview.hasAggregatedPlayerStats).toBe(true);
     expect(overview.teams).toEqual([
-      { id: 'a', name: 'Águias', logo_url: 'https://example.com/a.png' },
-      { id: 'b', name: 'Zebra', logo_url: null },
+      { id: 'a', name: 'Águias', logo_url: 'https://example.com/a.png', tri_code: 'AGU' },
+      { id: 'b', name: 'Zebra', logo_url: null, tri_code: null },
     ]);
   });
 
@@ -51,7 +52,7 @@ describe('GetTournamentOverviewUseCase', () => {
       phases: undefined, teams: undefined, player_stats: undefined, organization: undefined, sport_slug: undefined,
     } as never).run();
     expect(overview).toMatchObject({
-      phases: [], teams: [], playerStats: [], defaultPhaseId: null, organizationName: '', sportSlug: '', logoUrl: null,
+      phases: [], teams: [], playerStats: [], defaultPhaseId: null, organizationName: '', organizationSlug: '', sportSlug: '', logoUrl: null,
     });
   });
 });

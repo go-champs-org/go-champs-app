@@ -1,6 +1,6 @@
 import { TournamentRepository } from '../repositories/TournamentRepository';
 import { TournamentOverview } from './GetTournamentOverviewUseCase';
-import { LeaderCard, leaderCards, leaderStatsFor } from './shared/statLeaders';
+import { LeaderCard, leaderCards, leaderStatKeys, leaderStatsFor } from './shared/statLeaders';
 
 export class GetStatLeadersUseCase {
   constructor(private readonly tournamentRepository: TournamentRepository) {}
@@ -14,7 +14,7 @@ export class GetStatLeadersUseCase {
 
     const groups = await this.tournamentRepository.getStatLeaders(
       tournament.id,
-      stats.map((stat) => stat.slug),
+      leaderStatKeys(stats),
       apiBaseUrl
     );
     return leaderCards(stats, groups, tournament.teams);

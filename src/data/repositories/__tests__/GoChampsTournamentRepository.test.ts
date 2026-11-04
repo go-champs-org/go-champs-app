@@ -5,8 +5,6 @@ import { API_CONFIG } from '../../../core/config/apiConfig';
 import {
   classificationDataFixture,
   gamesFixture,
-  playoffResponseFixture,
-  tournamentDetailsFixture,
   tournamentFixture,
   tournamentHistoryFixture,
 } from '../../../test/fixtures/tournamentFixtures';
@@ -18,10 +16,7 @@ const createApiClient = (get: jest.Mock) =>
 
 const createFallback = (): TournamentFallbackDataSource =>
   ({
-    getTournamentDetails: jest.fn(() => tournamentDetailsFixture),
-    getPlayoffData: jest.fn(() => playoffResponseFixture),
     getGames: jest.fn(() => gamesFixture),
-    getSportConfig: jest.fn(() => ({ name: 'Basketball', slug: 'basketball' })),
   }) as unknown as TournamentFallbackDataSource;
 
 describe('GoChampsTournamentRepository', () => {
@@ -52,17 +47,6 @@ describe('GoChampsTournamentRepository', () => {
     ]);
   });
 
-  it('returns fallback tournament details when remote fails', async () => {
-    const fallback = createFallback();
-    const repository = new GoChampsTournamentRepository(
-      createApiClient(jest.fn().mockRejectedValue(new Error('offline'))),
-      fallback
-    );
-
-    await expect(repository.getTournamentDetails('tournament-1')).resolves.toEqual(tournamentDetailsFixture);
-    expect(fallback.getTournamentDetails).toHaveBeenCalled();
-  });
-
   it('keeps tournament history errors explicit', async () => {
     const repository = new GoChampsTournamentRepository(
       createApiClient(jest.fn().mockResolvedValue(tournamentHistoryFixture.data)),
@@ -79,7 +63,7 @@ describe('GoChampsTournamentRepository', () => {
       .mockResolvedValueOnce({ data: gamesFixture });
     const repository = new GoChampsTournamentRepository(createApiClient(get), createFallback());
 
-    await expect(repository.getClassificationData('phase-1')).resolves.toEqual(classificationDataFixture);
+    await expect(repository.getPhase('phase-1')).resolves.toEqual(classificationDataFixture);
     await expect(repository.getGamesByPhaseId('phase-1')).resolves.toEqual(gamesFixture);
   });
 });

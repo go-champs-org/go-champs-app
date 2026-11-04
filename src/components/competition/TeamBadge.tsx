@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
+import { initials } from '../../core/text/initials';
 import { theme } from '../../theme/theme';
 
 type Props = {
@@ -8,25 +9,28 @@ type Props = {
   size?: number;
 };
 
-const initials = (name?: string | null) =>
-  (name || 'Time')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0))
-    .join('')
-    .toUpperCase();
-
+// A logo keeps its own shape, fitted inside a square like the public site;
+// one that is missing, or fails to load, falls back to the name's initials in
+// a circle.
 export const TeamBadge = ({ logoUrl, name, size = 32 }: Props) => {
-  const shape = { width: size, height: size, borderRadius: size / 2 };
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const box = { width: size, height: size };
 
-  if (logoUrl) {
-    return <Image accessibilityLabel={`Escudo ${name || 'do time'}`} source={{ uri: logoUrl }} style={[styles.base, shape]} />;
+  if (logoUrl && logoUrl !== failedUrl) {
+    return (
+      <Image
+        accessibilityLabel={`Escudo ${name || 'do time'}`}
+        source={{ uri: logoUrl }}
+        onError={() => setFailedUrl(logoUrl)}
+        resizeMode="contain"
+        style={[styles.base, box]}
+      />
+    );
   }
 
   return (
-    <View accessibilityLabel={`Iniciais ${name || 'do time'}`} style={[styles.base, styles.placeholder, shape]}>
-      <Text style={[styles.initials, { fontSize: Math.max(9, size * 0.3) }]}>{initials(name)}</Text>
+    <View accessibilityLabel={`Iniciais ${name || 'do time'}`} style={[styles.base, styles.placeholder, box, { borderRadius: size / 2 }]}>
+      <Text style={[styles.initials, { fontSize: Math.max(9, size * 0.3) }]}>{initials(name || 'Time')}</Text>
     </View>
   );
 };

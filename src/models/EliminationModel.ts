@@ -5,6 +5,7 @@ export interface EliminationStat {
   title: string;
   team_stat_source: string;
   ranking_order: number;
+  ranking_criteria?: string | null;
 }
 
 export interface TeamStat {

@@ -1,12 +1,9 @@
 import { API_CONFIG } from '../../core/config/apiConfig';
-import { ClassificationData, ClassificationResponse } from '../../models/ClassificationModel';
 import { Game, GameResponse } from '../../models/GameModel';
 import { GameDetail, GameDetailResponse, PlayerStatsLog, PlayerStatsLogResponse } from '../../models/GameDetail';
-import { GroupPhaseData, GroupPhaseResponse } from '../../models/GroupPhaseModel';
-import { PlayoffResponse } from '../../models/PlayoffModel';
-import { SportConfig, SportResponse } from '../../models/Sport';
+import { PhaseData, PhaseResponse } from '../../models/PhaseModel';
+import { StatLeadersGroup, StatLeadersResponse } from '../../models/StatLeaders';
 import { Tournament } from '../../models/Tournament';
-import { TournamentDetails, TournamentDetailsResponse } from '../../models/TournamentDetails';
 import { TournamentHistory } from '../../models/TournamentHistory';
 import { TournamentRepository } from '../../domain/repositories/TournamentRepository';
 import { TournamentFallbackDataSource } from '../datasources/local/TournamentFallbackDataSource';
@@ -48,21 +45,14 @@ export class GoChampsTournamentRepository implements TournamentRepository {
     return mapTournamentHistoryResponse(response);
   }
 
-  async getTournamentDetails(tournamentId: string, apiBaseUrl?: string): Promise<TournamentDetails> {
-    try {
-      const response = await this.apiClient.get<TournamentDetailsResponse>(`/tournaments/${tournamentId}`, apiBaseUrl);
-      return response.data;
-    } catch {
-      return this.fallbackDataSource.getTournamentDetails();
-    }
-  }
-
-  async getPlayoffData(phaseId: string, apiBaseUrl?: string): Promise<PlayoffResponse> {
-    try {
-      return await this.apiClient.get<PlayoffResponse>(`/phases/${phaseId}`, apiBaseUrl);
-    } catch {
-      return this.fallbackDataSource.getPlayoffData();
-    }
+  async getPhase(phaseId: string, apiBaseUrl?: string): Promise<PhaseData> {
+    const response = await this.apiClient.get<PhaseResponse>(`/phases/${phaseId}`, apiBaseUrl);
+    return {
+      ...response.data,
+      elimination_stats: response.data.elimination_stats ?? [],
+      eliminations: response.data.eliminations ?? [],
+      draws: response.data.draws ?? [],
+    };
   }
 
   async getGamesByPhaseId(phaseId: string, apiBaseUrl?: string): Promise<Game[]> {
@@ -72,6 +62,15 @@ export class GoChampsTournamentRepository implements TournamentRepository {
     } catch {
       return this.fallbackDataSource.getGames();
     }
+  }
+
+  async getStatLeaders(tournamentId: string, statKeys: string[], apiBaseUrl?: string): Promise<StatLeadersGroup[]> {
+    const stats = statKeys.map((key) => `&stats[]=${key}`).join('');
+    const response = await this.apiClient.get<StatLeadersResponse>(
+      `/aggregated-player-stats-leaders?where[tournament_id]=${tournamentId}${stats}`,
+      apiBaseUrl
+    );
+    return response.data ?? [];
   }
 
   async getGameById(gameId: string, apiBaseUrl?: string): Promise<GameDetail> {
@@ -95,24 +94,5 @@ export class GoChampsTournamentRepository implements TournamentRepository {
       apiBaseUrl
     );
     return response.data ?? [];
-  }
-
-  async getSportConfig(sportSlug: string, apiBaseUrl?: string): Promise<SportConfig> {
-    try {
-      const response = await this.apiClient.get<SportResponse>(`/sports/${sportSlug}`, apiBaseUrl);
-      return response.data;
-    } catch {
-      return this.fallbackDataSource.getSportConfig();
-    }
-  }
-
-  async getClassificationData(phaseId: string, apiBaseUrl?: string): Promise<ClassificationData> {
-    const response = await this.apiClient.get<ClassificationResponse>(`/phases/${phaseId}`, apiBaseUrl);
-    return response.data;
-  }
-
-  async getGroupPhaseData(phaseId: string, apiBaseUrl?: string): Promise<GroupPhaseData> {
-    const response = await this.apiClient.get<GroupPhaseResponse>(`/phases/${phaseId}`, apiBaseUrl);
-    return response.data;
   }
 }

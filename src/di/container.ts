@@ -5,6 +5,7 @@ import { TournamentFallbackDataSource } from '../data/datasources/local/Tourname
 import { GoChampsApiClient } from '../data/datasources/remote/GoChampsApiClient';
 import { GoChampsAccountRepository } from '../data/repositories/GoChampsAccountRepository';
 import { GoChampsAthleteProfileRepository } from '../data/repositories/GoChampsAthleteProfileRepository';
+import { GoChampsScoreboardRepository } from '../data/repositories/GoChampsScoreboardRepository';
 import { GoChampsOrganizationRepository } from '../data/repositories/GoChampsOrganizationRepository';
 import { GoChampsTournamentRepository } from '../data/repositories/GoChampsTournamentRepository';
 import { LocalPinnedTournamentsRepository } from '../data/repositories/LocalPinnedTournamentsRepository';
@@ -12,15 +13,14 @@ import { CreateAthleteProfileUseCase } from '../domain/usecases/CreateAthletePro
 import { GetAccountProfileUseCase } from '../domain/usecases/GetAccountProfileUseCase';
 import { GetAthleteProfileByUsernameUseCase } from '../domain/usecases/GetAthleteProfileByUsernameUseCase';
 import { GetAthleteSchedulesUseCase } from '../domain/usecases/GetAthleteSchedulesUseCase';
-import { GetClassificationOverviewUseCase } from '../domain/usecases/GetClassificationOverviewUseCase';
 import { GetGameOverviewUseCase } from '../domain/usecases/GetGameOverviewUseCase';
-import { GetGroupPhaseOverviewUseCase } from '../domain/usecases/GetGroupPhaseOverviewUseCase';
+import { GetLiveScoreUseCase } from '../domain/usecases/GetLiveScoreUseCase';
 import { GetOrganizationsUseCase } from '../domain/usecases/GetOrganizationsUseCase';
+import { GetPhaseOverviewUseCase } from '../domain/usecases/GetPhaseOverviewUseCase';
 import { GetPinnedTournamentIdsUseCase } from '../domain/usecases/GetPinnedTournamentIdsUseCase';
-import { GetPlayoffOverviewUseCase } from '../domain/usecases/GetPlayoffOverviewUseCase';
 import { GetRecentTournamentsUseCase } from '../domain/usecases/GetRecentTournamentsUseCase';
-import { GetTournamentHistoryUseCase } from '../domain/usecases/GetTournamentHistoryUseCase';
-import { ResolvePhaseDestinationUseCase } from '../domain/usecases/ResolvePhaseDestinationUseCase';
+import { GetStatLeadersUseCase } from '../domain/usecases/GetStatLeadersUseCase';
+import { GetTournamentOverviewUseCase } from '../domain/usecases/GetTournamentOverviewUseCase';
 import { SignInUseCase } from '../domain/usecases/SignInUseCase';
 import { TogglePinnedTournamentUseCase } from '../domain/usecases/TogglePinnedTournamentUseCase';
 import { UpdateAthleteProfileUseCase } from '../domain/usecases/UpdateAthleteProfileUseCase';
@@ -35,15 +35,15 @@ const tournamentRepository = new GoChampsTournamentRepository(apiClient, fallbac
 const organizationRepository = new GoChampsOrganizationRepository(apiClient);
 const accountRepository = new GoChampsAccountRepository(apiClient);
 const athleteProfileRepository = new GoChampsAthleteProfileRepository(apiClient);
+const scoreboardRepository = new GoChampsScoreboardRepository(httpClient);
 const pinnedTournamentsRepository = new LocalPinnedTournamentsRepository(pinnedTournamentsStore);
 
 export const container = {
   getRecentTournaments: new GetRecentTournamentsUseCase(tournamentRepository),
-  getTournamentHistory: new GetTournamentHistoryUseCase(tournamentRepository),
-  resolvePhaseDestination: new ResolvePhaseDestinationUseCase(),
-  getPlayoffOverview: new GetPlayoffOverviewUseCase(tournamentRepository),
-  getClassificationOverview: new GetClassificationOverviewUseCase(tournamentRepository),
-  getGroupPhaseOverview: new GetGroupPhaseOverviewUseCase(tournamentRepository),
+  getTournamentOverview: new GetTournamentOverviewUseCase(tournamentRepository),
+  getLiveScore: new GetLiveScoreUseCase(scoreboardRepository),
+  getPhaseOverview: new GetPhaseOverviewUseCase(tournamentRepository),
+  getStatLeaders: new GetStatLeadersUseCase(tournamentRepository),
   getGameOverview: new GetGameOverviewUseCase(tournamentRepository),
   getOrganizations: new GetOrganizationsUseCase(organizationRepository),
   signIn: new SignInUseCase(accountRepository),

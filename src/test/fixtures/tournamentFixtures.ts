@@ -1,9 +1,7 @@
-import { ClassificationData } from '../../models/ClassificationModel';
 import { Game } from '../../models/GameModel';
-import { GroupPhaseData } from '../../models/GroupPhaseModel';
+import { PhaseData } from '../../models/PhaseModel';
 import { PlayoffResponse } from '../../models/PlayoffModel';
 import { Tournament } from '../../models/Tournament';
-import { TournamentDetails } from '../../models/TournamentDetails';
 import { TournamentHistory } from '../../models/TournamentHistory';
 
 export const tournamentFixture: Tournament = {
@@ -76,15 +74,9 @@ export const gamesFixture: Game[] = [
   },
 ];
 
-export const tournamentDetailsFixture: TournamentDetails = {
+// The tournament fields the E2E API stub merges over the history payload.
+export const tournamentDetailsFixture = {
   ...tournamentFixture,
-  phases: [
-    {
-      id: 'phase-playoff',
-      title: 'Playoffs',
-      type: 'draw',
-    },
-  ],
   sport_slug: 'basketball',
   sport_name: 'Basketball',
   teams: [teamA, teamB],
@@ -133,12 +125,13 @@ export const playoffResponseFixture: PlayoffResponse = {
   },
 };
 
-export const classificationDataFixture: ClassificationData = {
+export const classificationDataFixture: PhaseData = {
   id: 'phase-classification',
   title: 'Classificacao',
-  type: 'classification',
+  type: 'elimination',
   is_in_progress: false,
   order: 1,
+  draws: [],
   elimination_stats: [
     {
       id: 'wins',
@@ -171,11 +164,10 @@ export const classificationDataFixture: ClassificationData = {
   ],
 };
 
-export const groupPhaseDataFixture: GroupPhaseData = {
+export const groupPhaseDataFixture: PhaseData = {
   ...classificationDataFixture,
   id: 'phase-group',
-  title: 'Grupo A',
-  type: 'group',
+  title: 'Grupos',
   eliminations: [
     {
       ...classificationDataFixture.eliminations[0],

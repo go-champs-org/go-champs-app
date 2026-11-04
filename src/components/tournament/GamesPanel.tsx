@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Game } from '../../models/GameModel';
 import { isLiveGame, showsScore } from '../../domain/usecases/shared/liveScore';
 import { teamShortName } from '../../domain/usecases/shared/phasePresentation';
 import { useLiveScore } from '../../viewmodels/LiveScoreViewModel';
+import { LiveBadge } from '../competition/LiveBadge';
 import { TeamBadge } from '../competition/TeamBadge';
 import { theme } from '../../theme/theme';
 
@@ -36,37 +37,6 @@ type Emphasis = 'winner' | 'loser' | 'neutral';
 const emphasisOf = (finished: boolean, own: number, other: number): Emphasis => {
   if (!finished || own === other) return 'neutral';
   return own > other ? 'winner' : 'loser';
-};
-
-// The same red the public site and the CMS use for live; only the dot carries
-// it, the label stays in the text color for contrast.
-const LIVE_RED = '#ff4136';
-
-// The public site's `animate-pulse`: the dot fades to half and back every 2s.
-const PULSE_HALF_MS = 1000;
-const PULSE_EASING = Easing.bezier(0.4, 0, 0.6, 1);
-
-const LiveBadge = () => {
-  const [opacity] = useState(() => new Animated.Value(1));
-
-  useEffect(() => {
-    const useNativeDriver = Platform.OS !== 'web';
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.5, duration: PULSE_HALF_MS, easing: PULSE_EASING, useNativeDriver }),
-        Animated.timing(opacity, { toValue: 1, duration: PULSE_HALF_MS, easing: PULSE_EASING, useNativeDriver }),
-      ])
-    );
-    pulse.start();
-    return () => pulse.stop();
-  }, [opacity]);
-
-  return (
-    <View accessibilityLabel="Ao vivo" style={styles.live}>
-      <Animated.View style={[styles.liveDot, { opacity }]} />
-      <Text style={styles.liveText}>AO VIVO</Text>
-    </View>
-  );
 };
 
 type SideProps = { name: string; logoUrl?: string | null; score: number | null; emphasis: Emphasis };
@@ -210,9 +180,6 @@ const styles = StyleSheet.create({
   meta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.sm, marginBottom: 2 },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   time: { color: theme.colors.subtleText, fontSize: 12 },
-  live: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: LIVE_RED },
-  liveText: { color: theme.colors.ink, fontSize: 12, fontWeight: '800' },
   venue: { flexShrink: 1, color: theme.colors.subtleText, fontSize: 12, textTransform: 'uppercase' },
   side: { minHeight: 24, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   sideName: { flex: 1, fontSize: 14 },

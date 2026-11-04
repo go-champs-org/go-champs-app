@@ -84,6 +84,14 @@ describe('Tournament repository contracts', () => {
     expect(get).toHaveBeenCalledWith('/player-stats-logs?where[game_id]=game-1', baseUrl);
   });
 
+  it('loads team stats logs by game id', async () => {
+    get.mockResolvedValue({ data: [{ id: 'team-log', game_id: 'game-1', team_id: 't1', stats: { points: '80' } }] });
+    await expect(repository.getTeamStatsLogsByGameId('game-1', baseUrl)).resolves.toHaveLength(1);
+    expect(get).toHaveBeenCalledWith('/team-stats-logs?where[game_id]=game-1', baseUrl);
+    get.mockResolvedValue({});
+    await expect(repository.getTeamStatsLogsByGameId('game-1', baseUrl)).resolves.toEqual([]);
+  });
+
   it('loads bundled games when the games request fails', async () => {
     get.mockRejectedValue(new Error('offline'));
     const result = await repository.getGamesByPhaseId('item');

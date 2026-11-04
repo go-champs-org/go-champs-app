@@ -14,7 +14,7 @@ export interface Data {
   player_stats:                PlayerStat[];
   players:                     Player[];
   registrations:               any[];
-  scoreboard_setting:          string;
+  scoreboard_setting?:         ScoreboardSetting | null;
   site_url:                    string;
   slug:                        string;
   sport_name:                  string;
@@ -23,6 +23,10 @@ export interface Data {
   teams:                       Team[];
   twitter:                     string;
   visibility:                  string;
+}
+
+export interface ScoreboardSetting {
+  live_site_update?: string | null;
 }
 
 export interface Organization {

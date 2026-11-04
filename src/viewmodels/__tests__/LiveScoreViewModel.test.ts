@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { container } from '../../di/container';
-import { useLiveScore } from '../LiveScoreViewModel';
+import { useLiveGame, useLiveScore } from '../LiveScoreViewModel';
 
 jest.mock('../../di/container', () => ({ container: { getLiveScore: { execute: jest.fn() } } }));
 
@@ -72,5 +72,17 @@ describe('useLiveScore', () => {
     await act(async () => { reject(new Error('late')); await Promise.resolve(); });
     await tick();
     expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('hands back the whole feed and forgets it when the game changes', async () => {
+    const full = { ...update(3, 1), period: { type: 'quarter', number: 2 }, timeLeft: '07:32', boxScore: { home: { rows: [], totals: {} }, away: { rows: [], totals: {} } } };
+    execute.mockResolvedValueOnce(full).mockReturnValueOnce(new Promise(() => undefined));
+    const { result, rerender } = renderHook(({ gameId }: { gameId: string }) => useLiveGame(gameId, true), { initialProps: { gameId: 'game-1' } });
+    expect(result.current).toBeNull();
+    await flush();
+    expect(result.current).toBe(full);
+    rerender({ gameId: 'game-2' });
+    expect(result.current).toBeNull();
+    expect(execute).toHaveBeenLastCalledWith('game-2');
   });
 });

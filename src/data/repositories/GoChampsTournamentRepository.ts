@@ -5,7 +5,14 @@ import {
   AggregatedPlayerStatsResponse,
 } from '../../models/AggregatedPlayerStats';
 import { Game, GameResponse } from '../../models/GameModel';
-import { GameDetail, GameDetailResponse, PlayerStatsLog, PlayerStatsLogResponse } from '../../models/GameDetail';
+import {
+  GameDetail,
+  GameDetailResponse,
+  PlayerStatsLog,
+  PlayerStatsLogResponse,
+  TeamStatsLog,
+  TeamStatsLogResponse,
+} from '../../models/GameDetail';
 import { PhaseData, PhaseResponse } from '../../models/PhaseModel';
 import { StatLeadersGroup, StatLeadersResponse } from '../../models/StatLeaders';
 import { Tournament } from '../../models/Tournament';
@@ -115,6 +122,14 @@ export class GoChampsTournamentRepository implements TournamentRepository {
   async getPlayerStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]> {
     const response = await this.apiClient.get<PlayerStatsLogResponse>(
       `/player-stats-logs?where[game_id]=${gameId}`,
+      apiBaseUrl
+    );
+    return response.data ?? [];
+  }
+
+  async getTeamStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<TeamStatsLog[]> {
+    const response = await this.apiClient.get<TeamStatsLogResponse>(
+      `/team-stats-logs?where[game_id]=${gameId}`,
       apiBaseUrl
     );
     return response.data ?? [];

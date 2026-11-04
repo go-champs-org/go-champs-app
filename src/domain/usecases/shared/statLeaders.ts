@@ -29,8 +29,8 @@ const SPORT_LEADER_STATS: Record<string, LeaderStatConfig[]> = {
 
 export const SCOPE_LABELS: Record<StatScope, string> = { aggregate: 'Totais', per_game: 'Por jogo' };
 
-const PER_GAME_SUFFIX = '_per_game';
-const statKeyInScope = (slug: string, scope: StatScope): string =>
+export const PER_GAME_SUFFIX = '_per_game';
+export const statKeyInScope = (slug: string, scope: StatScope): string =>
   scope === 'per_game' ? `${slug}${PER_GAME_SUFFIX}` : slug;
 
 const LEADER_TITLES: Record<string, string> = {
@@ -46,7 +46,7 @@ const LEADER_TITLES: Record<string, string> = {
 };
 
 // The CMS hides these from the public; a leaders card must never show them.
-const PRIVATE_STAT_SLUGS = new Set([
+export const PRIVATE_STAT_SLUGS = new Set([
   'disqualifications',
   'ejections',
   'field_goals_attempted',

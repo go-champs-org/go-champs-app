@@ -36,6 +36,21 @@ describe('Tournament repository contracts', () => {
     await expect(repository.getStatLeaders('t1', [], baseUrl)).resolves.toEqual([]);
   });
 
+  it('requests a filtered tournament stats ranking', async () => {
+    const logs = [{ id: 'log', player_id: 'p1', stats: { points: 10 } }];
+    get.mockResolvedValue({ data: logs });
+    await expect(repository.getAggregatedPlayerStats('t1', {
+      sort: 'points_per_game', phaseId: 'ph1', teamId: 'team-a', minStats: { game_played: 3 },
+    }, baseUrl)).resolves.toEqual(logs);
+    expect(get).toHaveBeenCalledWith(
+      '/aggregated-player-stats-by-tournament?where[tournament_id]=t1&where[phase_id]=ph1&where[team_id]=team-a&where[game_played][gte]=3&sort=points_per_game',
+      baseUrl
+    );
+    get.mockResolvedValue({});
+    await expect(repository.getAggregatedPlayerStats('t1', {}, baseUrl)).resolves.toEqual([]);
+    expect(get).toHaveBeenLastCalledWith('/aggregated-player-stats-by-tournament?where[tournament_id]=t1', baseUrl);
+  });
+
   it('loads a single game by id', async () => {
     const detail = { ...gamesFixture[0], city: null, court: null, number: null, result_type: null, assets: [], officials: [], web_url: null };
     get.mockResolvedValue({ data: detail });

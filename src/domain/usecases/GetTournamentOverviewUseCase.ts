@@ -8,6 +8,13 @@ export type TournamentTeam = {
   tri_code: string | null;
 };
 
+export type TournamentPlayer = {
+  id: string;
+  name: string;
+  photo_url: string | null;
+  team_id: string | null;
+};
+
 export type TournamentPhaseOption = {
   id: string;
   title: string;
@@ -26,6 +33,7 @@ export type TournamentOverview = {
   // Inferred, as on the public site: any phase in progress reads as live.
   isActive: boolean;
   teams: TournamentTeam[];
+  players: TournamentPlayer[];
   phases: TournamentPhaseOption[];
   defaultPhaseId: string | null;
   hasAggregatedPlayerStats: boolean;
@@ -59,6 +67,12 @@ export class GetTournamentOverviewUseCase {
       teams: (data.teams ?? [])
         .map((team) => ({ id: team.id, name: team.name, logo_url: team.logo_url || null, tri_code: team.tri_code || null }))
         .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+      players: (data.players ?? []).map((player) => ({
+        id: player.id,
+        name: player.name,
+        photo_url: player.photo_url || null,
+        team_id: player.team_id || null,
+      })),
       phases: [...supported].sort((a, b) => a.order - b.order),
       defaultPhaseId: defaultPhase?.id ?? null,
       hasAggregatedPlayerStats: Boolean(data.has_aggregated_player_stats),

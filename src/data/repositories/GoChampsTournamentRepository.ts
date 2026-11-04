@@ -1,4 +1,9 @@
 import { API_CONFIG } from '../../core/config/apiConfig';
+import {
+  AggregatedPlayerStatsLog,
+  AggregatedPlayerStatsQuery,
+  AggregatedPlayerStatsResponse,
+} from '../../models/AggregatedPlayerStats';
 import { Game, GameResponse } from '../../models/GameModel';
 import { GameDetail, GameDetailResponse, PlayerStatsLog, PlayerStatsLogResponse } from '../../models/GameDetail';
 import { PhaseData, PhaseResponse } from '../../models/PhaseModel';
@@ -68,6 +73,25 @@ export class GoChampsTournamentRepository implements TournamentRepository {
     const stats = statKeys.map((key) => `&stats[]=${key}`).join('');
     const response = await this.apiClient.get<StatLeadersResponse>(
       `/aggregated-player-stats-leaders?where[tournament_id]=${tournamentId}${stats}`,
+      apiBaseUrl
+    );
+    return response.data ?? [];
+  }
+
+  // The API answers with the top of the ranking (50 athletes), sorted best
+  // first by `sort`; without one, in its own order.
+  async getAggregatedPlayerStats(
+    tournamentId: string,
+    { sort, phaseId, teamId, minStats = {} }: AggregatedPlayerStatsQuery,
+    apiBaseUrl?: string
+  ): Promise<AggregatedPlayerStatsLog[]> {
+    const params = [`where[tournament_id]=${tournamentId}`];
+    if (phaseId) params.push(`where[phase_id]=${phaseId}`);
+    if (teamId) params.push(`where[team_id]=${teamId}`);
+    Object.entries(minStats).forEach(([slug, minimum]) => params.push(`where[${slug}][gte]=${minimum}`));
+    if (sort) params.push(`sort=${sort}`);
+    const response = await this.apiClient.get<AggregatedPlayerStatsResponse>(
+      `/aggregated-player-stats-by-tournament?${params.join('&')}`,
       apiBaseUrl
     );
     return response.data ?? [];

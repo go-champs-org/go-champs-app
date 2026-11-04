@@ -60,6 +60,7 @@ export interface Player {
   id:                    string;
   instagram:             string | null;
   name:                  string;
+  photo_url?:            string | null;
   registration_response: string | null;
   shirt_name:            string | null;
   shirt_number:          string | null;

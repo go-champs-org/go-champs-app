@@ -21,6 +21,7 @@ const overview: TournamentOverview = {
   organizationSlug: 'org',
   isActive: true,
   teams: [{ id: 'team-a', name: 'Alpha', logo_url: null, tri_code: null }],
+  players: [],
   phases: [
     { id: 'table', title: 'Classificação', order: 1, isInProgress: false, kind: 'standings' },
     { id: 'draw', title: 'Playoffs', order: 2, isInProgress: true, kind: 'bracket' },

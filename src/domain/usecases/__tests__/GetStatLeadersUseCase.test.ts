@@ -11,6 +11,7 @@ const tournament: TournamentOverview = {
   organizationSlug: 'org',
   isActive: true,
   teams: [{ id: 'team-a', name: 'Alpha', logo_url: null, tri_code: null }],
+  players: [],
   phases: [],
   defaultPhaseId: null,
   hasAggregatedPlayerStats: true,

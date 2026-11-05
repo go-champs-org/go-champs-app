@@ -181,8 +181,8 @@ const STARTER_LABEL = 'Titular';
 // explains it ahead of the columns — only once a starter shows.
 const glossaryEntries = (boxScore: GameBoxScore) => {
   const hasStarter = [...boxScore.home.rows, ...boxScore.away.rows].some((row) => isStarter(row.stats));
-  const columns = boxScore.columns.map((column) => ({ label: column.label, description: column.description }));
-  return hasStarter ? [{ label: '●', description: STARTER_LABEL }, ...columns] : columns;
+  const columns = boxScore.columns.map((column) => ({ key: column.slug, label: column.label, description: column.description }));
+  return hasStarter ? [{ key: 'starter', label: '●', description: STARTER_LABEL }, ...columns] : columns;
 };
 
 const BoxScoreSection = ({ boxScore }: { boxScore: GameBoxScore }) => {
@@ -211,7 +211,7 @@ const BoxScoreSection = ({ boxScore }: { boxScore: GameBoxScore }) => {
       {glossaryOpen ? (
         <View style={styles.glossary}>
           {glossaryEntries(boxScore).map((item) => (
-            <Text key={item.label} style={styles.glossaryItem}>
+            <Text key={item.key} style={styles.glossaryItem}>
               <Text style={styles.glossaryLabel}>{item.label}</Text> — {item.description}
             </Text>
           ))}

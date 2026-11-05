@@ -1,5 +1,7 @@
 import { BoxScoreColumn, BoxScoreRow, BoxScoreTeamStats } from '../../../models/GameDetail';
 import { isLiveGame } from './liveScore';
+import { PER_GAME_SUFFIX, PRIVATE_STAT_SLUGS } from './statLeaders';
+import { statLabelOf } from './tournamentStats';
 
 // The box score of the public game page (go-champs-web
 // apps/public/src/games/boxScore.ts and src/stats/rosterStats.ts).
@@ -55,55 +57,72 @@ const BASKETBALL_5X5_COLUMNS: BoxScoreColumn[] = [
   { slug: 'disqualifications', label: 'DSQ', description: 'Desqualificações' },
 ];
 
-// The abbreviations the public site heads any other sport's columns with.
-const STAT_ABBREVIATIONS: Record<string, string> = {
-  points: 'PTS',
-  rebounds: 'REB',
-  rebounds_offensive: 'REO',
-  rebounds_defensive: 'RED',
-  assists: 'AST',
-  blocks: 'TOC',
-  steals: 'ROU',
-  turnovers: 'ERR',
-  free_throws_made: 'LLC',
-  free_throw_percentage: 'LL%',
-  field_goals_made: '2PC',
-  field_goal_percentage: '2P%',
-  three_point_field_goals_made: '3PC',
-  three_point_field_goal_percentage: '3P%',
-  one_point_made: '1PC',
-  one_point_attempted: '1PT',
-  one_point_percentage: '1P%',
-  two_point_made: '2PC',
-  two_point_attempted: '2PT',
-  two_point_percentage: '2P%',
-  free_throw_made: 'LLC',
-  plus_minus: '+/-',
-  unsportsmanlike_fouls: 'FA',
-  disqualifying_fouls: 'FD',
-  game_played: 'JOG',
-  efficiency: 'EFF',
-  game_started: 'TIT',
-  minutes_played: 'MIN',
-  free_throws_attempted: 'LLT',
-  field_goals_attempted: '2PT',
-  three_point_field_goals_attempted: '3PT',
-  fouls_personal: 'FLP',
-  fouls_technical: 'FLT',
-  fouls_flagrant: 'FLF',
+// The statistics a sport records for a single game: the API's sport catalog
+// (/sports, level "game"), which the public site narrows the tournament's
+// statistics to. A sport not listed here keeps every statistic it records.
+const SPORT_GAME_STATS: Record<string, string[]> = {
+  basketball_3x3: [
+    'disqualifying_fouls',
+    'free_throw_made',
+    'game_played',
+    'one_point_made',
+    'one_point_missed',
+    'one_point_attempted',
+    'one_point_percentage',
+    'plus_minus',
+    'points',
+    'two_point_made',
+    'two_point_missed',
+    'two_point_attempted',
+    'two_point_percentage',
+    'unsportsmanlike_fouls',
+  ],
+};
+
+// The sport's column order; a statistic it does not order goes after the
+// ones it does, in the tournament's order.
+const SPORT_COLUMN_ORDER: Record<string, string[]> = {
+  basketball_3x3: [
+    'points',
+    'one_point_made',
+    'one_point_attempted',
+    'one_point_percentage',
+    'two_point_made',
+    'two_point_attempted',
+    'two_point_percentage',
+    'free_throw_made',
+    'unsportsmanlike_fouls',
+    'disqualifying_fouls',
+  ],
 };
 
 export type TournamentPlayerStat = { id?: string | null; slug: string | null; title: string };
 
-// Basketball 5x5 uses its fixed set; any other sport lists the tournament's
-// statistics in the order the API sent them, headed by their abbreviation.
-export const boxScoreColumns = (sportSlug: string, playerStats: TournamentPlayerStat[]): BoxScoreColumn[] =>
-  sportSlug === BASKETBALL_5X5
-    ? BASKETBALL_5X5_COLUMNS
-    : playerStats
-        .map((stat) => ({ slug: stat.slug || stat.id || '', title: stat.title }))
-        .filter((stat) => stat.slug)
-        .map((stat) => ({ slug: stat.slug, label: STAT_ABBREVIATIONS[stat.slug] || stat.title, description: stat.title }));
+// Basketball 5x5 uses its fixed set. Any other sport lists the tournament's
+// public, single-game statistics — never a per-game average, which only means
+// something across a season — in the sport's order, headed in pt-BR.
+export const boxScoreColumns = (sportSlug: string, playerStats: TournamentPlayerStat[]): BoxScoreColumn[] => {
+  if (sportSlug === BASKETBALL_5X5) return BASKETBALL_5X5_COLUMNS;
+  const gameStats = SPORT_GAME_STATS[sportSlug];
+  const order = SPORT_COLUMN_ORDER[sportSlug] ?? [];
+  const rank = (slug: string) => {
+    const index = order.indexOf(slug);
+    return index === -1 ? order.length : index;
+  };
+  const seen = new Set<string>();
+
+  return playerStats
+    .map((stat) => ({ slug: stat.slug || stat.id || '', title: stat.title }))
+    .filter((stat) => {
+      if (!stat.slug || seen.has(stat.slug)) return false;
+      seen.add(stat.slug);
+      return true;
+    })
+    .filter((stat) => !stat.slug.endsWith(PER_GAME_SUFFIX) && !PRIVATE_STAT_SLUGS.has(stat.slug))
+    .filter((stat) => !gameStats || gameStats.includes(stat.slug))
+    .sort((left, right) => rank(left.slug) - rank(right.slug))
+    .map((stat) => ({ slug: stat.slug, ...statLabelOf(stat.slug, stat.title) }));
+};
 
 // A game in progress shows its box score when the tournament opted into full
 // live updates, even before any log is saved: the live lines only exist in the

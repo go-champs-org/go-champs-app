@@ -25,10 +25,13 @@ describe('boxScore', () => {
     expect(columns.find((column) => column.slug === 'free_throws_made')?.attemptedSlug).toBe('free_throws_attempted');
   });
 
-  it('lists another sport by the tournament statistics', () => {
+  it('lists another sport by its public, single-game statistics', () => {
     expect(
       boxScoreColumns('volleyball', [
-        { slug: 'points', title: 'Pontos' },
+        { slug: 'points', title: 'Points' },
+        { slug: 'points_per_game', title: 'Points Per Game' },
+        { slug: 'minutes_played', title: 'Minutes Played' },
+        { slug: 'aces', title: 'Aces' },
         { slug: 'aces', title: 'Aces' },
         { id: 'legacy-id', slug: null, title: 'Antiga' },
         { slug: null, title: 'Sem identificador' },
@@ -38,6 +41,21 @@ describe('boxScore', () => {
       { slug: 'aces', label: 'Aces', description: 'Aces' },
       { slug: 'legacy-id', label: 'Antiga', description: 'Antiga' },
     ]);
+  });
+
+  it('narrows basketball 3x3 to its game statistics, in its order', () => {
+    const columns = boxScoreColumns('basketball_3x3', [
+      { slug: 'disqualifying_fouls', title: 'Disqualifying Fouls (D)' },
+      { slug: 'game_played', title: 'Game Played' },
+      { slug: 'one_point_missed', title: 'One Point Missed' },
+      { slug: 'plus_minus', title: 'Plus Minus' },
+      { slug: 'points', title: 'Points' },
+      { slug: 'one_point_made', title: 'One Point Made' },
+      { slug: 'points_per_game', title: 'Points Per Game' },
+      { slug: 'rebounds', title: 'Rebounds' },
+    ]);
+    expect(columns.map((column) => column.label)).toEqual(['PTS', '1PC', 'FD', '1PE', '+/-']);
+    expect(columns[3].description).toBe('Arremessos de 1 ponto errados');
   });
 
   it.each([

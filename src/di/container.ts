@@ -21,6 +21,7 @@ import { GetPinnedTournamentIdsUseCase } from '../domain/usecases/GetPinnedTourn
 import { GetRecentTournamentsUseCase } from '../domain/usecases/GetRecentTournamentsUseCase';
 import { GetStatLeadersUseCase } from '../domain/usecases/GetStatLeadersUseCase';
 import { GetTournamentOverviewUseCase } from '../domain/usecases/GetTournamentOverviewUseCase';
+import { GetTeamOverviewUseCase } from '../domain/usecases/GetTeamOverviewUseCase';
 import { GetTournamentStatsUseCase } from '../domain/usecases/GetTournamentStatsUseCase';
 import { SignInUseCase } from '../domain/usecases/SignInUseCase';
 import { TogglePinnedTournamentUseCase } from '../domain/usecases/TogglePinnedTournamentUseCase';
@@ -47,6 +48,7 @@ export const container = {
   getStatLeaders: new GetStatLeadersUseCase(tournamentRepository),
   getTournamentStats: new GetTournamentStatsUseCase(tournamentRepository),
   getGameOverview: new GetGameOverviewUseCase(tournamentRepository),
+  getTeamOverview: new GetTeamOverviewUseCase(tournamentRepository),
   getOrganizations: new GetOrganizationsUseCase(organizationRepository),
   signIn: new SignInUseCase(accountRepository),
   getAccountProfile: new GetAccountProfileUseCase(accountRepository),

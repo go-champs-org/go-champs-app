@@ -51,6 +51,14 @@ describe('Tournament repository contracts', () => {
     expect(get).toHaveBeenLastCalledWith('/aggregated-player-stats-by-tournament?where[tournament_id]=t1', baseUrl);
   });
 
+  it('requests a team schedule from both sides', async () => {
+    get.mockResolvedValue({ data: gamesFixture });
+    await expect(repository.getGamesByTeamId('team-a', baseUrl)).resolves.toEqual(gamesFixture);
+    expect(get).toHaveBeenCalledWith('/games?where[or][0][home_team_id]=team-a&where[or][1][away_team_id]=team-a', baseUrl);
+    get.mockResolvedValue({});
+    await expect(repository.getGamesByTeamId('team-a', baseUrl)).resolves.toEqual([]);
+  });
+
   it('loads a single game by id', async () => {
     const detail = { ...gamesFixture[0], city: null, court: null, number: null, result_type: null, assets: [], officials: [], web_url: null };
     get.mockResolvedValue({ data: detail });

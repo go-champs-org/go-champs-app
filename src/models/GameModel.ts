@@ -25,6 +25,9 @@ export interface Game {
   home_placeholder: string | null;
   away_placeholder: string | null;
   is_finished: boolean;
+  // 'home_team_walkover' / 'away_team_walkover' name a winner the score
+  // doesn't; anything else is a game decided on the court.
+  result_type?: string | null;
   live_state: string;
   live_started_at: string | null;
   live_ended_at: string | null;

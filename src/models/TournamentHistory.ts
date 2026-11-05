@@ -79,4 +79,12 @@ export interface Team {
   name:      string;
   tri_code?: string | null;
   players:   any[];
+  coaches?:  Coach[] | null;
+}
+
+export interface Coach {
+  id:   string;
+  name: string;
+  // 'head_coach' or 'assistant_coach'; anything else is left unlabelled.
+  type: string | null;
 }

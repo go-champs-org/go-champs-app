@@ -7,6 +7,11 @@ const pad = (value: number) => String(value).padStart(2, '0');
 
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
+const MONTH_NAMES = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+];
+
 const parse = (iso: string): Date | null => {
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? null : date;
@@ -45,4 +50,11 @@ export const formatGameShortDateTime = (iso: string | null | undefined): string 
   const date = parse(iso);
   if (!date) return iso;
   return `${pad(date.getUTCDate())} de ${MONTHS[date.getUTCMonth()]}., ${timeOf(date)}`;
+};
+
+// '2026-10-31' as the public site heads a day of games: '31 de outubro de 2026'.
+export const formatDayKeyLong = (key: string): string => {
+  const [year, month, day] = key.split('-').map(Number);
+  if (!year || !month || !day) return '';
+  return `${day} de ${MONTH_NAMES[month - 1]} de ${year}`;
 };

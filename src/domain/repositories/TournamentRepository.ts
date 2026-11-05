@@ -11,6 +11,7 @@ export interface TournamentRepository {
   getTournamentHistory(id: string, apiBaseUrl?: string): Promise<TournamentHistory>;
   getPhase(phaseId: string, apiBaseUrl?: string): Promise<PhaseData>;
   getGamesByPhaseId(phaseId: string, apiBaseUrl?: string): Promise<Game[]>;
+  getGamesByTeamId(teamId: string, apiBaseUrl?: string): Promise<Game[]>;
   getStatLeaders(tournamentId: string, statKeys: string[], apiBaseUrl?: string): Promise<StatLeadersGroup[]>;
   getAggregatedPlayerStats(
     tournamentId: string,

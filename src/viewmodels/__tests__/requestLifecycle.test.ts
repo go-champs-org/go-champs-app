@@ -14,7 +14,7 @@ jest.mock('../../di/container', () => ({ container: {
 
 const cases = [
   { name: 'game', useModel: (id: string) => useGameDetailViewModel(id),
-    service: container.getGameOverview, value: { game: null, boxScore: [] } },
+    service: container.getGameOverview, value: { game: null, sportSlug: '', liveSiteUpdate: null, boxScore: null } },
   { name: 'schedule', useModel: (id: string) => useMyGamesViewModel(Boolean(id)),
     service: container.getAthleteSchedules, value: [] },
   { name: 'profile', useModel: (id: string) => useProfileViewModel(id),

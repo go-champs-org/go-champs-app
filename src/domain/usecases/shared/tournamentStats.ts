@@ -76,9 +76,11 @@ const STAT_ABBREVIATIONS: Record<string, string> = {
   one_point_made: '1PC',
   one_point_attempted: '1PT',
   one_point_percentage: '1P%',
+  one_point_missed: '1PE',
   two_point_made: '2PC',
   two_point_attempted: '2PT',
   two_point_percentage: '2P%',
+  two_point_missed: '2PE',
   free_throw_made: 'LLC',
   plus_minus: '+/-',
   unsportsmanlike_fouls: 'FA',
@@ -114,9 +116,11 @@ const STAT_DESCRIPTIONS: Record<string, string> = {
   one_point_made: 'Arremessos de 1 ponto convertidos',
   one_point_attempted: 'Arremessos de 1 ponto tentados',
   one_point_percentage: 'Porcentagem de arremessos de 1 ponto',
+  one_point_missed: 'Arremessos de 1 ponto errados',
   two_point_made: 'Arremessos de 2 pontos convertidos',
   two_point_attempted: 'Arremessos de 2 pontos tentados',
   two_point_percentage: 'Porcentagem de arremessos de 2 pontos',
+  two_point_missed: 'Arremessos de 2 pontos errados',
   free_throw_made: 'Lances livres convertidos',
   plus_minus: 'Mais/menos',
   unsportsmanlike_fouls: 'Faltas antidesportivas',
@@ -169,11 +173,14 @@ export const baseStatSlug = (key: string): string =>
 
 export const scopeOfStatKey = (key: string): StatScope => (key.endsWith(PER_GAME_SUFFIX) ? 'per_game' : 'aggregate');
 
-const columnOf = (key: string, title: string): StatColumn => ({
-  key,
+// A stat's header and its glossary line in pt-BR; the API's own title, in
+// English, only for a stat this app has no words for.
+export const statLabelOf = (key: string, title: string): { label: string; description: string } => ({
   label: STAT_ABBREVIATIONS[baseStatSlug(key)] || title,
   description: STAT_DESCRIPTIONS[baseStatSlug(key)] || title,
 });
+
+const columnOf = (key: string, title: string): StatColumn => ({ key, ...statLabelOf(key, title) });
 
 // The tournament's own stats in one scope, narrowed to the sport's table and
 // in its order. A sport with no table keeps every public stat, in API order.

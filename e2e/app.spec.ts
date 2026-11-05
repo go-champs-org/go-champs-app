@@ -360,14 +360,74 @@ test('[webAuthSignUp] abre fluxo WebAuth de cadastro', async ({ page }) => {
   await expect(page.getByLabel('Fechar')).toBeVisible();
 });
 
-test('[gameDetail] abre detalhe do jogo com súmula', async ({ page }) => {
+const basketballTournament = (page: Page, scoreboardSetting: unknown = null) =>
+  page.route('**/tournaments/t-1', (route) => fulfillJson(route, {
+    data: { ...historyPayload(1, [phases[0]]).data, sport_slug: 'basketball_5x5', scoreboard_setting: scoreboardSetting },
+  }));
+
+test('[gameDetail] abre detalhe do jogo com estatísticas', async ({ page }) => {
+  await basketballTournament(page);
   await openTournament(page, 'Copa Classificação');
   await gamesTab(page).click();
   await page.getByLabel('Data anterior').click();
   await page.getByLabel(/Abrir jogo/).first().click();
-  await expect(page.getByText('Súmula')).toBeVisible();
+  await expect(page.getByText('Estatísticas', { exact: true })).toBeVisible();
   await expect(page.getByText('Ana Silva')).toBeVisible();
   await expect(page.getByText('34:30')).toBeVisible();
+  await expect(page.getByText('Totais').first()).toBeVisible();
+  await expect(page.getByText('AO VIVO')).toHaveCount(0);
+});
+
+test('[liveGameDetail] acompanha jogo ao vivo com período e estatísticas do scoreboard', async ({ page }) => {
+  const live = { ...gamesFixture[1], live_state: 'in_progress', is_finished: false, home_score: 0, away_score: 0 };
+  const team = (base: typeof live.home_team, player: { id: string; name: string; shirt_number: string }) => ({
+    ...base, logo_url: 'https://example.com/alpha.png', players: [player],
+  });
+  await basketballTournament(page, { live_site_update: 'full-live-update' });
+  await page.route('**/games?*', (route) => fulfillJson(route, { data: [live] }));
+  await page.route((url) => url.hostname === 'api.go-champs.com' && url.pathname.endsWith(`/games/${live.id}`), (route) => fulfillJson(route, {
+    data: {
+      ...live,
+      city: 'São Paulo',
+      court: null,
+      number: null,
+      result_type: null,
+      assets: [],
+      officials: [],
+      web_url: null,
+      phase: { id: 'table', title: 'Classificação', type: 'elimination', tournament: { id: 't-1', name: 'Copa Classificação', slug: 'copa' } },
+      home_team: team(live.home_team, { id: 'player-a', name: 'Ana Silva', shirt_number: '5' }),
+      away_team: team(live.away_team, { id: 'player-b', name: 'Bia Costa', shirt_number: '10' }),
+    },
+  }));
+  await page.route('https://scoreboard.go-champs.com/**', (route) => fulfillJson(route, {
+      data: {
+        home_team: {
+          total_player_stats: { points: 5 },
+          players: [{ id: 'player-a', name: 'Ana Silva', number: '5', stats_values: { points: 5, minutes_played: 600, game_started: 1 } }],
+        },
+        away_team: {
+          total_player_stats: { points: 11 },
+          players: [{ id: 'player-b', name: 'Bia Costa', number: '10', stats_values: { points: 11, minutes_played: 300 } }],
+        },
+        live_state: { state: 'in_progress' },
+        clock_state: { period: 2, time: 452 },
+      },
+    }));
+  await openTournament(page, 'Copa Classificação');
+  await gamesTab(page).click();
+  await page.getByLabel(/Abrir jogo/).first().click();
+  await expect(page.getByText('Estatísticas', { exact: true })).toBeVisible();
+  await expect(page.getByText('AO VIVO').last()).toBeVisible();
+  await expect(page.getByText('2º quarto · 07:32')).toBeVisible();
+  await expect(page.getByLabel(/: 11$/)).toBeVisible();
+  await expect(page.getByLabel(/: 5$/)).toBeVisible();
+  await expect(page.getByText('Bia Costa')).toBeVisible();
+  // Minutes played, read in the box score: the games list behind it shows kickoff times too.
+  const boxScore = page.getByTestId('box-score-team');
+  await expect(boxScore.getByText('10:00', { exact: true })).toBeVisible();
+  await expect(boxScore.getByText('05:00', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Titular')).toHaveCount(1);
 });
 
 test('[profileEdit] edita perfil de atleta autenticado', async ({ page }) => {

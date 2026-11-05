@@ -3,7 +3,8 @@ import { container } from '../di/container';
 import { Game } from '../models/GameModel';
 import { PhaseOverview } from '../domain/usecases/GetPhaseOverviewUseCase';
 import { TournamentOverview } from '../domain/usecases/GetTournamentOverviewUseCase';
-import { buildDateKeys, closestDateKey, dateKeyOf } from '../domain/usecases/shared/phasePresentation';
+import { gameDateKey } from '../domain/usecases/shared/gameDateTime';
+import { buildDateKeys, closestDateKey } from '../domain/usecases/shared/phasePresentation';
 import { LeaderCard } from '../domain/usecases/shared/statLeaders';
 
 export type TournamentView = 'home' | 'games';
@@ -89,7 +90,7 @@ export const useTournamentViewModel = (tournamentId: string, initialPhaseId?: st
     ? requestedDate
     : closestDateKey(dateKeys, new Date());
   const gamesForSelectedDate = useMemo(
-    () => (selectedDate ? games.filter((game) => dateKeyOf(game.datetime) === selectedDate) : ([] as Game[])),
+    () => (selectedDate ? games.filter((game) => gameDateKey(game.datetime) === selectedDate) : ([] as Game[])),
     [games, selectedDate]
   );
 

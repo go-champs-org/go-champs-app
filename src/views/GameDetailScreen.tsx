@@ -14,25 +14,25 @@ import { RootStackParamList } from '../navigation/types';
 import { theme } from '../theme/theme';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
+import { LiveBadge } from '../components/competition/LiveBadge';
+import { PlayerAvatar } from '../components/competition/PlayerAvatar';
 import { TeamBadge } from '../components/competition/TeamBadge';
 import { useGameDetailViewModel } from '../viewmodels/GameDetailViewModel';
-import { BOX_SCORE_COLUMNS, BOX_SCORE_GLOSSARY } from '../data/mappers/BoxScoreMapper';
-import { BoxScoreTeamSection, GameAsset } from '../models/GameDetail';
+import {
+  BoxScoreSort,
+  boxScoreCellValue,
+  didNotPlay,
+  isStarter,
+  nextBoxScoreSort,
+  sortedBoxScoreTeam,
+} from '../domain/usecases/shared/boxScore';
+import { formatGameDateTime } from '../domain/usecases/shared/gameDateTime';
+import { LiveScore } from '../domain/usecases/shared/liveScore';
+import { BoxScoreColumn, BoxScoreRow, BoxScoreTeam, GameAsset, GameBoxScore } from '../models/GameDetail';
 
 type Props = { route: RouteProp<RootStackParamList, 'GameDetailScreen'> };
 
-const formatDateTime = (value: string | null | undefined) => {
-  if (!value) return 'Data a definir';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
+const UNDECIDED = 'A definir';
 
 const assetLabel = (type: string) => {
   if (type === 'fiba-scoresheet') return 'Súmula FIBA';
@@ -42,8 +42,10 @@ const assetLabel = (type: string) => {
 
 const GameDetailScreen: React.FC<Props> = ({ route }) => {
   const { gameId, apiBaseUrl } = route.params;
-  const { loading, error, game, boxScore, refresh } = useGameDetailViewModel(gameId, apiBaseUrl);
-  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const { loading, error, game, boxScore, isLive, score, periodLabel, refresh } = useGameDetailViewModel(
+    gameId,
+    apiBaseUrl
+  );
 
   if (loading) {
     return (
@@ -72,9 +74,10 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
 
   const tournamentName = game.phase?.tournament?.name || 'Campeonato';
   const venue = [game.location, game.city].filter(Boolean).join(' — ') || 'Local a definir';
-  const homeName = game.home_team?.name || game.home_placeholder || 'Casa';
-  const awayName = game.away_team?.name || game.away_placeholder || 'Visitante';
-  const assets = (game.assets || []).filter((asset) => asset.url);
+  const homeName = game.home_team?.name || game.home_placeholder || UNDECIDED;
+  const awayName = game.away_team?.name || game.away_placeholder || UNDECIDED;
+  // Only http(s) is safe to hand to the system browser.
+  const assets = (game.assets || []).filter((asset) => /^https?:\/\//.test(asset.url));
 
   return (
     <View style={styles.screen}>
@@ -82,11 +85,38 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.tournament}>{tournamentName}</Text>
 
+          <View style={styles.scoreCard}>
+            <View style={styles.metaRow}>
+              <Text style={styles.date}>{formatGameDateTime(game.datetime)}</Text>
+              <Text style={styles.venue} numberOfLines={1}>
+                {venue}
+              </Text>
+            </View>
+
+            {isLive ? (
+              <View style={styles.liveRow}>
+                <LiveBadge />
+                {/* Keeps its height before the first scoreboard response so
+                    the score under it does not jump. */}
+                <Text style={styles.period}>{periodLabel ?? ''}</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.scoreboard}>
+              <TeamIdentity name={homeName} logoUrl={game.home_team?.logo_url} />
+              <Score score={score} homeName={homeName} awayName={awayName} />
+              <TeamIdentity name={awayName} logoUrl={game.away_team?.logo_url} />
+            </View>
+
+            {game.info ? <Text style={styles.info}>{game.info}</Text> : null}
+          </View>
+
+          {/* The game's PDFs share one full-width line under the score. */}
           {assets.length ? (
             <View style={styles.assetRow}>
               {assets.map((asset: GameAsset) => (
                 <TouchableOpacity
-                  key={asset.id}
+                  key={asset.id || asset.url}
                   accessibilityRole="button"
                   accessibilityLabel={assetLabel(asset.type)}
                   onPress={() => void Linking.openURL(asset.url)}
@@ -99,108 +129,214 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
             </View>
           ) : null}
 
-          <View style={styles.scoreCard}>
-            <View style={styles.metaRow}>
-              <Text style={styles.meta}>{formatDateTime(game.datetime)}</Text>
-              <Text style={styles.meta} numberOfLines={2}>
-                {venue}
-              </Text>
-            </View>
-            <View style={styles.scoreboard}>
-              <View style={styles.teamBlock}>
-                <TeamBadge logoUrl={game.home_team?.logo_url} name={homeName} />
-                <Text style={styles.teamName} numberOfLines={2}>
-                  {homeName}
-                </Text>
-              </View>
-              <Text style={styles.score}>
-                {game.home_score ?? '-'} x {game.away_score ?? '-'}
-              </Text>
-              <View style={styles.teamBlock}>
-                <TeamBadge logoUrl={game.away_team?.logo_url} name={awayName} />
-                <Text style={styles.teamName} numberOfLines={2}>
-                  {awayName}
-                </Text>
-              </View>
-            </View>
-            {game.is_finished ? <Text style={styles.finalBadge}>FINAL</Text> : null}
-          </View>
-
-          <View style={styles.boxHeader}>
-            <Text style={styles.sectionTitle}>Súmula</Text>
+          {game.youtube_code ? (
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Glossário"
-              onPress={() => setGlossaryOpen((value) => !value)}
-              style={styles.glossaryButton}
+              accessibilityLabel="Vídeo do jogo"
+              onPress={() => void Linking.openURL(`https://www.youtube.com/watch?v=${game.youtube_code}`)}
+              style={styles.videoButton}
             >
-              <Text style={styles.glossaryButtonText}>Glossário</Text>
-              <Ionicons
-                name={glossaryOpen ? 'chevron-up' : 'chevron-down'}
-                size={16}
-                color={theme.colors.success}
-              />
+              <Ionicons name="logo-youtube" size={18} color={theme.colors.danger} />
+              <Text style={styles.videoText}>Vídeo do jogo</Text>
             </TouchableOpacity>
-          </View>
-
-          {glossaryOpen ? (
-            <View style={styles.glossary}>
-              {BOX_SCORE_GLOSSARY.map((item) => (
-                <Text key={item.label} style={styles.glossaryItem}>
-                  <Text style={styles.glossaryLabel}>{item.label}</Text> — {item.description}
-                </Text>
-              ))}
-            </View>
           ) : null}
 
-          {boxScore.length === 0 ? (
-            <EmptyState
-              icon="stats-chart-outline"
-              title="Estatísticas indisponíveis"
-              description="A súmula desta partida ainda não foi publicada."
-            />
-          ) : (
-            boxScore.map((section) => <BoxScoreTable key={section.teamId} section={section} />)
-          )}
+          {boxScore ? <BoxScoreSection boxScore={boxScore} /> : null}
         </ScrollView>
       </ContentShell>
     </View>
   );
 };
 
-const BoxScoreTable = ({ section }: { section: BoxScoreTeamSection }) => (
-  <View style={styles.tableBlock}>
-    <View style={styles.teamHeader}>
-      <TeamBadge logoUrl={section.logoUrl} name={section.teamName} />
-      <Text style={styles.teamHeaderName}>{section.teamName}</Text>
-    </View>
-    <ScrollView horizontal showsHorizontalScrollIndicator>
-      <View>
-        <View style={styles.tableHeader}>
-          <Text style={[styles.playerCol, styles.headerCell]}>JOGADOR</Text>
-          {BOX_SCORE_COLUMNS.map((column) => (
-            <Text key={column.key} style={[styles.statCol, styles.headerCell]}>
-              {column.label}
+const TeamIdentity = ({ name, logoUrl }: { name: string; logoUrl?: string | null }) => (
+  <View style={styles.teamBlock}>
+    <TeamBadge logoUrl={logoUrl} name={name} size={56} />
+    <Text style={styles.teamName} numberOfLines={2}>
+      {name}
+    </Text>
+  </View>
+);
+
+// The digits alone say nothing out loud: each side carries the team it
+// belongs to, so a live update reads as a sentence.
+const Score = ({ score, homeName, awayName }: { score: LiveScore | null; homeName: string; awayName: string }) => (
+  <View style={styles.scoreRow} accessibilityLiveRegion="polite">
+    {score ? (
+      <Text accessibilityLabel={`${homeName}: ${score.homeScore}`} style={styles.score}>
+        {score.homeScore}
+      </Text>
+    ) : null}
+    <Text style={styles.scoreSeparator}>x</Text>
+    {score ? (
+      <Text accessibilityLabel={`${awayName}: ${score.awayScore}`} style={styles.score}>
+        {score.awayScore}
+      </Text>
+    ) : null}
+  </View>
+);
+
+const STARTER_LABEL = 'Titular';
+
+// The starter dot is read off the table like a column, so the glossary
+// explains it ahead of the columns — only once a starter shows.
+const glossaryEntries = (boxScore: GameBoxScore) => {
+  const hasStarter = [...boxScore.home.rows, ...boxScore.away.rows].some((row) => isStarter(row.stats));
+  const columns = boxScore.columns.map((column) => ({ key: column.slug, label: column.label, description: column.description }));
+  return hasStarter ? [{ key: 'starter', label: '●', description: STARTER_LABEL }, ...columns] : columns;
+};
+
+const BoxScoreSection = ({ boxScore }: { boxScore: GameBoxScore }) => {
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  // Null until a header is tapped: the box score opens in its ranked order.
+  // One sort for both sides, so a tap reads the same column across the game.
+  const [sort, setSort] = useState<BoxScoreSort | null>(null);
+  const onSort = (slug: string) => setSort((current) => nextBoxScoreSort(current, slug));
+
+  return (
+    <View style={styles.boxScore}>
+      <View style={styles.boxHeader}>
+        <Text style={styles.sectionTitle}>Estatísticas</Text>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Glossário"
+          accessibilityState={{ expanded: glossaryOpen }}
+          onPress={() => setGlossaryOpen((value) => !value)}
+          style={styles.glossaryButton}
+        >
+          <Text style={styles.glossaryButtonText}>Glossário</Text>
+          <Ionicons name={glossaryOpen ? 'chevron-up' : 'chevron-down'} size={16} color={theme.colors.success} />
+        </TouchableOpacity>
+      </View>
+
+      {glossaryOpen ? (
+        <View style={styles.glossary}>
+          {glossaryEntries(boxScore).map((item) => (
+            <Text key={item.key} style={styles.glossaryItem}>
+              <Text style={styles.glossaryLabel}>{item.label}</Text> — {item.description}
             </Text>
           ))}
         </View>
-        {section.rows.map((row, index) => (
-          <View key={row.playerId} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlt]}>
-            <Text style={styles.playerCol} numberOfLines={1}>
-              {row.shirtNumber ? `#${row.shirtNumber} ` : ''}
-              {row.playerName}
-            </Text>
-            {BOX_SCORE_COLUMNS.map((column) => (
-              <Text key={column.key} style={styles.statCol}>
-                {row.values[column.key]}
-              </Text>
-            ))}
-          </View>
-        ))}
+      ) : null}
+
+      {[boxScore.home, boxScore.away].map((team) => (
+        <BoxScoreTable
+          key={team.teamId || team.teamName}
+          team={sortedBoxScoreTeam(team, sort)}
+          columns={boxScore.columns}
+          sort={sort}
+          onSort={onSort}
+        />
+      ))}
+    </View>
+  );
+};
+
+const NAME_WIDTH = 168;
+const cellWidth = (column: BoxScoreColumn) => (column.attemptedSlug ? 64 : 52);
+
+type TableProps = {
+  team: BoxScoreTeam;
+  columns: BoxScoreColumn[];
+  sort: BoxScoreSort | null;
+  onSort: (slug: string) => void;
+};
+
+// The name column stays pinned while the statistics scroll under it.
+const BoxScoreTable = ({ team, columns, sort, onSort }: TableProps) => {
+  // Logs saved before the API stored the number carry none, and a column of
+  // empty slots would only cost width.
+  const showNumber = team.rows.some((row) => row.number);
+  const statsWidth = columns.reduce((width, column) => width + cellWidth(column), 0);
+
+  return (
+    <View style={styles.tableBlock} testID="box-score-team">
+      <View style={styles.teamHeader}>
+        <TeamBadge logoUrl={team.logoUrl} name={team.teamName} size={28} />
+        <Text style={styles.teamHeaderName}>{team.teamName}</Text>
       </View>
-    </ScrollView>
+      <View style={styles.table}>
+        <View style={[styles.nameColumn, { width: NAME_WIDTH }]}>
+          <View style={[styles.cellRow, styles.headerBand]}>
+            <Text style={styles.bandLabel}>ATLETA</Text>
+          </View>
+          {team.rows.map((row, index) => (
+            <PlayerNameCell key={row.playerId || `${row.name}-${index}`} row={row} showNumber={showNumber} />
+          ))}
+          <View style={[styles.cellRow, styles.totalsBand]}>
+            <Text style={styles.totalsLabel}>Totais</Text>
+          </View>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator>
+          <View>
+            <View style={[styles.cellRow, styles.headerBand]}>
+              {columns.map((column) => (
+                <StatHeader key={column.slug} column={column} sort={sort} onSort={onSort} />
+              ))}
+            </View>
+            {team.rows.map((row, index) => (
+              <View key={row.playerId || `${row.name}-${index}`} style={[styles.cellRow, styles.bodyRow]}>
+                {didNotPlay(row.stats) ? (
+                  <Text style={[styles.didNotPlay, { width: statsWidth }]}>Não jogou</Text>
+                ) : (
+                  columns.map((column) => (
+                    <Text key={column.slug} style={[styles.statCell, { width: cellWidth(column) }]}>
+                      {boxScoreCellValue(column, row.stats)}
+                    </Text>
+                  ))
+                )}
+              </View>
+            ))}
+            <View style={[styles.cellRow, styles.totalsBand]}>
+              {columns.map((column) => (
+                <Text key={column.slug} style={[styles.statCell, styles.totalsCell, { width: cellWidth(column) }]}>
+                  {boxScoreCellValue(column, team.totals)}
+                </Text>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    </View>
+  );
+};
+
+const PlayerNameCell = ({ row, showNumber }: { row: BoxScoreRow; showNumber: boolean }) => (
+  <View style={[styles.cellRow, styles.bodyRow, styles.nameCell]}>
+    {showNumber ? <Text style={styles.playerNumber}>{row.number ?? ''}</Text> : null}
+    <PlayerAvatar photoUrl={row.photoUrl} name={row.name} size={28} />
+    <Text style={styles.playerName} numberOfLines={1}>
+      {row.name}
+    </Text>
+    {isStarter(row.stats) ? <View accessibilityLabel={STARTER_LABEL} style={styles.starterDot} /> : null}
   </View>
 );
+
+const StatHeader = ({
+  column,
+  sort,
+  onSort,
+}: {
+  column: BoxScoreColumn;
+  sort: BoxScoreSort | null;
+  onSort: (slug: string) => void;
+}) => {
+  const direction = sort?.slug === column.slug ? sort.direction : null;
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`Ordenar por ${column.description}`}
+      onPress={() => onSort(column.slug)}
+      style={[styles.statHeader, { width: cellWidth(column) }]}
+    >
+      <Text style={styles.statHeaderLabel}>{column.label}</Text>
+      {direction ? (
+        <Ionicons name={direction === 'desc' ? 'caret-down' : 'caret-up'} size={10} color={theme.colors.ink} />
+      ) : null}
+    </TouchableOpacity>
+  );
+};
+
+const ROW_HEIGHT = 44;
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.colors.background },
@@ -219,13 +355,14 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   assetRow: {
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.md,
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: theme.spacing.sm,
   },
   assetButton: {
-    height: 36,
+    flex: 1,
+    justifyContent: 'center',
+    height: 44,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.accentSoft,
@@ -246,38 +383,81 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
   },
-  meta: { flex: 1, color: theme.colors.mutedText, fontSize: theme.typography.caption, fontWeight: '700' },
+  date: { flexShrink: 0, color: theme.colors.mutedText, fontSize: theme.typography.bodySmall },
+  venue: {
+    flexShrink: 1,
+    textAlign: 'right',
+    color: theme.colors.mutedText,
+    fontSize: theme.typography.bodySmall,
+  },
+  liveRow: { marginTop: theme.spacing.md, alignItems: 'center', gap: theme.spacing.xs },
+  period: {
+    minHeight: 16,
+    color: theme.colors.mutedText,
+    fontSize: theme.typography.caption,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    fontVariant: ['tabular-nums'],
+  },
   scoreboard: {
+    marginTop: theme.spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: theme.spacing.sm,
   },
-  teamBlock: { flex: 1, alignItems: 'center', gap: theme.spacing.xs },
+  teamBlock: { flex: 1, alignItems: 'center', gap: theme.spacing.sm },
   teamName: {
     color: theme.colors.textPrimary,
-    fontSize: theme.typography.caption,
-    fontWeight: '800',
+    fontSize: theme.typography.bodySmall,
+    fontWeight: '700',
     textAlign: 'center',
   },
+  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   score: {
     color: theme.colors.textPrimary,
-    fontSize: theme.typography.display,
-    fontWeight: '900',
+    fontSize: 32,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
   },
-  finalBadge: {
-    marginTop: theme.spacing.sm,
-    alignSelf: 'center',
-    color: theme.colors.success,
-    fontSize: theme.typography.caption,
-    fontWeight: '900',
+  scoreSeparator: { color: theme.colors.mutedText, fontSize: theme.typography.title },
+  info: {
+    marginTop: theme.spacing.lg,
+    textAlign: 'center',
+    color: theme.colors.mutedText,
+    fontSize: theme.typography.bodySmall,
+  },
+  videoButton: {
+    marginTop: theme.spacing.md,
+    alignSelf: 'flex-start',
+    height: 36,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  videoText: { color: theme.colors.textPrimary, fontSize: theme.typography.caption, fontWeight: '800' },
+  // The tables run edge to edge of the card, split by a line only.
+  boxScore: {
+    marginTop: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    overflow: 'hidden',
   },
   boxHeader: {
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -285,7 +465,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: theme.colors.textPrimary,
     fontSize: theme.typography.title,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   glossaryButton: {
     flexDirection: 'row',
@@ -302,6 +482,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   glossary: {
+    marginHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.md,
     padding: theme.spacing.md,
     borderRadius: theme.radius.md,
@@ -311,54 +492,86 @@ const styles = StyleSheet.create({
   glossaryItem: { color: theme.colors.mutedText, fontSize: theme.typography.caption, lineHeight: 18 },
   glossaryLabel: { color: theme.colors.textPrimary, fontWeight: '900' },
   tableBlock: {
-    marginBottom: theme.spacing.lg,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
-    overflow: 'hidden',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
   teamHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
     padding: theme.spacing.md,
-    backgroundColor: theme.colors.surfaceMuted,
   },
   teamHeaderName: {
     flex: 1,
     color: theme.colors.textPrimary,
-    fontSize: theme.typography.body,
-    fontWeight: '900',
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.accentSoft,
-    minHeight: 36,
-    alignItems: 'center',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    minHeight: 40,
-    alignItems: 'center',
-    backgroundColor: theme.colors.card,
-  },
-  tableRowAlt: { backgroundColor: theme.colors.surfaceMuted },
-  playerCol: {
-    width: 160,
-    paddingHorizontal: theme.spacing.sm,
-    color: theme.colors.textPrimary,
-    fontSize: theme.typography.caption,
+    fontSize: theme.typography.titleSmall,
     fontWeight: '800',
   },
-  statCol: {
-    width: 52,
-    textAlign: 'center',
-    color: theme.colors.textPrimary,
+  table: { flexDirection: 'row' },
+  nameColumn: {
+    borderRightWidth: 1,
+    borderRightColor: theme.colors.divider,
+    backgroundColor: theme.colors.card,
+  },
+  cellRow: { height: ROW_HEIGHT, flexDirection: 'row', alignItems: 'center' },
+  headerBand: { backgroundColor: theme.colors.accentSoft },
+  totalsBand: { backgroundColor: theme.colors.surfaceStrong },
+  bodyRow: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.colors.border },
+  bandLabel: {
+    paddingHorizontal: theme.spacing.sm,
+    color: theme.colors.ink,
     fontSize: theme.typography.caption,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  totalsLabel: {
+    paddingHorizontal: theme.spacing.sm,
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.bodySmall,
+    fontWeight: '800',
+  },
+  nameCell: { paddingHorizontal: theme.spacing.sm, gap: theme.spacing.xs },
+  playerNumber: {
+    width: 18,
+    textAlign: 'right',
+    color: theme.colors.mutedText,
+    fontSize: theme.typography.caption,
+    fontVariant: ['tabular-nums'],
+  },
+  playerName: {
+    flex: 1,
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.bodySmall,
     fontWeight: '700',
   },
-  headerCell: { fontWeight: '900', color: theme.colors.success },
+  starterDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.success },
+  statHeader: {
+    height: ROW_HEIGHT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingHorizontal: theme.spacing.xs,
+  },
+  statHeaderLabel: {
+    color: theme.colors.ink,
+    fontSize: theme.typography.caption,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  statCell: {
+    paddingHorizontal: theme.spacing.xs,
+    textAlign: 'right',
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.caption,
+    fontVariant: ['tabular-nums'],
+  },
+  totalsCell: { fontWeight: '800' },
+  didNotPlay: {
+    paddingHorizontal: theme.spacing.sm,
+    color: theme.colors.mutedText,
+    fontSize: theme.typography.caption,
+  },
   retry: {
     marginHorizontal: theme.spacing.md,
     height: 48,

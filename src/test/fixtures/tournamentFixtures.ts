@@ -94,7 +94,7 @@ export const tournamentHistoryFixture: TournamentHistory = {
     player_stats: [],
     players: [],
     registrations: [],
-    scoreboard_setting: '',
+    scoreboard_setting: null,
     site_url: '',
     slug: tournamentFixture.slug,
     sport_name: 'Basketball',

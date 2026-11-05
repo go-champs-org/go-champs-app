@@ -97,6 +97,9 @@ export const test = base.extend({
           },
         }],
       };
+      else if (path === '/team-stats-logs') payload = {
+        data: [{ id: 'team-log-1', game_id: url.searchParams.get('where[game_id]') || 'game-1', team_id: 'team-a', stats: { points: '20' } }],
+      };
       else if (path === '/accounts/signin') payload = { data: { email: 'ana@example.com', token: 'token', username: 'ana' } };
       else if (path.startsWith('/users/')) payload = {
         data: {

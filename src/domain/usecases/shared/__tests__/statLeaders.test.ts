@@ -1,4 +1,4 @@
-import { formatLeaderValue, leaderCards, leaderStatKeys, leaderStatsFor, tournamentStatsUrl } from '../statLeaders';
+import { formatLeaderValue, leaderCards, leaderStatKeys, leaderStatsFor } from '../statLeaders';
 
 const teams = [{ id: 'team-a', name: 'Alpha', logo_url: null, tri_code: 'ALP' }];
 
@@ -55,9 +55,5 @@ describe('statLeaders', () => {
       ['Atleta 2', '', '10', null],
       ['Atleta 3', '', '10', null],
     ]);
-  });
-
-  it('links to the public stats page of a stat', () => {
-    expect(tournamentStatsUrl('org', 'copa', 'points_per_game')).toBe('https://go-champs.com/org/copa/stats?stat=points_per_game');
   });
 });

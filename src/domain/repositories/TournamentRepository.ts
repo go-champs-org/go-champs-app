@@ -1,3 +1,4 @@
+import { AggregatedPlayerStatsLog, AggregatedPlayerStatsQuery } from '../../models/AggregatedPlayerStats';
 import { Game } from '../../models/GameModel';
 import { GameDetail, PlayerStatsLog } from '../../models/GameDetail';
 import { PhaseData } from '../../models/PhaseModel';
@@ -11,6 +12,11 @@ export interface TournamentRepository {
   getPhase(phaseId: string, apiBaseUrl?: string): Promise<PhaseData>;
   getGamesByPhaseId(phaseId: string, apiBaseUrl?: string): Promise<Game[]>;
   getStatLeaders(tournamentId: string, statKeys: string[], apiBaseUrl?: string): Promise<StatLeadersGroup[]>;
+  getAggregatedPlayerStats(
+    tournamentId: string,
+    query: AggregatedPlayerStatsQuery,
+    apiBaseUrl?: string
+  ): Promise<AggregatedPlayerStatsLog[]>;
   getGameById(gameId: string, apiBaseUrl?: string): Promise<GameDetail>;
   getPlayerStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]>;
 }

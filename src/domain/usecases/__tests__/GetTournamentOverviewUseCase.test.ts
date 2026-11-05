@@ -20,6 +20,10 @@ describe('GetTournamentOverviewUseCase', () => {
       has_aggregated_player_stats: true,
       sport_slug: 'basketball_5x5',
       phases: [phase('playoffs', 'draw', 3, true), phase('table', 'elimination', 1, false, null), phase('signup', 'registration', 0)],
+      players: [
+        { id: 'p1', name: 'Ana', photo_url: 'https://example.com/ana.png', team_id: 'a' },
+        { id: 'p2', name: 'Bia', team_id: null },
+      ] as never,
       teams: [{ id: 'b', name: 'Zebra', players: [] }, { id: 'a', name: 'Águias', logo_url: 'https://example.com/a.png', tri_code: 'AGU', players: [] }],
     });
     const overview = await run();
@@ -35,6 +39,10 @@ describe('GetTournamentOverviewUseCase', () => {
     expect(overview.organizationName).toBe('Go Champs');
     expect([overview.organizationSlug, overview.slug]).toEqual(['go-champs', 'copa-go-champs']);
     expect(overview.hasAggregatedPlayerStats).toBe(true);
+    expect(overview.players).toEqual([
+      { id: 'p1', name: 'Ana', photo_url: 'https://example.com/ana.png', team_id: 'a' },
+      { id: 'p2', name: 'Bia', photo_url: null, team_id: null },
+    ]);
     expect(overview.teams).toEqual([
       { id: 'a', name: 'Águias', logo_url: 'https://example.com/a.png', tri_code: 'AGU' },
       { id: 'b', name: 'Zebra', logo_url: null, tri_code: null },
@@ -49,10 +57,10 @@ describe('GetTournamentOverviewUseCase', () => {
 
   it('tolerates a tournament without phases, teams or optional fields', async () => {
     const overview = await execute({
-      phases: undefined, teams: undefined, player_stats: undefined, organization: undefined, sport_slug: undefined,
+      phases: undefined, teams: undefined, players: undefined, player_stats: undefined, organization: undefined, sport_slug: undefined,
     } as never).run();
     expect(overview).toMatchObject({
-      phases: [], teams: [], playerStats: [], defaultPhaseId: null, organizationName: '', organizationSlug: '', sportSlug: '', logoUrl: null,
+      phases: [], teams: [], players: [], playerStats: [], defaultPhaseId: null, organizationName: '', organizationSlug: '', sportSlug: '', logoUrl: null,
     });
   });
 });

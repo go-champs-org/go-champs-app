@@ -134,6 +134,96 @@ test('[tournamentHighlights] mostra os destaques de atletas', async ({ page }) =
   await expect(page.getByText('15.5', { exact: true })).toBeVisible();
 });
 
+const statsTournament = (index: number, selectedPhases = phases) => ({
+  data: {
+    ...historyPayload(index, selectedPhases).data,
+    has_aggregated_player_stats: true,
+    sport_slug: 'basketball_5x5',
+    player_stats: [
+      { id: 's1', slug: 'game_played', title: 'JOG' },
+      { id: 's2', slug: 'points', title: 'PTS' },
+      { id: 's3', slug: 'assists', title: 'AST' },
+      { id: 's4', slug: 'points_per_game', title: 'PTS/J' },
+    ],
+    players: [
+      { id: 'player-a', name: 'Ana Silva', photo_url: null, team_id: 'team-a' },
+      { id: 'player-b', name: 'Bia Souza', photo_url: null, team_id: 'team-b' },
+    ],
+  },
+});
+
+// Ranks Ana first by points and Bia first by anything else; a minimum of
+// games leaves no one.
+const routeStatsRanking = async (page: Page) => {
+  const queries: URLSearchParams[] = [];
+  await page.route('**/aggregated-player-stats-by-tournament?*', (route) => {
+    const query = new URL(route.request().url()).searchParams;
+    queries.push(query);
+    const ana = { id: 'l1', player_id: 'player-a', stats: { game_played: 4, points: 40, assists: 2, points_per_game: 10 } };
+    const bia = { id: 'l2', player_id: 'player-b', stats: { game_played: 3, points: 30, assists: 9, points_per_game: 12.5 } };
+    const sort = query.get('sort');
+    const data = query.has('where[game_played][gte]') ? [] : sort === 'points' ? [ana, bia] : [bia, ana];
+    return fulfillJson(route, { data });
+  });
+  return () => queries[queries.length - 1];
+};
+
+const athleteOrder = (page: Page) => page.getByTestId('tournament-stats-table').getByText(/^(Ana Silva|Bia Souza)$/).allTextContents();
+
+test('[tournamentStats] abre as estatísticas pelo Ver todos do destaque', async ({ page }) => {
+  await page.route('**/tournaments/t-1', (route) => fulfillJson(route, statsTournament(1, [phases[0]])));
+  await page.route('**/aggregated-player-stats-leaders?*', (route) => fulfillJson(route, {
+    data: [
+      { stat_key: 'points', leaders: [{ player_id: 'player-a', team_id: 'team-a', value: 40, player: { name: 'Ana Silva' } }] },
+      { stat_key: 'points_per_game', leaders: [{ player_id: 'player-b', team_id: 'team-b', value: 12.5, player: { name: 'Bia Souza' } }] },
+    ],
+  }));
+  const lastQuery = await routeStatsRanking(page);
+  await openTournament(page, 'Copa Classificação');
+  await page.getByRole('button', { name: 'Destaques', exact: true }).click();
+  await page.getByRole('tab', { name: 'Pontos Por jogo' }).click();
+  await page.getByRole('link', { name: 'Ver todos: Pontos' }).click();
+
+  await expect(page.getByText('Estatísticas do campeonato')).toBeVisible();
+  await expect.poll(() => lastQuery()?.get('sort')).toBe('points_per_game');
+  expect(lastQuery().get('where[tournament_id]')).toBe('t-1');
+  await expect(page.getByTestId('tournament-stats-table').getByText('12.5', { exact: true })).toBeVisible();
+  await expect.poll(() => athleteOrder(page)).toEqual(['Bia Souza', 'Ana Silva']);
+});
+
+test('[statsRanking] troca estatística, escopo e filtros do ranking', async ({ page }) => {
+  await page.route('**/tournaments/t-0', (route) => fulfillJson(route, statsTournament(0)));
+  await page.route('**/aggregated-player-stats-leaders?*', (route) => fulfillJson(route, { data: [] }));
+  const lastQuery = await routeStatsRanking(page);
+  await openTournament(page, 'Copa Completa');
+  await page.getByRole('button', { name: 'Estatísticas' }).click();
+
+  await expect.poll(() => lastQuery()?.get('sort')).toBe('points');
+  await expect.poll(() => athleteOrder(page)).toEqual(['Ana Silva', 'Bia Souza']);
+
+  await page.getByRole('button', { name: 'Ordenar por Assistências' }).click();
+  await expect.poll(() => lastQuery().get('sort')).toBe('assists');
+  await expect.poll(() => athleteOrder(page)).toEqual(['Bia Souza', 'Ana Silva']);
+
+  await page.getByRole('tab', { name: 'Por jogo' }).click();
+  await expect.poll(() => lastQuery().get('sort')).toBe('points_per_game');
+
+  await page.getByRole('button', { name: 'Filtros', exact: true }).click();
+  await page.getByRole('button', { name: 'Fase: Todas as fases' }).click();
+  await page.getByRole('radio', { name: 'Playoffs' }).click();
+  await expect.poll(() => lastQuery().get('where[phase_id]')).toBe('draw');
+  await page.getByRole('button', { name: 'Time: Todos os times' }).click();
+  await page.getByRole('radio', { name: 'Beta' }).click();
+  await expect.poll(() => lastQuery().get('where[team_id]')).toBe('team-b');
+  await page.getByLabel('Jogos (mín.)').fill('5');
+  await expect.poll(() => lastQuery().get('where[game_played][gte]')).toBe('5');
+  await expect(page.getByText('Nenhum atleta atende a esses filtros.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Filtros (3)' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Glossário' }).click();
+  await expect(page.getByTestId('stats-glossary').getByText('PTS', { exact: true })).toBeVisible();
+});
+
 test('[noPhases] informa campeonato sem fases', async ({ page }) => {
   await openTournament(page, 'Copa Sem Fases');
   await expect(page.getByText('Este campeonato ainda não possui fases disponíveis.')).toBeVisible();

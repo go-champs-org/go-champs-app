@@ -16,6 +16,7 @@ import {
 import { PhaseData, PhaseResponse } from '../../models/PhaseModel';
 import { StatLeadersGroup, StatLeadersResponse } from '../../models/StatLeaders';
 import { Tournament } from '../../models/Tournament';
+import { TournamentAthlete, TournamentAthleteResponse } from '../../models/TournamentAthlete';
 import { TournamentHistory } from '../../models/TournamentHistory';
 import { TournamentRepository } from '../../domain/repositories/TournamentRepository';
 import { TournamentFallbackDataSource } from '../datasources/local/TournamentFallbackDataSource';
@@ -140,6 +141,21 @@ export class GoChampsTournamentRepository implements TournamentRepository {
   async getTeamStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<TeamStatsLog[]> {
     const response = await this.apiClient.get<TeamStatsLogResponse>(
       `/team-stats-logs?where[game_id]=${gameId}`,
+      apiBaseUrl
+    );
+    return response.data ?? [];
+  }
+
+  async getPlayer(playerId: string, apiBaseUrl?: string): Promise<TournamentAthlete> {
+    const response = await this.apiClient.get<TournamentAthleteResponse>(`/players/${playerId}`, apiBaseUrl);
+    return response.data;
+  }
+
+  // There is no aggregated-by-phase endpoint: the athlete screen groups these
+  // per-game logs by phase itself, as the public athlete page does.
+  async getPlayerStatsLogsByPlayerId(playerId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]> {
+    const response = await this.apiClient.get<PlayerStatsLogResponse>(
+      `/player-stats-logs?where[player_id]=${playerId}`,
       apiBaseUrl
     );
     return response.data ?? [];

@@ -4,6 +4,7 @@ import { GameDetail, PlayerStatsLog, TeamStatsLog } from '../../models/GameDetai
 import { PhaseData } from '../../models/PhaseModel';
 import { StatLeadersGroup } from '../../models/StatLeaders';
 import { Tournament } from '../../models/Tournament';
+import { TournamentAthlete } from '../../models/TournamentAthlete';
 import { TournamentHistory } from '../../models/TournamentHistory';
 
 export interface TournamentRepository {
@@ -21,4 +22,7 @@ export interface TournamentRepository {
   getGameById(gameId: string, apiBaseUrl?: string): Promise<GameDetail>;
   getPlayerStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]>;
   getTeamStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<TeamStatsLog[]>;
+  getPlayer(playerId: string, apiBaseUrl?: string): Promise<TournamentAthlete>;
+  // Every game log the athlete has, each carrying its phase.
+  getPlayerStatsLogsByPlayerId(playerId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]>;
 }

@@ -100,6 +100,21 @@ describe('Tournament repository contracts', () => {
     await expect(repository.getTeamStatsLogsByGameId('game-1', baseUrl)).resolves.toEqual([]);
   });
 
+  it('loads a tournament athlete by id', async () => {
+    const athlete = { id: 'p1', name: 'Ana', team_id: 'team-a', photo_url: null };
+    get.mockResolvedValue({ data: athlete });
+    await expect(repository.getPlayer('p1', baseUrl)).resolves.toEqual(athlete);
+    expect(get).toHaveBeenCalledWith('/players/p1', baseUrl);
+  });
+
+  it('loads every stats log of an athlete', async () => {
+    get.mockResolvedValue({ data: [{ id: 'log-1', player_id: 'p1', team_id: 't1', game_id: 'g1', phase_id: 'ph1', tournament_id: 't', stats: {} }] });
+    await expect(repository.getPlayerStatsLogsByPlayerId('p1', baseUrl)).resolves.toHaveLength(1);
+    expect(get).toHaveBeenCalledWith('/player-stats-logs?where[player_id]=p1', baseUrl);
+    get.mockResolvedValue({});
+    await expect(repository.getPlayerStatsLogsByPlayerId('p1', baseUrl)).resolves.toEqual([]);
+  });
+
   it('loads bundled games when the games request fails', async () => {
     get.mockRejectedValue(new Error('offline'));
     const result = await repository.getGamesByPhaseId('item');

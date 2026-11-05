@@ -11,6 +11,7 @@ import { GoChampsTournamentRepository } from '../data/repositories/GoChampsTourn
 import { LocalPinnedTournamentsRepository } from '../data/repositories/LocalPinnedTournamentsRepository';
 import { CreateAthleteProfileUseCase } from '../domain/usecases/CreateAthleteProfileUseCase';
 import { GetAccountProfileUseCase } from '../domain/usecases/GetAccountProfileUseCase';
+import { GetAthleteOverviewUseCase } from '../domain/usecases/GetAthleteOverviewUseCase';
 import { GetAthleteProfileByUsernameUseCase } from '../domain/usecases/GetAthleteProfileByUsernameUseCase';
 import { GetAthleteSchedulesUseCase } from '../domain/usecases/GetAthleteSchedulesUseCase';
 import { GetGameOverviewUseCase } from '../domain/usecases/GetGameOverviewUseCase';
@@ -49,6 +50,7 @@ export const container = {
   getTournamentStats: new GetTournamentStatsUseCase(tournamentRepository),
   getGameOverview: new GetGameOverviewUseCase(tournamentRepository),
   getTeamOverview: new GetTeamOverviewUseCase(tournamentRepository),
+  getAthleteOverview: new GetAthleteOverviewUseCase(tournamentRepository),
   getOrganizations: new GetOrganizationsUseCase(organizationRepository),
   signIn: new SignInUseCase(accountRepository),
   getAccountProfile: new GetAccountProfileUseCase(accountRepository),

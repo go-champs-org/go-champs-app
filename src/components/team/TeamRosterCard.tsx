@@ -17,6 +17,8 @@ type Props = {
   sort: BoxScoreSort | null;
   onSelectScope: (scope: StatScope) => void;
   onSort: (key: string) => void;
+  // Opens the athlete's page, as the public roster links each name.
+  onPressAthlete: (playerId: string) => void;
 };
 
 const ROW_HEIGHT = 44;
@@ -26,7 +28,7 @@ const STAT_WIDTH = 52;
 // The roster and its season numbers are one table, as on the public team
 // page: shirt number, photo and name pinned while the stats scroll under
 // them, a sortable header band and a totals band that adds the team up.
-export const TeamRosterCard = ({ rows, columns, totals, scopes, scope, sort, onSelectScope, onSort }: Props) => {
+export const TeamRosterCard = ({ rows, columns, totals, scopes, scope, sort, onSelectScope, onSort, onPressAthlete }: Props) => {
   const [glossaryOpen, setGlossaryOpen] = useState(false);
 
   return (
@@ -83,11 +85,18 @@ export const TeamRosterCard = ({ rows, columns, totals, scopes, scope, sort, onS
             <Text style={styles.bandLabel}>Nome</Text>
           </View>
           {rows.map((row) => (
-            <View key={row.playerId} style={[styles.cellRow, styles.bodyRow, styles.nameCell]} testID="team-roster-athlete">
+            <TouchableOpacity
+              key={row.playerId}
+              accessibilityRole="link"
+              accessibilityLabel={`Abrir atleta ${row.name}`}
+              onPress={() => onPressAthlete(row.playerId)}
+              style={[styles.cellRow, styles.bodyRow, styles.nameCell]}
+              testID="team-roster-athlete"
+            >
               <Text style={[styles.number, styles.playerNumber]}>{row.number ?? ''}</Text>
               <PlayerAvatar photoUrl={row.photoUrl} name={row.name} size={28} />
               <Text numberOfLines={1} style={styles.playerName}>{row.name}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
           <View style={[styles.cellRow, styles.totalsBand, styles.nameCell]}>
             <Text style={styles.number} />

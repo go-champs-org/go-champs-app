@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { SCOPE_LABELS } from '../domain/usecases/shared/statLeaders';
 import { useTournamentStatsViewModel } from '../viewmodels/TournamentStatsViewModel';
@@ -47,6 +48,7 @@ const Toggle = ({ label, icon, open, onPress }: ToggleProps) => (
 // page: Totais or Por jogo, any column tapped to rank by it, narrowed by
 // phase, team and minimum games.
 const TournamentStatsScreen: React.FC<Props> = ({ route }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { tournamentId, statKey: requestedStatKey, apiBaseUrl } = route.params;
   const viewModel = useTournamentStatsViewModel(tournamentId, requestedStatKey, apiBaseUrl);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -155,6 +157,7 @@ const TournamentStatsScreen: React.FC<Props> = ({ route }) => {
                   loading={viewModel.rowsLoading}
                   emptyLabel={viewModel.activeFilterCount > 0 ? NO_FILTERED_STATS : NO_STATS}
                   onScroll={onTableScroll}
+                  onPressAthlete={(playerId) => navigation.navigate('AthleteScreen', { tournamentId, playerId, apiBaseUrl })}
                 />
               )}
             </View>

@@ -8,6 +8,7 @@ export const tournaments = ['Copa Completa', 'Copa Classificação', 'Copa Grupo
 }));
 const selectedPhases = [phases, [phases[0]], [phases[1]], [phases[2]], []];
 const logo = 'https://example.com/alpha.png';
+const athleteNames: Record<string, string> = { 'player-a': 'Ana Silva', 'player-b': 'Bia Souza' };
 
 export const test = base.extend({
   page: async ({ page }, use) => {
@@ -66,6 +67,10 @@ export const test = base.extend({
             },
           },
         };
+      }
+      else if (path.startsWith('/players/')) {
+        const id = path.split('/')[2];
+        payload = { data: { id, name: athleteNames[id] || 'Atleta', team_id: 'team-a', photo_url: null, instagram: '@anasilva' } };
       }
       else if (path === '/player-stats-logs') payload = {
         data: [{

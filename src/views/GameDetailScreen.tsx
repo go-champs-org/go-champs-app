@@ -80,6 +80,10 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
   // team page to open.
   const openTeam = (teamId: string | undefined) =>
     tournamentId && teamId ? () => navigation.navigate('TeamScreen', { tournamentId, teamId, apiBaseUrl }) : undefined;
+  // The box score links each athlete to their page in the game's tournament.
+  const openAthlete = tournamentId
+    ? (playerId: string) => navigation.navigate('AthleteScreen', { tournamentId, playerId, apiBaseUrl })
+    : undefined;
   const venue = [game.location, game.city].filter(Boolean).join(' — ') || 'Local a definir';
   const homeName = game.home_team?.name || game.home_placeholder || UNDECIDED;
   const awayName = game.away_team?.name || game.away_placeholder || UNDECIDED;
@@ -148,7 +152,7 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
             </TouchableOpacity>
           ) : null}
 
-          {boxScore ? <BoxScoreSection boxScore={boxScore} /> : null}
+          {boxScore ? <BoxScoreSection boxScore={boxScore} onPressAthlete={openAthlete} /> : null}
         </ScrollView>
       </ContentShell>
     </View>
@@ -203,7 +207,9 @@ const glossaryEntries = (boxScore: GameBoxScore) => {
   return hasStarter ? [{ key: 'starter', label: '●', description: STARTER_LABEL }, ...columns] : columns;
 };
 
-const BoxScoreSection = ({ boxScore }: { boxScore: GameBoxScore }) => {
+type OpenAthlete = ((playerId: string) => void) | undefined;
+
+const BoxScoreSection = ({ boxScore, onPressAthlete }: { boxScore: GameBoxScore; onPressAthlete: OpenAthlete }) => {
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   // Null until a header is tapped: the box score opens in its ranked order.
   // One sort for both sides, so a tap reads the same column across the game.
@@ -243,6 +249,7 @@ const BoxScoreSection = ({ boxScore }: { boxScore: GameBoxScore }) => {
           columns={boxScore.columns}
           sort={sort}
           onSort={onSort}
+          onPressAthlete={onPressAthlete}
         />
       ))}
     </View>
@@ -257,10 +264,11 @@ type TableProps = {
   columns: BoxScoreColumn[];
   sort: BoxScoreSort | null;
   onSort: (slug: string) => void;
+  onPressAthlete: OpenAthlete;
 };
 
 // The name column stays pinned while the statistics scroll under it.
-const BoxScoreTable = ({ team, columns, sort, onSort }: TableProps) => {
+const BoxScoreTable = ({ team, columns, sort, onSort, onPressAthlete }: TableProps) => {
   // Logs saved before the API stored the number carry none, and a column of
   // empty slots would only cost width.
   const showNumber = team.rows.some((row) => row.number);
@@ -278,7 +286,7 @@ const BoxScoreTable = ({ team, columns, sort, onSort }: TableProps) => {
             <Text style={styles.bandLabel}>ATLETA</Text>
           </View>
           {team.rows.map((row, index) => (
-            <PlayerNameCell key={row.playerId || `${row.name}-${index}`} row={row} showNumber={showNumber} />
+            <PlayerNameCell key={row.playerId || `${row.name}-${index}`} row={row} showNumber={showNumber} onPressAthlete={onPressAthlete} />
           ))}
           <View style={[styles.cellRow, styles.totalsBand]}>
             <Text style={styles.totalsLabel}>Totais</Text>
@@ -318,16 +326,35 @@ const BoxScoreTable = ({ team, columns, sort, onSort }: TableProps) => {
   );
 };
 
-const PlayerNameCell = ({ row, showNumber }: { row: BoxScoreRow; showNumber: boolean }) => (
-  <View style={[styles.cellRow, styles.bodyRow, styles.nameCell]}>
-    {showNumber ? <Text style={styles.playerNumber}>{row.number ?? ''}</Text> : null}
-    <PlayerAvatar photoUrl={row.photoUrl} name={row.name} size={28} />
-    <Text style={styles.playerName} numberOfLines={1}>
-      {row.name}
-    </Text>
-    {isStarter(row.stats) ? <View accessibilityLabel={STARTER_LABEL} style={styles.starterDot} /> : null}
-  </View>
-);
+// A line with no athlete id, or a game whose tournament is unknown, has no
+// athlete page to open.
+const PlayerNameCell = ({ row, showNumber, onPressAthlete }: { row: BoxScoreRow; showNumber: boolean; onPressAthlete: OpenAthlete }) => {
+  const content = (
+    <>
+      {showNumber ? <Text style={styles.playerNumber}>{row.number ?? ''}</Text> : null}
+      <PlayerAvatar photoUrl={row.photoUrl} name={row.name} size={28} />
+      <Text style={styles.playerName} numberOfLines={1}>
+        {row.name}
+      </Text>
+      {isStarter(row.stats) ? <View accessibilityLabel={STARTER_LABEL} style={styles.starterDot} /> : null}
+    </>
+  );
+  if (!onPressAthlete || !row.playerId) {
+    return <View style={[styles.cellRow, styles.bodyRow, styles.nameCell]}>{content}</View>;
+  }
+  const { playerId } = row;
+  return (
+    <TouchableOpacity
+      accessibilityRole="link"
+      accessibilityLabel={`Abrir atleta ${row.name}`}
+      onPress={() => onPressAthlete(playerId)}
+      style={[styles.cellRow, styles.bodyRow, styles.nameCell]}
+      testID="box-score-athlete"
+    >
+      {content}
+    </TouchableOpacity>
+  );
+};
 
 const StatHeader = ({
   column,

@@ -75,18 +75,27 @@ type Props = {
   loading: boolean;
   emptyLabel: string;
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  // Opens the athlete's page, as the public stats table links each name.
+  onPressAthlete: (playerId: string) => void;
 };
 
-export const StatsTable = ({ columns, rows, statKey, loading, emptyLabel, onScroll }: Props) => (
+export const StatsTable = ({ columns, rows, statKey, loading, emptyLabel, onScroll, onPressAthlete }: Props) => (
   <View style={styles.container} testID="tournament-stats-table">
     <View style={styles.table}>
       <View style={styles.fixed}>
         {rows.map((row, index) => (
-          <View key={row.playerId} style={[styles.bodyRow, styles.athleteCell, index > 0 && styles.rowDivider]}>
+          <TouchableOpacity
+            key={row.playerId}
+            accessibilityRole="link"
+            accessibilityLabel={`Abrir atleta ${row.name}`}
+            onPress={() => onPressAthlete(row.playerId)}
+            style={[styles.bodyRow, styles.athleteCell, index > 0 && styles.rowDivider]}
+            testID="tournament-stats-athlete"
+          >
             <Text style={[styles.rank, styles.rankCell]}>{index + 1}</Text>
             <PlayerAvatar photoUrl={row.photoUrl} name={row.name} size={28} />
             <Text numberOfLines={1} style={styles.athlete}>{row.name}</Text>
-          </View>
+          </TouchableOpacity>
         ))}
         <View pointerEvents="none" style={styles.fixedEdge} />
       </View>

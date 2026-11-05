@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/types';
 import { theme } from '../theme/theme';
@@ -41,6 +42,7 @@ const assetLabel = (type: string) => {
 };
 
 const GameDetailScreen: React.FC<Props> = ({ route }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { gameId, apiBaseUrl } = route.params;
   const { loading, error, game, boxScore, isLive, score, periodLabel, refresh } = useGameDetailViewModel(
     gameId,
@@ -73,6 +75,11 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
   }
 
   const tournamentName = game.phase?.tournament?.name || 'Campeonato';
+  const tournamentId = game.phase?.tournament?.id;
+  // A side still to be decided, or a game whose tournament is unknown, has no
+  // team page to open.
+  const openTeam = (teamId: string | undefined) =>
+    tournamentId && teamId ? () => navigation.navigate('TeamScreen', { tournamentId, teamId, apiBaseUrl }) : undefined;
   const venue = [game.location, game.city].filter(Boolean).join(' — ') || 'Local a definir';
   const homeName = game.home_team?.name || game.home_placeholder || UNDECIDED;
   const awayName = game.away_team?.name || game.away_placeholder || UNDECIDED;
@@ -103,9 +110,9 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
             ) : null}
 
             <View style={styles.scoreboard}>
-              <TeamIdentity name={homeName} logoUrl={game.home_team?.logo_url} />
+              <TeamIdentity name={homeName} logoUrl={game.home_team?.logo_url} onPress={openTeam(game.home_team?.id)} />
               <Score score={score} homeName={homeName} awayName={awayName} />
-              <TeamIdentity name={awayName} logoUrl={game.away_team?.logo_url} />
+              <TeamIdentity name={awayName} logoUrl={game.away_team?.logo_url} onPress={openTeam(game.away_team?.id)} />
             </View>
 
             {game.info ? <Text style={styles.info}>{game.info}</Text> : null}
@@ -148,14 +155,25 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
   );
 };
 
-const TeamIdentity = ({ name, logoUrl }: { name: string; logoUrl?: string | null }) => (
-  <View style={styles.teamBlock}>
-    <TeamBadge logoUrl={logoUrl} name={name} size={56} />
-    <Text style={styles.teamName} numberOfLines={2}>
-      {name}
-    </Text>
-  </View>
-);
+type TeamIdentityProps = { name: string; logoUrl?: string | null; onPress?: () => void };
+
+// Logo and name open the team's page when there is one to open.
+const TeamIdentity = ({ name, logoUrl, onPress }: TeamIdentityProps) => {
+  const content = (
+    <>
+      <TeamBadge logoUrl={logoUrl} name={name} size={56} />
+      <Text style={styles.teamName} numberOfLines={2}>
+        {name}
+      </Text>
+    </>
+  );
+  if (!onPress) return <View style={styles.teamBlock}>{content}</View>;
+  return (
+    <TouchableOpacity accessibilityRole="link" accessibilityLabel={`Abrir time ${name}`} onPress={onPress} style={styles.teamBlock}>
+      {content}
+    </TouchableOpacity>
+  );
+};
 
 // The digits alone say nothing out loud: each side carries the team it
 // belongs to, so a live update reads as a sentence.

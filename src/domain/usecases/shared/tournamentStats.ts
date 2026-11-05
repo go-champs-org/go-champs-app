@@ -227,7 +227,7 @@ export const tournamentStatsLayout = (tournament: TournamentOverview): Tournamen
 
 // The ranking a scope opens on: points, best first, when the scope has them;
 // otherwise the order the API sends.
-export const defaultStatKey = (layout: TournamentStatsLayout, scope: StatScope): string | null => {
+export const defaultStatKey = (layout: Pick<TournamentStatsLayout, 'columnsByScope'>, scope: StatScope): string | null => {
   const key = statKeyInScope(DEFAULT_SORT_SLUG, scope);
   return (layout.columnsByScope[scope] || []).some((column) => column.key === key) ? key : null;
 };

@@ -1,6 +1,7 @@
 import {
   formatGameDateTime,
   formatGameShortDateTime,
+  formatDayKeyLong,
   formatGameTime,
   gameDateKey,
   localDateKey,
@@ -32,5 +33,11 @@ describe('gameDateTime', () => {
 
   it('keys today on the device calendar', () => {
     expect(localDateKey(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
+  });
+
+  it('heads a day of games with its long pt-BR date', () => {
+    expect(formatDayKeyLong('2026-10-31')).toBe('31 de outubro de 2026');
+    expect(formatDayKeyLong('2026-03-05')).toBe('5 de março de 2026');
+    expect(formatDayKeyLong('')).toBe('');
   });
 });

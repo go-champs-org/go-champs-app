@@ -76,6 +76,16 @@ export class GoChampsTournamentRepository implements TournamentRepository {
     }
   }
 
+  // A team plays at home or away, so its schedule is the union of both sides:
+  // the API's `or` group, the same filter the public team page sends.
+  async getGamesByTeamId(teamId: string, apiBaseUrl?: string): Promise<Game[]> {
+    const response = await this.apiClient.get<GameResponse>(
+      `/games?where[or][0][home_team_id]=${teamId}&where[or][1][away_team_id]=${teamId}`,
+      apiBaseUrl
+    );
+    return response.data ?? [];
+  }
+
   async getStatLeaders(tournamentId: string, statKeys: string[], apiBaseUrl?: string): Promise<StatLeadersGroup[]> {
     const stats = statKeys.map((key) => `&stats[]=${key}`).join('');
     const response = await this.apiClient.get<StatLeadersResponse>(

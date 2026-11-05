@@ -30,6 +30,7 @@ export const test = base.extend({
         id: 'match', name: 'Decisão', first_team_id: 'team-a', second_team_id: 'team-b', first_team_score: '10', second_team_score: '8',
       }] }] } };
       else if (path === '/games') payload = { data: gamesFixture.map((game) => ({ ...game, phase_id: url.searchParams.get('where[phase_id]'), home_team: { ...game.home_team!, logo_url: logo }, away_team: { ...game.away_team!, logo_url: logo } })) };
+      else if (path === '/aggregated-player-stats-by-tournament') payload = { data: [] };
       else if (path.startsWith('/sports/')) payload = { data: { slug: 'basketball', name: 'Basquete' } };
       else if (path.startsWith('/games/')) {
         const gameId = path.split('/')[2];

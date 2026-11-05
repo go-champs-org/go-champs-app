@@ -11,25 +11,28 @@ jest.mock('../../di/container', () => ({
 
 const getAthlete = container.getAthleteOverview.execute as jest.Mock;
 
-const overview = (): AthleteOverview => ({
+const overview = (overrides: Partial<AthleteOverview> = {}): AthleteOverview => ({
   tournamentId: 't1',
   tournamentName: 'Liga',
   athlete: { id: 'p1', name: 'Ana', photoUrl: null },
   team: { id: 'team-a', name: 'Alpha' },
-  gamesText: '4 jogos disputados',
+  gamesText: '9 jogos disputados',
   socialLinks: [],
-  columns: [{ key: 'points', label: 'PTS', description: 'Pontos' }],
-  table: {
-    rows: [{ phaseId: 'ph1', label: 'Grupos', games: 4, sums: { points: 30 }, counts: { points: 4 } }],
-    total: { phaseId: '', label: 'Total', games: 4, sums: { points: 30 }, counts: { points: 4 } },
+  scopes: ['aggregate', 'per_game'],
+  columnsByScope: {
+    aggregate: [{ key: 'points', label: 'PTS', description: 'Pontos' }],
+    per_game: [{ key: 'points_per_game', label: 'PTS', description: 'Pontos' }],
   },
+  rows: [{ phaseId: 'ph1', label: 'Temporada', stats: { game_played: 7, points: 307, points_per_game: 43.857 } }],
+  total: { phaseId: '', label: 'Total', stats: { game_played: 9, points: 371, points_per_game: 41.222 } },
   hasStats: true,
+  ...overrides,
 });
 
 describe('useAthleteViewModel', () => {
   beforeEach(() => getAthlete.mockReset());
 
-  it('loads the athlete and reads the table in the chosen scope', async () => {
+  it('reads the API lines in the chosen scope', async () => {
     getAthlete.mockResolvedValue(overview());
     const { result } = renderHook(() => useAthleteViewModel('t1', 'p1', 'https://api.test'));
 
@@ -38,13 +41,29 @@ describe('useAthleteViewModel', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(getAthlete).toHaveBeenCalledWith('t1', 'p1', 'https://api.test');
     expect(result.current.scopes).toEqual(['aggregate', 'per_game']);
-    expect(result.current.columns).toHaveLength(1);
-    expect(result.current.rows).toEqual([{ key: 'ph1', label: 'Grupos', games: '4', cells: ['30'] }]);
-    expect(result.current.total).toEqual({ key: 'total', label: 'Total', games: '4', cells: ['30'] });
+    expect(result.current.rows).toEqual([{ key: 'ph1', label: 'Temporada', games: '7', cells: ['307'] }]);
+    expect(result.current.total).toEqual({ key: 'total', label: 'Total', games: '9', cells: ['371'] });
 
     act(() => result.current.selectScope('per_game'));
     expect(result.current.scope).toBe('per_game');
-    expect(result.current.rows[0].cells).toEqual(['7.5']);
+    expect(result.current.rows[0].cells).toEqual(['43.9']);
+    expect(result.current.total?.cells).toEqual(['41.2']);
+  });
+
+  it('opens on the only scope a tournament has and has no total without stats', async () => {
+    getAthlete.mockResolvedValue(overview({ scopes: ['per_game'], total: null, rows: [], hasStats: false }));
+    const { result } = renderHook(() => useAthleteViewModel('t1', 'p1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.scope).toBe('per_game');
+    expect(result.current.total).toBeNull();
+  });
+
+  it('opens on the aggregate scope when the tournament has no columns', async () => {
+    getAthlete.mockResolvedValue(overview({ scopes: [], columnsByScope: {} }));
+    const { result } = renderHook(() => useAthleteViewModel('t1', 'p1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.scope).toBe('aggregate');
+    expect(result.current.columns).toEqual([]);
   });
 
   it('shows the not-found message and a generic one otherwise, then retries', async () => {
@@ -53,6 +72,7 @@ describe('useAthleteViewModel', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toBe('Atleta não encontrado neste campeonato.');
     expect(result.current.columns).toEqual([]);
+    expect(result.current.scopes).toEqual([]);
 
     getAthlete.mockRejectedValueOnce(new Error('offline'));
     act(() => result.current.retry());

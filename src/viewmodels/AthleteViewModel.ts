@@ -1,24 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppError } from '../core/errors/AppError';
 import { container } from '../di/container';
-import { AthleteOverview } from '../domain/usecases/GetAthleteOverviewUseCase';
-import { PhaseStatRow, phaseCellValue } from '../domain/usecases/shared/athleteProfile';
-import { StatColumn } from '../domain/usecases/shared/tournamentStats';
+import { AthleteOverview, AthleteStatsLine } from '../domain/usecases/GetAthleteOverviewUseCase';
+import { formatStatValue, StatColumn } from '../domain/usecases/shared/tournamentStats';
 import { StatScope } from '../domain/usecases/shared/statLeaders';
 
 const ATHLETE_ERROR = 'Não foi possível abrir o atleta. Tente novamente.';
 
-// Both scopes are always offered: they read the same games, one as totals
-// and one divided by the games played.
-export const ATHLETE_SCOPES: StatScope[] = ['aggregate', 'per_game'];
-
 export type AthleteStatsRow = { key: string; label: string; games: string; cells: string[] };
 
-export const athleteStatsRow = (row: PhaseStatRow, columns: StatColumn[], scope: StatScope): AthleteStatsRow => ({
-  key: row.phaseId || 'total',
-  label: row.label,
-  games: String(row.games),
-  cells: columns.map((column) => phaseCellValue(column.key, row, scope)),
+// A line read in one scope's columns, formatted the way the tournament stats
+// screen formats the same keys.
+export const athleteStatsRow = (line: AthleteStatsLine, columns: StatColumn[]): AthleteStatsRow => ({
+  key: line.phaseId || 'total',
+  label: line.label,
+  games: formatStatValue('game_played', line.stats.game_played),
+  cells: columns.map((column) => formatStatValue(column.key, line.stats[column.key])),
 });
 
 export const useAthleteViewModel = (tournamentId: string, playerId: string, apiBaseUrl?: string) => {
@@ -37,6 +34,7 @@ export const useAthleteViewModel = (tournamentId: string, playerId: string, apiB
         const next = await container.getAthleteOverview.execute(tournamentId, playerId, apiBaseUrl);
         if (!mounted) return;
         setOverview(next);
+        setScope(next.scopes[0] ?? 'aggregate');
       } catch (requestError) {
         if (!mounted) return;
         setOverview(null);
@@ -52,14 +50,9 @@ export const useAthleteViewModel = (tournamentId: string, playerId: string, apiB
     };
   }, [tournamentId, playerId, apiBaseUrl, attempt]);
 
-  const rows = useMemo(
-    () => (overview ? overview.table.rows.map((row) => athleteStatsRow(row, overview.columns, scope)) : []),
-    [overview, scope]
-  );
-  const total = useMemo(
-    () => (overview ? athleteStatsRow(overview.table.total, overview.columns, scope) : null),
-    [overview, scope]
-  );
+  const columns = useMemo(() => overview?.columnsByScope[scope] ?? [], [overview, scope]);
+  const rows = useMemo(() => (overview ? overview.rows.map((line) => athleteStatsRow(line, columns)) : []), [overview, columns]);
+  const total = useMemo(() => (overview?.total ? athleteStatsRow(overview.total, columns) : null), [overview, columns]);
 
   const selectScope = useCallback((next: StatScope) => setScope(next), []);
   const retry = useCallback(() => setAttempt((value) => value + 1), []);
@@ -69,8 +62,8 @@ export const useAthleteViewModel = (tournamentId: string, playerId: string, apiB
     loading,
     error,
     scope,
-    scopes: ATHLETE_SCOPES,
-    columns: overview?.columns ?? [],
+    scopes: overview?.scopes ?? [],
+    columns,
     rows,
     total,
     selectScope,

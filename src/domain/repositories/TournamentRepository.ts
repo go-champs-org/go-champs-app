@@ -23,6 +23,4 @@ export interface TournamentRepository {
   getPlayerStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]>;
   getTeamStatsLogsByGameId(gameId: string, apiBaseUrl?: string): Promise<TeamStatsLog[]>;
   getPlayer(playerId: string, apiBaseUrl?: string): Promise<TournamentAthlete>;
-  // Every game log the athlete has, each carrying its phase.
-  getPlayerStatsLogsByPlayerId(playerId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]>;
 }

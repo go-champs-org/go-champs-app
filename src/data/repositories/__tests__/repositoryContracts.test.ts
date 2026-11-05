@@ -107,12 +107,13 @@ describe('Tournament repository contracts', () => {
     expect(get).toHaveBeenCalledWith('/players/p1', baseUrl);
   });
 
-  it('loads every stats log of an athlete', async () => {
-    get.mockResolvedValue({ data: [{ id: 'log-1', player_id: 'p1', team_id: 't1', game_id: 'g1', phase_id: 'ph1', tournament_id: 't', stats: {} }] });
-    await expect(repository.getPlayerStatsLogsByPlayerId('p1', baseUrl)).resolves.toHaveLength(1);
-    expect(get).toHaveBeenCalledWith('/player-stats-logs?where[player_id]=p1', baseUrl);
-    get.mockResolvedValue({});
-    await expect(repository.getPlayerStatsLogsByPlayerId('p1', baseUrl)).resolves.toEqual([]);
+  it('requests the stats of one athlete in a phase', async () => {
+    get.mockResolvedValue({ data: [] });
+    await repository.getAggregatedPlayerStats('t1', { phaseId: 'ph1', playerId: 'p1' }, baseUrl);
+    expect(get).toHaveBeenCalledWith(
+      '/aggregated-player-stats-by-tournament?where[tournament_id]=t1&where[phase_id]=ph1&where[player_id]=p1',
+      baseUrl
+    );
   });
 
   it('loads bundled games when the games request fails', async () => {

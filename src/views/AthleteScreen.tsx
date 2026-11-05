@@ -32,7 +32,7 @@ const AthleteScreen: React.FC<Props> = ({ route }) => {
     return <View style={styles.centered}><ActivityIndicator size="large" color={theme.colors.accent} /></View>;
   }
 
-  if (!overview || !total) {
+  if (!overview) {
     return <View style={styles.centered}><Retry message={viewModel.error ?? ''} onRetry={viewModel.retry} /></View>;
   }
 
@@ -49,7 +49,7 @@ const AthleteScreen: React.FC<Props> = ({ route }) => {
             socialLinks={overview.socialLinks}
             onPressTeam={(teamId) => navigation.navigate('TeamScreen', { tournamentId, teamId, apiBaseUrl })}
           />
-          {overview.hasStats ? (
+          {overview.hasStats && total ? (
             <AthleteStatsCard
               columns={viewModel.columns}
               rows={viewModel.rows}

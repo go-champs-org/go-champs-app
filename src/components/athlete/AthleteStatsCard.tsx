@@ -20,8 +20,8 @@ const PHASE_WIDTH = 132;
 const STAT_WIDTH = 52;
 
 // The public athlete page's "Estatísticas detalhadas": one row per phase the
-// athlete played, the games in it and every stat, totals or per game, and a
-// total band. The phase stays pinned while the numbers scroll under it.
+// athlete played, the games in it and every stat, totals or per game as the
+// API aggregated them, and a total band. The phase stays pinned while the numbers scroll under it.
 export const AthleteStatsCard = ({ columns, rows, total, scopes, scope, onSelectScope }: Props) => {
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const cellsOf = (row: AthleteStatsRow) => [row.games, ...row.cells];
@@ -42,22 +42,24 @@ export const AthleteStatsCard = ({ columns, rows, total, scopes, scope, onSelect
             <Ionicons name={glossaryOpen ? 'chevron-up' : 'chevron-down'} size={16} color={theme.colors.success} />
           </TouchableOpacity>
         </View>
-        <View accessibilityRole="tablist" accessibilityLabel="Estatísticas" style={styles.scopes}>
-          {scopes.map((option) => {
-            const selected = option === scope;
-            return (
-              <TouchableOpacity
-                key={option}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-                onPress={() => onSelectScope(option)}
-                style={[styles.scope, selected && styles.scopeSelected]}
-              >
-                <Text style={[styles.scopeText, selected && styles.scopeTextSelected]}>{SCOPE_LABELS[option]}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        {scopes.length > 1 ? (
+          <View accessibilityRole="tablist" accessibilityLabel="Estatísticas" style={styles.scopes}>
+            {scopes.map((option) => {
+              const selected = option === scope;
+              return (
+                <TouchableOpacity
+                  key={option}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected }}
+                  onPress={() => onSelectScope(option)}
+                  style={[styles.scope, selected && styles.scopeSelected]}
+                >
+                  <Text style={[styles.scopeText, selected && styles.scopeTextSelected]}>{SCOPE_LABELS[option]}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : null}
         {glossaryOpen ? (
           <View style={styles.glossary} testID="athlete-glossary">
             <Text style={styles.glossaryItem}>

@@ -100,12 +100,13 @@ export class GoChampsTournamentRepository implements TournamentRepository {
   // first by `sort`; without one, in its own order.
   async getAggregatedPlayerStats(
     tournamentId: string,
-    { sort, phaseId, teamId, minStats = {} }: AggregatedPlayerStatsQuery,
+    { sort, phaseId, teamId, playerId, minStats = {} }: AggregatedPlayerStatsQuery,
     apiBaseUrl?: string
   ): Promise<AggregatedPlayerStatsLog[]> {
     const params = [`where[tournament_id]=${tournamentId}`];
     if (phaseId) params.push(`where[phase_id]=${phaseId}`);
     if (teamId) params.push(`where[team_id]=${teamId}`);
+    if (playerId) params.push(`where[player_id]=${playerId}`);
     Object.entries(minStats).forEach(([slug, minimum]) => params.push(`where[${slug}][gte]=${minimum}`));
     if (sort) params.push(`sort=${sort}`);
     const response = await this.apiClient.get<AggregatedPlayerStatsResponse>(
@@ -149,15 +150,5 @@ export class GoChampsTournamentRepository implements TournamentRepository {
   async getPlayer(playerId: string, apiBaseUrl?: string): Promise<TournamentAthlete> {
     const response = await this.apiClient.get<TournamentAthleteResponse>(`/players/${playerId}`, apiBaseUrl);
     return response.data;
-  }
-
-  // There is no aggregated-by-phase endpoint: the athlete screen groups these
-  // per-game logs by phase itself, as the public athlete page does.
-  async getPlayerStatsLogsByPlayerId(playerId: string, apiBaseUrl?: string): Promise<PlayerStatsLog[]> {
-    const response = await this.apiClient.get<PlayerStatsLogResponse>(
-      `/player-stats-logs?where[player_id]=${playerId}`,
-      apiBaseUrl
-    );
-    return response.data ?? [];
   }
 }

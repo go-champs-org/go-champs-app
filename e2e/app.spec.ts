@@ -431,22 +431,30 @@ const athleteLink = (page: Page, name: string) => page.getByLabel(`Abrir atleta 
 const athleteBanner = (page: Page) => page.getByTestId('athlete-banner').filter({ visible: true });
 const athleteStats = (page: Page) => page.getByTestId('athlete-stats').filter({ visible: true });
 
+// The API's aggregate of one athlete, the same for the tournament and each phase.
+const routeAthleteStats = (page: Page, stats: Record<string, number>) =>
+  page.route('**/aggregated-player-stats-by-tournament?*', (route) => {
+    const playerId = new URL(route.request().url()).searchParams.get('where[player_id]');
+    return fulfillJson(route, { data: playerId ? [{ id: 'agg', player_id: playerId, stats }] : [] });
+  });
+
 test('[athleteFromRoster] abre o atleta pelo elenco do time', async ({ page }) => {
   await page.route('**/tournaments/t-1', (route) => fulfillJson(route, statsTournament(1, [phases[0]])));
   await page.route('**/aggregated-player-stats-leaders?*', (route) => fulfillJson(route, { data: [] }));
+  await routeAthleteStats(page, { game_played: 4, points: 40, assists: 2, points_per_game: 10 });
   await openTournament(page, 'Copa Classificação');
   await page.getByLabel('Times do campeonato').getByLabel('Abrir time Alpha').click();
   await athleteLink(page, 'Ana Silva').click();
 
   await expect(athleteBanner(page)).toContainText('Ana Silva');
   await expect(athleteBanner(page)).toContainText('Copa Classificação');
-  await expect(athleteBanner(page)).toContainText('Alpha · 1 jogo disputado');
+  await expect(athleteBanner(page)).toContainText('Alpha · 4 jogos disputados');
   await expect(athleteBanner(page).getByLabel('Instagram')).toBeVisible();
   await expect(athleteStats(page)).toContainText('Estatísticas detalhadas');
   await expect(athleteStats(page).getByTestId('athlete-stats-phase')).toHaveText(['Classificação']);
-  await expect(athleteStats(page).getByTestId('athlete-stats-total')).toHaveText('1203');
+  await expect(athleteStats(page).getByTestId('athlete-stats-total')).toHaveText('4402');
   await page.getByRole('tab', { name: 'Por jogo' }).filter({ visible: true }).click();
-  await expect(athleteStats(page).getByTestId('athlete-stats-total')).toHaveText('120.03.0');
+  await expect(athleteStats(page).getByTestId('athlete-stats-total')).toHaveText('410.0');
   await athleteStats(page).getByRole('button', { name: 'Glossário' }).click();
   await expect(athleteStats(page).getByTestId('athlete-glossary')).toContainText('JG — Jogos');
 
@@ -462,8 +470,10 @@ test('[athleteFromStats] abre o atleta pela tabela de estatísticas', async ({ p
   await page.getByRole('button', { name: 'Estatísticas' }).click();
   await athleteLink(page, 'Bia Souza').click();
 
-  await expect(athleteBanner(page)).toContainText('Bia Souza');
-  await expect(athleteStats(page).getByTestId('athlete-stats-phase')).toHaveText(['Classificação']);
+  await expect(athleteBanner(page)).toContainText('Bia SouzaAlpha · 3 jogos disputados');
+  // Every phase the API has numbers for, each read from its own aggregate.
+  await expect(athleteStats(page).getByTestId('athlete-stats-phase')).toHaveText(['Classificação', 'Grupos', 'Playoffs']);
+  await expect(athleteStats(page).getByTestId('athlete-stats-total')).toHaveText('3309');
 });
 
 test('[athleteFromBoxScore] abre o atleta pelo box score do jogo', async ({ page }) => {
@@ -475,7 +485,7 @@ test('[athleteFromBoxScore] abre o atleta pelo box score do jogo', async ({ page
   await athleteLink(page, 'Ana Silva').click();
 
   await expect(athleteBanner(page)).toContainText('Ana Silva');
-  // The tournament records no stat to read the games in.
+  // The API has no aggregate for the athlete yet.
   await expect(athleteStats(page)).toHaveText('Sem estatísticas para este atleta ainda.');
 });
 
@@ -491,6 +501,7 @@ test('[athleteError] permite tentar novamente após falha ao abrir o atleta', as
     const { status, json } = responses.shift() ?? responses[responses.length - 1];
     return fulfillJson(route, json, status);
   });
+  await routeAthleteStats(page, { game_played: 1, points: 12 });
   await openTournament(page, 'Copa Classificação');
   await page.getByLabel('Times do campeonato').getByLabel('Abrir time Alpha').click();
   await athleteLink(page, 'Ana Silva').click();

@@ -7,6 +7,8 @@ import { StandingsColumn, standingsColumns } from './shared/standingsPresentatio
 
 export type StandingsRow = {
   id: string;
+  // Null for a slot the organizer has not filled yet: no team page to open.
+  teamId: string | null;
   team: TeamInfo;
   shortName: string;
   values: Record<string, string>;
@@ -67,6 +69,7 @@ export class GetPhaseOverviewUseCase {
         title: elimination.title,
         rows: elimination.team_stats.map((teamStat) => ({
           id: teamStat.id,
+          teamId: teamMap[teamStat.team_id] ? teamStat.team_id : null,
           team: teamMap[teamStat.team_id] || { name: teamStat.placeholder || UNDECIDED_TEAM, logo_url: null },
           shortName: teamShortName(teamMap[teamStat.team_id], teamStat.placeholder, UNDECIDED_TEAM),
           values: Object.fromEntries(

@@ -13,9 +13,10 @@ type Props = {
   leaders: LeaderCard[];
   // Opens the stats screen, on a stat key when one is given.
   onOpenStats: (statKey?: string) => void;
+  onOpenTeam: (teamId: string) => void;
 };
 
-export const TournamentSummaryCard = ({ tournament, leaders, onOpenStats }: Props) => (
+export const TournamentSummaryCard = ({ tournament, leaders, onOpenStats, onOpenTeam }: Props) => (
   <View style={styles.card}>
     <View style={styles.banner}>
       <Image
@@ -47,7 +48,7 @@ export const TournamentSummaryCard = ({ tournament, leaders, onOpenStats }: Prop
         </TouchableOpacity>
       ) : null}
     </View>
-    <TournamentTeamsStrip teams={tournament.teams} />
+    <TournamentTeamsStrip teams={tournament.teams} onPressTeam={onOpenTeam} />
     <HighlightsAccordion cards={leaders} onSeeAll={onOpenStats} />
   </View>
 );

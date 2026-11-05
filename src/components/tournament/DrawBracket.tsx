@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Draw } from '../../models/PlayoffModel';
 import { TeamMap } from '../../domain/usecases/shared/phasePresentation';
 import { theme } from '../../theme/theme';
@@ -9,19 +9,49 @@ import { EmptyState } from '../feedback/EmptyState';
 type Props = {
   draws: Draw[];
   teamMap: TeamMap;
+  // Opens the team's page, as the public bracket links each decided side.
+  onPressTeam: (teamId: string) => void;
 };
 
 const scoreOf = (value: string | null) => Number(value) || 0;
 
-const Side = ({ name, logoUrl, score, winner }: { name: string; logoUrl?: string | null; score: string | null; winner: boolean }) => (
-  <View style={styles.side}>
-    <TeamBadge logoUrl={logoUrl} name={name} size={24} />
-    <Text numberOfLines={2} style={[styles.teamName, winner ? styles.winner : styles.loser]}>{name}</Text>
-    <Text style={[styles.score, winner ? styles.winnerScore : styles.loser]}>{score ?? '-'}</Text>
-  </View>
-);
+type SideProps = {
+  teamId: string | null;
+  name: string;
+  logoUrl?: string | null;
+  score: string | null;
+  winner: boolean;
+  onPressTeam: (teamId: string) => void;
+};
 
-export const DrawBracket = ({ draws, teamMap }: Props) => {
+// A side still to be decided has no team to open.
+const Side = ({ teamId, name, logoUrl, score, winner, onPressTeam }: SideProps) => {
+  const team = (
+    <>
+      <TeamBadge logoUrl={logoUrl} name={name} size={24} />
+      <Text numberOfLines={2} style={[styles.teamName, winner ? styles.winner : styles.loser]}>{name}</Text>
+    </>
+  );
+  return (
+    <View style={styles.side}>
+      {teamId ? (
+        <TouchableOpacity
+          accessibilityRole="link"
+          accessibilityLabel={`Abrir time ${name}`}
+          onPress={() => onPressTeam(teamId)}
+          style={styles.teamLink}
+        >
+          {team}
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.teamLink}>{team}</View>
+      )}
+      <Text style={[styles.score, winner ? styles.winnerScore : styles.loser]}>{score ?? '-'}</Text>
+    </View>
+  );
+};
+
+export const DrawBracket = ({ draws, teamMap, onPressTeam }: Props) => {
   if (draws.length === 0) {
     return <EmptyState icon="git-branch-outline" title="Chaveamento indisponível" description="O chaveamento aparecerá quando a fase for publicada." />;
   }
@@ -42,12 +72,16 @@ export const DrawBracket = ({ draws, teamMap }: Props) => {
                 <View key={match.id} style={[styles.match, index > 0 && styles.divider]}>
                   {match.name ? <Text style={styles.matchName}>{match.name}</Text> : null}
                   <Side
+                    teamId={first ? match.first_team_id : null}
+                    onPressTeam={onPressTeam}
                     name={first?.name || match.first_team_placeholder || 'A definir'}
                     logoUrl={first?.logo_url}
                     score={match.first_team_score}
                     winner={firstScore > secondScore}
                   />
                   <Side
+                    teamId={second ? match.second_team_id : null}
+                    onPressTeam={onPressTeam}
                     name={second?.name || match.second_team_placeholder || 'A definir'}
                     logoUrl={second?.logo_url}
                     score={match.second_team_score}
@@ -79,6 +113,7 @@ const styles = StyleSheet.create({
   divider: { borderTopWidth: 1, borderTopColor: theme.colors.subtleBorder },
   matchName: { color: theme.colors.subtleText, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
   side: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  teamLink: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
   teamName: { flex: 1, fontSize: 14 },
   score: { fontSize: 16 },
   winner: { color: theme.colors.ink, fontWeight: '800' },

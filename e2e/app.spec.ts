@@ -378,6 +378,54 @@ test('[gameDetail] abre detalhe do jogo com estatísticas', async ({ page }) => 
   await expect(page.getByText('AO VIVO')).toHaveCount(0);
 });
 
+// The screens a stack leaves behind stay in the page on web: only the one
+// showing counts.
+const teamLink = (page: Page, name: string) => page.getByLabel(`Abrir time ${name}`).filter({ visible: true });
+
+const expectTeamScreen = async (page: Page, name: string) => {
+  await expect(page.getByTestId('team-banner').filter({ visible: true })).toContainText(name);
+  await expect(page.getByTestId('team-games').filter({ visible: true })).toBeVisible();
+};
+
+test('[teamFromStrip] abre o time pela faixa de times', async ({ page }) => {
+  await openTournament(page, 'Copa Classificação');
+  await page.getByLabel('Times do campeonato').getByLabel('Abrir time Beta').click();
+  await expectTeamScreen(page, 'Beta');
+});
+
+test('[teamFromStandings] abre o time pela tabela de classificação', async ({ page }) => {
+  await openTournament(page, 'Copa Classificação');
+  await expect(page.getByText('Tabela de classificação')).toBeVisible();
+  await teamLink(page, 'Alpha').last().click();
+  await expectTeamScreen(page, 'Alpha');
+});
+
+test('[teamFromGames] abre o time pelo nome na lista de jogos', async ({ page }) => {
+  await openTournament(page, 'Copa Classificação');
+  await gamesTab(page).click();
+  await expect(page.getByText('Court 2')).toBeVisible();
+  await teamLink(page, 'Beta').last().click();
+  await expectTeamScreen(page, 'Beta');
+});
+
+test('[teamFromBracket] abre o time pelo chaveamento', async ({ page }) => {
+  await openTournament(page, 'Copa Playoffs');
+  await expect(page.getByText('Decisão')).toBeVisible();
+  await teamLink(page, 'Alpha').last().click();
+  await expectTeamScreen(page, 'Alpha');
+});
+
+test('[teamFromGameDetail] abre o time pelo placar do jogo', async ({ page }) => {
+  await basketballTournament(page);
+  await openTournament(page, 'Copa Classificação');
+  await gamesTab(page).click();
+  await page.getByLabel('Data anterior').click();
+  await page.getByLabel(/Abrir jogo/).first().click();
+  await expect(page.getByText('Estatísticas', { exact: true })).toBeVisible();
+  await teamLink(page, 'Alpha').first().click();
+  await expectTeamScreen(page, 'Alpha');
+});
+
 test('[liveGameDetail] acompanha jogo ao vivo com período e estatísticas do scoreboard', async ({ page }) => {
   const live = { ...gamesFixture[1], live_state: 'in_progress', is_finished: false, home_score: 0, away_score: 0 };
   const team = (base: typeof live.home_team, player: { id: string; name: string; shirt_number: string }) => ({

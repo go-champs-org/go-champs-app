@@ -39,6 +39,8 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
     return <View style={styles.centered}><Retry message={viewModel.error ?? ''} onRetry={viewModel.retry} /></View>;
   }
 
+  const openTeam = (teamId: string) => navigation.navigate('TeamScreen', { tournamentId, teamId, apiBaseUrl });
+
   const renderPhaseContent = () => {
     if (viewModel.phaseLoading) return <ActivityIndicator style={styles.phaseLoader} color={theme.colors.accent} />;
     if (viewModel.phaseError) return <Retry message={viewModel.phaseError} onRetry={viewModel.retryPhase} />;
@@ -53,14 +55,15 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
           onSelectDate={viewModel.setSelectedDate}
           games={viewModel.gamesForSelectedDate}
           onPressGame={(gameId) => navigation.navigate('GameDetailScreen', { gameId, apiBaseUrl })}
+          onPressTeam={openTeam}
           apiBaseUrl={apiBaseUrl}
         />
       );
     }
 
     return phase.kind === 'standings'
-      ? <StandingsSection columns={phase.columns} groups={phase.groups} />
-      : <DrawBracket draws={phase.draws} teamMap={phase.teamMap} />;
+      ? <StandingsSection columns={phase.columns} groups={phase.groups} onPressTeam={openTeam} />
+      : <DrawBracket draws={phase.draws} teamMap={phase.teamMap} onPressTeam={openTeam} />;
   };
 
   return (
@@ -71,6 +74,7 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
             tournament={tournament}
             leaders={viewModel.leaders}
             onOpenStats={(statKey) => navigation.navigate('TournamentStatsScreen', { tournamentId, statKey, apiBaseUrl })}
+            onOpenTeam={openTeam}
           />
           {selectedPhase ? (
             <>

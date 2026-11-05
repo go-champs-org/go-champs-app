@@ -17,6 +17,9 @@ type Props = {
   onSelectDate: (value: string) => void;
   games: Game[];
   onPressGame: (gameId: string) => void;
+  // A team name opens its page, as on the public games card; the rest of the
+  // row still opens the game.
+  onPressTeam: (teamId: string) => void;
   apiBaseUrl?: string;
 };
 
@@ -35,21 +38,44 @@ const emphasisOf = (finished: boolean, own: number, other: number): Emphasis => 
   return own > other ? 'winner' : 'loser';
 };
 
-type SideProps = { name: string; logoUrl?: string | null; score: number | null; emphasis: Emphasis };
+type SideProps = {
+  teamId: string | null;
+  name: string;
+  fullName: string;
+  logoUrl?: string | null;
+  score: number | null;
+  emphasis: Emphasis;
+  onPressTeam: (teamId: string) => void;
+};
 
-const GameSide = ({ name, logoUrl, score, emphasis }: SideProps) => (
+// Only the name is the team's link: a side still to be decided has no team.
+const GameSide = ({ teamId, name, fullName, logoUrl, score, emphasis, onPressTeam }: SideProps) => (
   <View style={styles.side}>
     {logoUrl ? <TeamBadge logoUrl={logoUrl} name={name} size={20} /> : null}
-    <Text numberOfLines={1} style={[styles.sideName, styles[emphasis]]}>{name}</Text>
+    <View style={styles.sideNameBox}>
+      {teamId ? (
+        <Text
+          accessibilityRole="link"
+          accessibilityLabel={`Abrir time ${fullName}`}
+          numberOfLines={1}
+          onPress={() => onPressTeam(teamId)}
+          style={[styles.sideName, styles[emphasis]]}
+        >
+          {name}
+        </Text>
+      ) : (
+        <Text numberOfLines={1} style={[styles.sideName, styles[emphasis]]}>{name}</Text>
+      )}
+    </View>
     <Text style={[styles.sideScore, styles[emphasis]]}>{score ?? ''}</Text>
   </View>
 );
 
-type GameRowProps = { game: Game; apiBaseUrl?: string; onPress: () => void };
+type GameRowProps = { game: Game; apiBaseUrl?: string; onPress: () => void; onPressTeam: (teamId: string) => void };
 
 // One game as the public "Partidas" card prints it: time and a live badge,
 // the venue, then each side by logo and short name with its score.
-const GameRow = ({ game, apiBaseUrl, onPress }: GameRowProps) => {
+const GameRow = ({ game, apiBaseUrl, onPress, onPressTeam }: GameRowProps) => {
   const live = isLiveGame(game.live_state);
   const score = useLiveScore(game.id, live, { homeScore: game.home_score, awayScore: game.away_score }, apiBaseUrl);
   const shown = showsScore(game);
@@ -73,12 +99,18 @@ const GameRow = ({ game, apiBaseUrl, onPress }: GameRowProps) => {
         {game.location ? <Text numberOfLines={1} style={styles.venue}>{game.location}</Text> : null}
       </View>
       <GameSide
+        teamId={game.home_team?.id || null}
+        fullName={fullHome}
+        onPressTeam={onPressTeam}
         name={homeName}
         logoUrl={game.home_team?.logo_url}
         score={shown ? score.homeScore : null}
         emphasis={emphasisOf(game.is_finished, game.home_score, game.away_score)}
       />
       <GameSide
+        teamId={game.away_team?.id || null}
+        fullName={fullAway}
+        onPressTeam={onPressTeam}
         name={awayName}
         logoUrl={game.away_team?.logo_url}
         score={shown ? score.awayScore : null}
@@ -88,7 +120,7 @@ const GameRow = ({ game, apiBaseUrl, onPress }: GameRowProps) => {
   );
 };
 
-export const GamesPanel = ({ phaseTitle, dateKeys, selectedDate, onSelectDate, games, onPressGame, apiBaseUrl }: Props) => {
+export const GamesPanel = ({ phaseTitle, dateKeys, selectedDate, onSelectDate, games, onPressGame, onPressTeam, apiBaseUrl }: Props) => {
   const index = selectedDate ? dateKeys.indexOf(selectedDate) : -1;
   const previous = index > 0 ? dateKeys[index - 1] : null;
   const next = index >= 0 && index < dateKeys.length - 1 ? dateKeys[index + 1] : null;
@@ -124,7 +156,7 @@ export const GamesPanel = ({ phaseTitle, dateKeys, selectedDate, onSelectDate, g
           </View>
         ) : null}
         {games.length ? (
-          games.map((game) => <GameRow key={game.id} game={game} apiBaseUrl={apiBaseUrl} onPress={() => onPressGame(game.id)} />)
+          games.map((game) => <GameRow key={game.id} game={game} apiBaseUrl={apiBaseUrl} onPress={() => onPressGame(game.id)} onPressTeam={onPressTeam} />)
         ) : (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>Sem partidas para esta data</Text>
@@ -178,7 +210,9 @@ const styles = StyleSheet.create({
   time: { color: theme.colors.subtleText, fontSize: 12 },
   venue: { flexShrink: 1, color: theme.colors.subtleText, fontSize: 12, textTransform: 'uppercase' },
   side: { minHeight: 24, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
-  sideName: { flex: 1, fontSize: 14 },
+  // The name's own width is its link, so a tap beside it still opens the game.
+  sideNameBox: { flex: 1, minWidth: 0, flexDirection: 'row' },
+  sideName: { flexShrink: 1, fontSize: 14 },
   sideScore: { minWidth: 24, fontSize: 14, textAlign: 'right', fontVariant: ['tabular-nums'] },
   winner: { color: theme.colors.olive, fontWeight: '800' },
   loser: { color: theme.colors.subtleText },

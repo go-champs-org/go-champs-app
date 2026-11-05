@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { StandingsGroup } from '../../domain/usecases/GetPhaseOverviewUseCase';
 import { StandingsColumn } from '../../domain/usecases/shared/standingsPresentation';
 import { theme } from '../../theme/theme';
@@ -9,6 +9,8 @@ import { EmptyState } from '../feedback/EmptyState';
 type Props = {
   columns: StandingsColumn[];
   groups: StandingsGroup[];
+  // Opens the team's page, as the public standings link each team name.
+  onPressTeam: (teamId: string) => void;
 };
 
 // Both halves of the table share these heights so a row lines up across the
@@ -23,7 +25,32 @@ const isNegative = (value: string) => /^-\d/.test(value.trim());
 // stretch to fill the card when they don't need to scroll.
 const columnWidth = (title: string) => Math.min(120, Math.max(52, title.length * 7 + 20));
 
-const StandingsTable = ({ group, columns }: { group: StandingsGroup; columns: StandingsColumn[] }) => (
+type TableProps = { group: StandingsGroup; columns: StandingsColumn[]; onPressTeam: (teamId: string) => void };
+
+// Logo and name open the team; a slot still to be decided has no team to open.
+const TeamCell = ({ row, onPressTeam }: { row: StandingsGroup['rows'][number]; onPressTeam: (teamId: string) => void }) => {
+  const name = row.team.name || row.shortName;
+  const content = (
+    <>
+      <TeamBadge logoUrl={row.team.logo_url} name={name} size={24} />
+      <Text numberOfLines={1} style={styles.team}>{row.shortName}</Text>
+    </>
+  );
+  const { teamId } = row;
+  if (!teamId) return <View accessibilityLabel={name} style={styles.teamLink}>{content}</View>;
+  return (
+    <TouchableOpacity
+      accessibilityRole="link"
+      accessibilityLabel={`Abrir time ${name}`}
+      onPress={() => onPressTeam(teamId)}
+      style={styles.teamLink}
+    >
+      {content}
+    </TouchableOpacity>
+  );
+};
+
+const StandingsTable = ({ group, columns, onPressTeam }: TableProps) => (
   <View style={styles.card}>
     {group.title ? (
       <View style={styles.groupHeader}>
@@ -39,10 +66,7 @@ const StandingsTable = ({ group, columns }: { group: StandingsGroup; columns: St
         {group.rows.map((row, index) => (
           <View key={row.id} style={[styles.bodyRow, styles.teamCell, index > 0 && styles.rowDivider]}>
             <Text style={[styles.rank, styles.rankCell]}>{index + 1}</Text>
-            <TeamBadge logoUrl={row.team.logo_url} name={row.team.name || row.shortName} size={24} />
-            <Text accessibilityLabel={row.team.name || row.shortName} numberOfLines={1} style={styles.team}>
-              {row.shortName}
-            </Text>
+            <TeamCell row={row} onPressTeam={onPressTeam} />
           </View>
         ))}
         <View pointerEvents="none" style={styles.fixedEdge} />
@@ -83,7 +107,7 @@ const StandingsTable = ({ group, columns }: { group: StandingsGroup; columns: St
   </View>
 );
 
-export const StandingsSection = ({ columns, groups }: Props) => {
+export const StandingsSection = ({ columns, groups, onPressTeam }: Props) => {
   if (groups.length === 0) {
     return <EmptyState icon="list-outline" title="Classificação indisponível" description="Os dados desta fase ainda não foram publicados." />;
   }
@@ -94,7 +118,7 @@ export const StandingsSection = ({ columns, groups }: Props) => {
         <Text style={styles.title}>Tabela de classificação</Text>
         {groups.length > 1 ? <Text style={styles.count}>{groups.length} grupos</Text> : null}
       </View>
-      {groups.map((group) => <StandingsTable key={group.id} group={group} columns={columns} />)}
+      {groups.map((group) => <StandingsTable key={group.id} group={group} columns={columns} onPressTeam={onPressTeam} />)}
     </View>
   );
 };
@@ -157,6 +181,7 @@ const styles = StyleSheet.create({
   teamCell: { paddingHorizontal: theme.spacing.sm, gap: theme.spacing.sm },
   rankCell: { width: 16, textAlign: 'center' },
   rank: { color: theme.colors.subtleText, fontSize: 12, fontWeight: '700' },
+  teamLink: { flex: 1, minWidth: 0, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   team: { flex: 1, color: theme.colors.ink, fontSize: 13, fontWeight: '800' },
   statCell: { flexGrow: 1, flexBasis: 0, textAlign: 'center' },
   statValue: { color: theme.colors.ink, fontSize: 14 },

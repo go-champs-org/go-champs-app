@@ -149,8 +149,3 @@ export const leaderCards = (
     return scopes.length > 0 ? [{ slug: stat.slug, title: stat.title, scopes }] : [];
   });
 };
-
-// Until the app has its own stats screen, "Ver todos" opens the public site's.
-export const PUBLIC_SITE_URL = 'https://go-champs.com';
-export const tournamentStatsUrl = (organizationSlug: string, tournamentSlug: string, statKey: string): string =>
-  `${PUBLIC_SITE_URL}/${organizationSlug}/${tournamentSlug}/stats?stat=${encodeURIComponent(statKey)}`;

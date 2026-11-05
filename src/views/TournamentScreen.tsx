@@ -67,7 +67,11 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
     <View style={styles.screen}>
       <ContentShell style={styles.content}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <TournamentSummaryCard tournament={tournament} leaders={viewModel.leaders} />
+          <TournamentSummaryCard
+            tournament={tournament}
+            leaders={viewModel.leaders}
+            onOpenStats={(statKey) => navigation.navigate('TournamentStatsScreen', { tournamentId, statKey, apiBaseUrl })}
+          />
           {selectedPhase ? (
             <>
               <PhaseSelector phases={viewModel.phases} selected={selectedPhase} onSelect={viewModel.selectPhase} />

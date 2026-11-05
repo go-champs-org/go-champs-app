@@ -119,8 +119,8 @@ describe('tournament stats', () => {
       tournament().teams
     );
     expect(rows).toEqual([
-      { playerId: 'p2', name: 'Bia', photoUrl: null, team: { id: 'team-b', name: 'Beta', logoUrl: null, triCode: 'BET' }, stats: { points: 30 } },
-      { playerId: 'p1', name: 'Ana', photoUrl: 'https://example.com/ana.png', team: { id: 'team-a', name: 'Alpha', logoUrl: 'https://example.com/a.png', triCode: 'ALP' }, stats: { points: 10 } },
+      { playerId: 'p2', name: 'Bia', photoUrl: null, team: { id: 'team-b', name: 'Beta', logoUrl: null }, stats: { points: 30 } },
+      { playerId: 'p1', name: 'Ana', photoUrl: 'https://example.com/ana.png', team: { id: 'team-a', name: 'Alpha', logoUrl: 'https://example.com/a.png' }, stats: { points: 10 } },
       { playerId: 'p3', name: 'Cris', photoUrl: null, team: null, stats: {} },
     ]);
   });

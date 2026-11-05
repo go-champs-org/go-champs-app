@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { TournamentOverview } from '../../domain/usecases/GetTournamentOverviewUseCase';
 import { LeaderCard } from '../../domain/usecases/shared/statLeaders';
 import { theme } from '../../theme/theme';
@@ -10,9 +11,11 @@ import { TournamentTeamsStrip } from './TournamentTeamsStrip';
 type Props = {
   tournament: TournamentOverview;
   leaders: LeaderCard[];
+  // Opens the stats screen, on a stat key when one is given.
+  onOpenStats: (statKey?: string) => void;
 };
 
-export const TournamentSummaryCard = ({ tournament, leaders }: Props) => (
+export const TournamentSummaryCard = ({ tournament, leaders, onOpenStats }: Props) => (
   <View style={styles.card}>
     <View style={styles.banner}>
       <Image
@@ -37,13 +40,15 @@ export const TournamentSummaryCard = ({ tournament, leaders }: Props) => (
           ) : null}
         </View>
       ) : null}
+      {tournament.hasAggregatedPlayerStats ? (
+        <TouchableOpacity accessibilityRole="button" onPress={() => onOpenStats()} style={styles.statsButton}>
+          <Ionicons name="podium-outline" size={18} color={theme.colors.ink} />
+          <Text style={styles.statsButtonText}>Estatísticas</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
     <TournamentTeamsStrip teams={tournament.teams} />
-    <HighlightsAccordion
-      cards={leaders}
-      organizationSlug={tournament.organizationSlug}
-      tournamentSlug={tournament.slug}
-    />
+    <HighlightsAccordion cards={leaders} onSeeAll={onOpenStats} />
   </View>
 );
 
@@ -101,6 +106,21 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs,
     borderRadius: 12,
     backgroundColor: theme.colors.olive,
+  },
+  // The Figma card's full-width "Estatísticas" button, under the meta row.
+  statsButton: {
+    minHeight: theme.layout.touchTarget,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.sm,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.oliveSoft,
+  },
+  statsButtonText: {
+    color: theme.colors.onOliveSoft,
+    fontSize: 15,
+    fontWeight: '600',
   },
   statusText: {
     color: theme.colors.surface,

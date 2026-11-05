@@ -15,7 +15,7 @@ describe('GetTournamentStatsUseCase', () => {
     const query = { sort: 'points', teamId: 'team-a' };
 
     await expect(useCase.execute(tournament, query, 'https://api.test/v1')).resolves.toEqual([
-      { playerId: 'p1', name: 'Ana', photoUrl: null, team: { id: 'team-a', name: 'Alpha', logoUrl: null, triCode: 'ALP' }, stats: { points: 12 } },
+      { playerId: 'p1', name: 'Ana', photoUrl: null, team: { id: 'team-a', name: 'Alpha', logoUrl: null }, stats: { points: 12 } },
     ]);
     expect(getAggregatedPlayerStats).toHaveBeenCalledWith('t1', query, 'https://api.test/v1');
   });

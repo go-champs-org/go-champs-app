@@ -154,7 +154,7 @@ export type TournamentStatsLayout = {
   minStatFilters: StatFilterOption[];
 };
 
-export type StatsRowTeam = { id: string; name: string; logoUrl: string | null; triCode: string };
+export type StatsRowTeam = { id: string; name: string; logoUrl: string | null };
 
 export type TournamentStatsRow = {
   playerId: string;
@@ -274,7 +274,7 @@ export const tournamentStatsRows = (
       name: player.name,
       photoUrl: player.photo_url,
       team: team
-        ? { id: team.id, name: team.name, logoUrl: team.logo_url, triCode: team.tri_code || team.name.slice(0, 3).toUpperCase() }
+        ? { id: team.id, name: team.name, logoUrl: team.logo_url }
         : null,
       stats: log.stats || {},
     }];

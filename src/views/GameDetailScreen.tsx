@@ -445,16 +445,19 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
   },
   videoText: { color: theme.colors.textPrimary, fontSize: theme.typography.caption, fontWeight: '800' },
+  // The tables run edge to edge of the card, split by a line only.
   boxScore: {
     marginTop: theme.spacing.lg,
-    padding: theme.spacing.md,
+    paddingTop: theme.spacing.md,
     borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.card,
-    gap: theme.spacing.md,
+    overflow: 'hidden',
   },
   boxHeader: {
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -479,6 +482,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   glossary: {
+    marginHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
     padding: theme.spacing.md,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surfaceMuted,
@@ -487,11 +492,8 @@ const styles = StyleSheet.create({
   glossaryItem: { color: theme.colors.mutedText, fontSize: theme.typography.caption, lineHeight: 18 },
   glossaryLabel: { color: theme.colors.textPrimary, fontWeight: '900' },
   tableBlock: {
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
-    overflow: 'hidden',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
   teamHeader: {
     flexDirection: 'row',

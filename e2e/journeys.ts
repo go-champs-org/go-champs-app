@@ -11,6 +11,8 @@ export const journeys = {
   multiplePhases: 'Trocar de fase no seletor do campeonato',
   tournamentSummary: 'Mostrar identidade e times do campeonato',
   tournamentHighlights: 'Mostrar destaques de atletas do campeonato',
+  tournamentStats: 'Abrir estatisticas do campeonato pelo Ver todos',
+  statsRanking: 'Trocar estatistica escopo e filtros do ranking',
   noPhases: 'Campeonato sem fases disponiveis',
   unsupportedPhase: 'Ignorar fases nao suportadas',
   entryError: 'Falha ao abrir campeonato e nova tentativa',

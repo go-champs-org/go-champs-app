@@ -423,8 +423,10 @@ test('[liveGameDetail] acompanha jogo ao vivo com período e estatísticas do sc
   await expect(page.getByLabel(/: 11$/)).toBeVisible();
   await expect(page.getByLabel(/: 5$/)).toBeVisible();
   await expect(page.getByText('Bia Costa')).toBeVisible();
-  await expect(page.getByText('10:00', { exact: true })).toBeVisible();
-  await expect(page.getByText('05:00', { exact: true })).toBeVisible();
+  // Minutes played, read in the box score: the games list behind it shows kickoff times too.
+  const boxScore = page.getByTestId('box-score-team');
+  await expect(boxScore.getByText('10:00', { exact: true })).toBeVisible();
+  await expect(boxScore.getByText('05:00', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Titular')).toHaveCount(1);
 });
 

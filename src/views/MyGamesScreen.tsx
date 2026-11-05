@@ -9,18 +9,7 @@ import { ContentShell } from '../components/layout/ContentShell';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useMyGamesViewModel } from '../viewmodels/MyGamesViewModel';
 import { ScheduleGame } from '../domain/repositories/AthleteProfileRepository';
-
-const formatDate = (value: string | null) => {
-  if (!value) return 'Data a definir';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
+import { formatGameShortDateTime } from '../domain/usecases/shared/gameDateTime';
 
 const GameCard = ({
   game,
@@ -47,7 +36,7 @@ const GameCard = ({
       <Text style={styles.match}>
         {home} {score} {away}
       </Text>
-      <Text style={styles.meta}>{formatDate(game.datetime)}</Text>
+      <Text style={styles.meta}>{formatGameShortDateTime(game.datetime)}</Text>
       {game.location || game.city ? (
         <Text style={styles.meta}>
           {[game.location, game.city, game.court].filter(Boolean).join(' · ')}

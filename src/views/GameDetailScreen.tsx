@@ -26,25 +26,13 @@ import {
   nextBoxScoreSort,
   sortedBoxScoreTeam,
 } from '../domain/usecases/shared/boxScore';
+import { formatGameDateTime } from '../domain/usecases/shared/gameDateTime';
 import { LiveScore } from '../domain/usecases/shared/liveScore';
 import { BoxScoreColumn, BoxScoreRow, BoxScoreTeam, GameAsset, GameBoxScore } from '../models/GameDetail';
 
 type Props = { route: RouteProp<RootStackParamList, 'GameDetailScreen'> };
 
 const UNDECIDED = 'A definir';
-
-const formatDateTime = (value: string | null | undefined) => {
-  if (!value) return 'Data a definir';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
 
 const assetLabel = (type: string) => {
   if (type === 'fiba-scoresheet') return 'Súmula FIBA';
@@ -97,26 +85,9 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.tournament}>{tournamentName}</Text>
 
-          {assets.length ? (
-            <View style={styles.assetRow}>
-              {assets.map((asset: GameAsset) => (
-                <TouchableOpacity
-                  key={asset.id || asset.url}
-                  accessibilityRole="button"
-                  accessibilityLabel={assetLabel(asset.type)}
-                  onPress={() => void Linking.openURL(asset.url)}
-                  style={styles.assetButton}
-                >
-                  <Ionicons name="document-text-outline" size={16} color={theme.colors.success} />
-                  <Text style={styles.assetText}>{assetLabel(asset.type)}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : null}
-
           <View style={styles.scoreCard}>
             <View style={styles.metaRow}>
-              <Text style={styles.date}>{formatDateTime(game.datetime)}</Text>
+              <Text style={styles.date}>{formatGameDateTime(game.datetime)}</Text>
               <Text style={styles.venue} numberOfLines={1}>
                 {venue}
               </Text>
@@ -139,6 +110,24 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
 
             {game.info ? <Text style={styles.info}>{game.info}</Text> : null}
           </View>
+
+          {/* The game's PDFs share one full-width line under the score. */}
+          {assets.length ? (
+            <View style={styles.assetRow}>
+              {assets.map((asset: GameAsset) => (
+                <TouchableOpacity
+                  key={asset.id || asset.url}
+                  accessibilityRole="button"
+                  accessibilityLabel={assetLabel(asset.type)}
+                  onPress={() => void Linking.openURL(asset.url)}
+                  style={styles.assetButton}
+                >
+                  <Ionicons name="document-text-outline" size={16} color={theme.colors.success} />
+                  <Text style={styles.assetText}>{assetLabel(asset.type)}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
 
           {game.youtube_code ? (
             <TouchableOpacity
@@ -366,13 +355,14 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   assetRow: {
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.md,
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: theme.spacing.sm,
   },
   assetButton: {
-    height: 36,
+    flex: 1,
+    justifyContent: 'center',
+    height: 44,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.accentSoft,
@@ -472,7 +462,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: theme.colors.textPrimary,
     fontSize: theme.typography.title,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   glossaryButton: {
     flexDirection: 'row',

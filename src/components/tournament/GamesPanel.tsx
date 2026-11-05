@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Game } from '../../models/GameModel';
+import { formatGameTime } from '../../domain/usecases/shared/gameDateTime';
 import { isLiveGame, showsScore } from '../../domain/usecases/shared/liveScore';
 import { teamShortName } from '../../domain/usecases/shared/phasePresentation';
 import { useLiveScore } from '../../viewmodels/LiveScoreViewModel';
@@ -20,11 +21,6 @@ type Props = {
 };
 
 const UNDECIDED = 'A definir';
-
-const formatTime = (iso: string) => {
-  const date = new Date(iso);
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-};
 
 const formatDate = (value: string) => {
   const [year, month, day] = value.split('-');
@@ -71,7 +67,7 @@ const GameRow = ({ game, apiBaseUrl, onPress }: GameRowProps) => {
     >
       <View style={styles.meta}>
         <View style={styles.timeRow}>
-          <Text style={styles.time}>{formatTime(game.datetime)}</Text>
+          <Text style={styles.time}>{formatGameTime(game.datetime)}</Text>
           {live ? <LiveBadge /> : null}
         </View>
         {game.location ? <Text numberOfLines={1} style={styles.venue}>{game.location}</Text> : null}

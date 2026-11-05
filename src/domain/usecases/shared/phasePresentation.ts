@@ -1,4 +1,5 @@
 import { Game } from '../../../models/GameModel';
+import { gameDateKey, localDateKey } from './gameDateTime';
 
 export type TeamInfo = {
   name: string;
@@ -51,13 +52,8 @@ export const buildTeamMap = (
   return map;
 };
 
-export const dateKeyOf = (iso: string): string => {
-  const date = new Date(iso);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-};
-
 export const buildDateKeys = (games: Game[]): string[] =>
-  Array.from(new Set(games.map((game) => dateKeyOf(game.datetime)))).sort();
+  Array.from(new Set(games.map((game) => gameDateKey(game.datetime)))).sort();
 
 const DAY = 24 * 60 * 60 * 1000;
 const dayNumber = (key: string): number => {
@@ -69,7 +65,7 @@ const dayNumber = (key: string): number => {
 // games rather than its first round; on a tie the upcoming day wins.
 export const closestDateKey = (dateKeys: string[], today: Date): string | null => {
   if (dateKeys.length === 0) return null;
-  const target = dayNumber(dateKeyOf(today.toISOString()));
+  const target = dayNumber(localDateKey(today));
 
   return dateKeys.reduce((best, key) => {
     const distance = Math.abs(dayNumber(key) - target);

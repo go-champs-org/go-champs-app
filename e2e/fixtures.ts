@@ -22,6 +22,16 @@ export const test = base.extend({
       if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } });
       let payload: unknown;
       if (path === '/recently-view') payload = { data: tournaments.map((tournament) => ({ tournament })) };
+      else if (path === '/organizations') payload = {
+        data: url.searchParams.get('where[slug]') === tournamentFixture.organization.slug
+          ? [{ ...tournamentFixture.organization, logo_url: logo }]
+          : [],
+      };
+      else if (path === '/tournaments') payload = {
+        data: url.searchParams.get('where[organization_slug]') === tournamentFixture.organization.slug
+          ? tournaments.map((tournament, index) => ({ ...tournament, logo_url: index === 0 ? logo : null }))
+          : [],
+      };
       else if (path.startsWith('/tournaments/')) {
         const index = tournaments.findIndex((tournament) => path.endsWith('/' + tournament.id));
         payload = { data: { ...tournamentHistoryFixture.data, ...tournamentDetailsFixture, ...tournaments[index], phases: selectedPhases[index] } };

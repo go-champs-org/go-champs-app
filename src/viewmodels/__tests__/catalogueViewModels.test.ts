@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { container } from '../../di/container';
 import { tournamentFixture } from '../../test/fixtures/tournamentFixtures';
 import { useTournamentsViewModel } from '../TournamentsViewModel';
@@ -39,6 +39,19 @@ describe('catalogue viewmodels', () => {
     await result.current.togglePin('tournament-1');
     await waitFor(() => expect(result.current.pinnedIds.has('tournament-1')).toBe(true));
     expect(container.togglePinnedTournament.execute).toHaveBeenCalledWith('tournament-1');
+  });
+
+  it('filters the catalogue by the search query', async () => {
+    const second = { ...tournamentFixture, id: 'tournament-2', name: 'Liga Norte' };
+    (container.getRecentTournaments.execute as jest.Mock).mockResolvedValue([tournamentFixture, second]);
+
+    const { result } = renderHook(() => useTournamentsViewModel());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.searchQuery).toBe('');
+
+    act(() => result.current.setSearchQuery('norte'));
+    expect(result.current.searchQuery).toBe('norte');
+    expect(result.current.tournaments.map((item) => item.id)).toEqual(['tournament-2']);
   });
 
   it('finishes loading with an empty catalogue after failure', async () => {

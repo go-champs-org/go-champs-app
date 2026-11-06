@@ -1,28 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Tournament } from '../models/Tournament';
 import { container } from '../di/container';
-
-const sortWithPinnedFirst = (tournaments: Tournament[], pinnedIds: string[]) => {
-  if (pinnedIds.length === 0) {
-    return tournaments;
-  }
-
-  const pinnedIndex = new Map(pinnedIds.map((id, index) => [id, index]));
-  return [...tournaments].sort((left, right) => {
-    const leftPinned = pinnedIndex.has(left.id);
-    const rightPinned = pinnedIndex.has(right.id);
-    if (leftPinned && rightPinned) {
-      return (pinnedIndex.get(left.id) ?? 0) - (pinnedIndex.get(right.id) ?? 0);
-    }
-    if (leftPinned) return -1;
-    if (rightPinned) return 1;
-    return 0;
-  });
-};
+import { homeTournaments } from '../domain/usecases/shared/homeTournaments';
 
 export const useTournamentsViewModel = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,16 +37,18 @@ export const useTournamentsViewModel = () => {
     }
   }, []);
 
-  const sortedTournaments = useMemo(
-    () => sortWithPinnedFirst(tournaments, pinnedIds),
-    [tournaments, pinnedIds]
+  const visibleTournaments = useMemo(
+    () => homeTournaments(tournaments, pinnedIds, searchQuery),
+    [tournaments, pinnedIds, searchQuery]
   );
 
   const pinnedIdSet = useMemo(() => new Set(pinnedIds), [pinnedIds]);
 
   return {
-    tournaments: sortedTournaments,
+    tournaments: visibleTournaments,
     pinnedIds: pinnedIdSet,
+    searchQuery,
+    setSearchQuery,
     togglePin,
     loading,
   };

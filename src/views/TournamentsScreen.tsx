@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Animated, Easing, Keyboard, TextInput } from 'react-native';
-import { theme } from '../theme/theme';
+import { View, Text, FlatList, ActivityIndicator, Animated, Easing, Keyboard, TextInput } from 'react-native';
+import { makeStyles, useTheme } from '../theme/theme';
 import { useTournamentsViewModel } from '../viewmodels/TournamentsViewModel';
 import { useNavigation } from '@react-navigation/native';
 import { AppHeader } from '../components/layout/AppHeader';
@@ -12,6 +12,8 @@ const SEARCH_HEIGHT = 60;
 // The home (Figma Home / TournamentList): the recent tournaments, pinned
 // first, and the search that slides down from the header.
 const TournamentsScreen = () => {
+  const theme = useTheme();
+  const styles = useStyles();
   const { tournaments, pinnedIds, togglePin, loading, searchQuery, setSearchQuery, searching } = useTournamentsViewModel();
   const navigation = useNavigation<any>();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -105,7 +107,7 @@ const TournamentsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -115,6 +117,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     backgroundColor: theme.colors.primary,
     paddingHorizontal: theme.spacing.md,
+    borderBottomWidth: theme.dark ? 1 : 0,
+    borderBottomColor: theme.colors.chromeBorder,
   },
   searching: {
     marginTop: theme.spacing.lg,
@@ -149,6 +153,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: theme.spacing.sm,
   },
-});
+}));
 
 export default TournamentsScreen;

@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 
 type Props = {
   value: string;
@@ -12,6 +12,8 @@ type Props = {
 };
 
 export const SearchBar = forwardRef<React.ComponentRef<typeof TextInput>, Props>(({ value, onChangeText, placeholder, variant = 'dark' }, ref) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const light = variant === 'light';
 
   return (
@@ -36,11 +38,11 @@ export const SearchBar = forwardRef<React.ComponentRef<typeof TextInput>, Props>
 
 SearchBar.displayName = 'SearchBar';
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: {
     height: 44,
     borderRadius: theme.radius.md,
-    backgroundColor: '#262a21',
+    backgroundColor: theme.colors.chromeField,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
@@ -53,10 +55,10 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#ffffff',
+    color: theme.colors.onPrimary,
     fontSize: theme.typography.body,
   },
   inputLight: {
     color: theme.colors.ink,
   },
-});
+}));

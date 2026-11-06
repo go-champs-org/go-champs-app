@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { SCOPE_LABELS } from '../domain/usecases/shared/statLeaders';
 import { useTournamentStatsViewModel } from '../viewmodels/TournamentStatsViewModel';
-import { theme } from '../theme/theme';
+import { makeStyles, useTheme } from '../theme/theme';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { StatsTable, StatsTableHeader, useStatsTableScroll } from '../components/tournament/StatsTable';
@@ -19,35 +19,44 @@ const NO_STATS = 'Sem estatísticas para este campeonato ainda.';
 const STICKY_HEADER_INDEX = 2;
 const NO_FILTERED_STATS = 'Nenhum atleta atende a esses filtros.';
 
-const Retry = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <View style={styles.retry}>
-    <Text style={styles.retryText}>{message}</Text>
-    <TouchableOpacity accessibilityRole="button" onPress={onRetry} style={styles.retryButton}>
-      <Text style={styles.retryButtonText}>Tentar novamente</Text>
-    </TouchableOpacity>
-  </View>
-);
+const Retry = ({ message, onRetry }: { message: string; onRetry: () => void }) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.retry}>
+      <Text style={styles.retryText}>{message}</Text>
+      <TouchableOpacity accessibilityRole="button" onPress={onRetry} style={styles.retryButton}>
+        <Text style={styles.retryButtonText}>Tentar novamente</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 type ToggleProps = { label: string; icon: keyof typeof Ionicons.glyphMap; open: boolean; onPress: () => void };
 
-const Toggle = ({ label, icon, open, onPress }: ToggleProps) => (
-  <TouchableOpacity
-    accessibilityRole="button"
-    accessibilityLabel={label}
-    accessibilityState={{ expanded: open }}
-    onPress={onPress}
-    style={[styles.toggle, open && styles.toggleOpen]}
-  >
-    <Ionicons name={icon} size={16} color={theme.colors.onOliveSoft} />
-    <Text style={styles.toggleText}>{label}</Text>
-    <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color={theme.colors.onOliveSoft} />
-  </TouchableOpacity>
-);
+const Toggle = ({ label, icon, open, onPress }: ToggleProps) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ expanded: open }}
+      onPress={onPress}
+      style={[styles.toggle, open && styles.toggleOpen]}
+    >
+      <Ionicons name={icon} size={16} color={theme.colors.onOliveSoft} />
+      <Text style={styles.toggleText}>{label}</Text>
+      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color={theme.colors.onOliveSoft} />
+    </TouchableOpacity>
+  );
+};
 
 // The tournament's athletes ranked by one stat, like the public site's stats
 // page: Totais or Por jogo, any column tapped to rank by it, narrowed by
 // phase, team and minimum games.
 const TournamentStatsScreen: React.FC<Props> = ({ route }) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { tournamentId, statKey: requestedStatKey, apiBaseUrl } = route.params;
   const viewModel = useTournamentStatsViewModel(tournamentId, requestedStatKey, apiBaseUrl);
@@ -168,7 +177,7 @@ const TournamentStatsScreen: React.FC<Props> = ({ route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   screen: { flex: 1, backgroundColor: theme.colors.background },
   content: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.background },
@@ -210,7 +219,7 @@ const styles = StyleSheet.create({
   scope: { flex: 1, minHeight: 34, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.pill },
   scopeSelected: { backgroundColor: theme.colors.olive },
   scopeText: { color: theme.colors.onOliveSoft, fontSize: 13, fontWeight: '700' },
-  scopeTextSelected: { color: theme.colors.surface },
+  scopeTextSelected: { color: theme.colors.onOlive },
   toggles: { flexDirection: 'row', gap: theme.spacing.sm },
   toggle: {
     flex: 1,
@@ -246,6 +255,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.oliveSoft,
   },
   retryButtonText: { color: theme.colors.onOliveSoft, fontSize: 14, fontWeight: '800' },
-});
+}));
 
 export default TournamentStatsScreen;

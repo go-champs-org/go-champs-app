@@ -16,7 +16,7 @@ import { RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
-import { theme } from '../theme/theme';
+import { makeStyles, useTheme } from '../theme/theme';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useAuthViewModel } from '../viewmodels/AuthViewModel';
 import { WebAuthPurpose, webAuthCopy } from '../webauth/WebAuthPurpose';
@@ -30,6 +30,8 @@ const modeToPurpose: Record<Exclude<AuthMode, 'signIn'>, WebAuthPurpose> = {
 };
 
 const AuthScreen: React.FC<Props> = ({ route }) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signIn: persistSession } = useAuthSession();
   const [mode, setMode] = useState<AuthMode>(route.params?.initialMode || 'signIn');
@@ -59,7 +61,7 @@ const AuthScreen: React.FC<Props> = ({ route }) => {
         <View style={styles.header}>
           <Image accessibilityLabel="Go Champs" source={require('../../assets/images/logo-white-name.png')} style={styles.logo} />
           <TouchableOpacity accessibilityLabel="Voltar" onPress={() => navigation.goBack()} style={styles.closeButton}>
-            <Ionicons name="close" size={25} color="#ffffff" />
+            <Ionicons name="close" size={25} color={theme.colors.onPrimary} />
           </TouchableOpacity>
         </View>
         <ScrollView contentContainerStyle={styles.content}>
@@ -91,7 +93,7 @@ const AuthScreen: React.FC<Props> = ({ route }) => {
         <View style={styles.header}>
           <Image accessibilityLabel="Go Champs" source={require('../../assets/images/logo-white-name.png')} style={styles.logo} />
           <TouchableOpacity accessibilityLabel="Voltar" onPress={() => navigation.goBack()} style={styles.closeButton}>
-            <Ionicons name="close" size={25} color="#ffffff" />
+            <Ionicons name="close" size={25} color={theme.colors.onPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -111,7 +113,7 @@ const AuthScreen: React.FC<Props> = ({ route }) => {
             onPress={submitSignIn}
             style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
           >
-            {loading ? <ActivityIndicator color={theme.colors.primary} /> : <Text style={styles.primaryButtonText}>Entrar</Text>}
+            {loading ? <ActivityIndicator color={theme.colors.onAccent} /> : <Text style={styles.primaryButtonText}>Entrar</Text>}
           </TouchableOpacity>
 
           <View style={styles.divider}><View style={styles.line} /><Text style={styles.dividerText}>Ou</Text><View style={styles.line} /></View>
@@ -138,22 +140,26 @@ type InputProps = {
   keyboardType?: 'default' | 'email-address';
 };
 
-const AuthInput = ({ label, placeholder, value, onChangeText, autoCapitalize = 'sentences', keyboardType = 'default' }: InputProps) => (
-  <View style={styles.field}>
-    <Text style={styles.label}>{label}</Text>
-    <TextInput
-      accessibilityLabel={label}
-      autoCapitalize={autoCapitalize}
-      autoCorrect={false}
-      keyboardType={keyboardType}
-      onChangeText={onChangeText}
-      placeholder={placeholder}
-      placeholderTextColor={theme.colors.inactive}
-      style={styles.input}
-      value={value}
-    />
-  </View>
-);
+const AuthInput = ({ label, placeholder, value, onChangeText, autoCapitalize = 'sentences', keyboardType = 'default' }: InputProps) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
+        keyboardType={keyboardType}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={theme.colors.inactive}
+        style={styles.input}
+        value={value}
+      />
+    </View>
+  );
+};
 
 type PasswordProps = Omit<InputProps, 'label' | 'placeholder' | 'keyboardType'> & {
   label?: string;
@@ -169,29 +175,33 @@ const PasswordInput = ({
   onChangeText,
   visible,
   onToggle,
-}: PasswordProps) => (
-  <View style={styles.field}>
-    <Text style={styles.label}>{label}</Text>
-    <View style={styles.passwordField}>
-      <TextInput
-        accessibilityLabel={label}
-        autoCapitalize="none"
-        autoCorrect={false}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={theme.colors.inactive}
-        secureTextEntry={!visible}
-        style={[styles.input, styles.passwordInput]}
-        value={value}
-      />
-      <TouchableOpacity accessibilityLabel={visible ? 'Ocultar senha' : 'Mostrar senha'} onPress={onToggle} style={styles.eyeButton}>
-        <Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={21} color={theme.colors.textPrimary} />
-      </TouchableOpacity>
+}: PasswordProps) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.passwordField}>
+        <TextInput
+          accessibilityLabel={label}
+          autoCapitalize="none"
+          autoCorrect={false}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={theme.colors.inactive}
+          secureTextEntry={!visible}
+          style={[styles.input, styles.passwordInput]}
+          value={value}
+        />
+        <TouchableOpacity accessibilityLabel={visible ? 'Ocultar senha' : 'Mostrar senha'} onPress={onToggle} style={styles.eyeButton}>
+          <Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={21} color={theme.colors.textPrimary} />
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   safeArea: { flex: 1, backgroundColor: theme.colors.primary },
   screen: { flex: 1, backgroundColor: theme.colors.background },
   header: {
@@ -267,7 +277,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.accent,
   },
   primaryButtonDisabled: { opacity: 0.6 },
-  primaryButtonText: { color: theme.colors.primary, fontSize: theme.typography.body, fontWeight: '900' },
+  primaryButtonText: { color: theme.colors.onAccent, fontSize: theme.typography.body, fontWeight: '900' },
   divider: {
     marginVertical: theme.spacing.lg,
     flexDirection: 'row',
@@ -292,6 +302,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.accentSoft,
   },
   secondaryButtonText: { color: theme.colors.success, fontSize: theme.typography.bodySmall, fontWeight: '900' },
-});
+}));
 
 export default AuthScreen;

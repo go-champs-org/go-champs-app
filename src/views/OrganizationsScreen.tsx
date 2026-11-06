@@ -1,10 +1,10 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useOrganizationsViewModel } from '../viewmodels/OrganizationsViewModel';
-import { theme } from '../theme/theme';
+import { makeStyles, useTheme } from '../theme/theme';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { SearchBar } from '../components/search/SearchBar';
@@ -12,6 +12,8 @@ import { OrganizationRow } from '../components/organization/OrganizationRow';
 
 // The organizations list opened from the menu, with a search over all of them.
 const OrganizationsScreen = () => {
+  const theme = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { organizations, query, setQuery, isSearching, loading } = useOrganizationsViewModel();
 
@@ -51,12 +53,12 @@ const OrganizationsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   screen: { flex: 1, backgroundColor: theme.colors.background },
   content: { flex: 1 },
   search: { paddingHorizontal: theme.spacing.md, paddingTop: theme.spacing.md },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   list: { padding: theme.spacing.md, paddingBottom: theme.spacing.xl, gap: theme.spacing.sm },
-});
+}));
 
 export default OrganizationsScreen;

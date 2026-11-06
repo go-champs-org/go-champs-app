@@ -5,14 +5,13 @@ import {
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { TournamentTeam } from '../../domain/usecases/GetTournamentOverviewUseCase';
 import { carouselMaxOffset, nextCarouselOffset } from '../../domain/usecases/shared/carousel';
-import { theme } from '../../theme/theme';
+import { makeStyles, tokens } from '../../theme/theme';
 import { TeamBadge } from '../competition/TeamBadge';
 
 type Props = {
@@ -22,8 +21,8 @@ type Props = {
 };
 
 const ITEM_MIN_WIDTH = 72;
-const PADDING = theme.spacing.md;
-const GAP = theme.spacing.sm;
+const PADDING = tokens.spacing.md;
+const GAP = tokens.spacing.sm;
 const AUTO_SLIDE_MS = 5000;
 
 // When every team fits, they share the width equally; otherwise each keeps
@@ -51,6 +50,7 @@ const useReduceMotion = () => {
 };
 
 export const TournamentTeamsStrip = ({ teams, onPressTeam }: Props) => {
+  const styles = useStyles();
   const [containerWidth, setContainerWidth] = useState(0);
   const listRef = useRef<FlatList<TournamentTeam>>(null);
   const offsetRef = useRef(0);
@@ -118,7 +118,7 @@ export const TournamentTeamsStrip = ({ teams, onPressTeam }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: {
     paddingVertical: theme.spacing.sm,
     borderTopWidth: 1,
@@ -139,4 +139,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 12,
   },
-});
+}));

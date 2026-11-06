@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationIndependentTree } from '@react-navigation/core';
-import { NavigationContainer } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import type { LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../src/theme/theme';
+import { Theme, useTheme } from '../src/theme/theme';
 import TournamentsScreen from '../src/views/TournamentsScreen';
 import TournamentScreen from '../src/views/TournamentScreen';
 import MyGamesScreen from '../src/views/MyGamesScreen';
@@ -41,19 +41,38 @@ const linking: LinkingOptions<RootStackParamList> = {
   },
 };
 
+// React Navigation's own theme (screen backgrounds, transitions) from ours.
+const navigationThemeFor = (theme: Theme) => {
+  const base = theme.dark ? DarkTheme : DefaultTheme;
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: theme.colors.textSecondary,
+      background: theme.colors.background,
+      card: theme.colors.primary,
+      text: theme.colors.textPrimary,
+      border: theme.colors.chromeBorder,
+      notification: theme.colors.danger,
+    },
+  };
+};
+
 function MainTabs() {
+  const theme = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.colors.textSecondary,
-        tabBarInactiveTintColor: '#d1d4ca',
+        tabBarInactiveTintColor: theme.colors.onPrimaryMuted,
         tabBarStyle: {
           minHeight: 70,
           paddingTop: 7,
           paddingBottom: 8,
           backgroundColor: theme.colors.primary,
-          borderTopWidth: 0,
+          borderTopWidth: theme.dark ? 1 : 0,
+          borderTopColor: theme.colors.chromeBorder,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -93,13 +112,15 @@ function MainTabs() {
 }
 
 export default function App() {
+  const theme = useTheme();
+  const navigationTheme = useMemo(() => navigationThemeFor(theme), [theme]);
   return (
     <NavigationIndependentTree>
-      <NavigationContainer linking={linking}>
+      <NavigationContainer linking={linking} theme={navigationTheme}>
         <Stack.Navigator
           screenOptions={{
             headerStyle: { backgroundColor: theme.colors.primary },
-            headerTintColor: '#fff',
+            headerTintColor: theme.colors.onPrimary,
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: '800', fontSize: 16 },
             headerBackTitle: 'Voltar',

@@ -1,21 +1,24 @@
 import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
-import { theme } from '../../theme/theme';
+import { Image, View } from 'react-native';
+import { makeStyles } from '../../theme/theme';
 
 // The green strip with the court pattern that tops a tournament or an
 // organization card (the public pages' ProfileBanner strip).
-export const CardBanner = () => (
-  <View style={styles.banner}>
-    <Image
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      source={require('../../../assets/images/tournament-banner-pattern.png')}
-      style={styles.pattern}
-    />
-  </View>
-);
+export const CardBanner = () => {
+  const styles = useStyles();
+  return (
+    <View style={styles.banner}>
+      <Image
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        source={require('../../../assets/images/tournament-banner-pattern.png')}
+        style={styles.pattern}
+      />
+    </View>
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   banner: {
     height: 44,
     overflow: 'hidden',
@@ -30,4 +33,4 @@ const styles = StyleSheet.create({
     opacity: 0.3,
     transform: [{ rotate: '-118.5deg' }],
   },
-});
+}));

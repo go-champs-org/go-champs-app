@@ -12,7 +12,7 @@ import { RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/types';
-import { theme } from '../theme/theme';
+import { makeStyles, useTheme } from '../theme/theme';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { LiveBadge } from '../components/competition/LiveBadge';
@@ -42,6 +42,8 @@ const assetLabel = (type: string) => {
 };
 
 const GameDetailScreen: React.FC<Props> = ({ route }) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { gameId, apiBaseUrl } = route.params;
   const { loading, error, game, boxScore, isLive, score, periodLabel, refresh } = useGameDetailViewModel(
@@ -163,6 +165,7 @@ type TeamIdentityProps = { name: string; logoUrl?: string | null; onPress?: () =
 
 // Logo and name open the team's page when there is one to open.
 const TeamIdentity = ({ name, logoUrl, onPress }: TeamIdentityProps) => {
+  const styles = useStyles();
   const content = (
     <>
       <TeamBadge logoUrl={logoUrl} name={name} size={56} />
@@ -181,21 +184,24 @@ const TeamIdentity = ({ name, logoUrl, onPress }: TeamIdentityProps) => {
 
 // The digits alone say nothing out loud: each side carries the team it
 // belongs to, so a live update reads as a sentence.
-const Score = ({ score, homeName, awayName }: { score: LiveScore | null; homeName: string; awayName: string }) => (
-  <View style={styles.scoreRow} accessibilityLiveRegion="polite">
-    {score ? (
-      <Text accessibilityLabel={`${homeName}: ${score.homeScore}`} style={styles.score}>
-        {score.homeScore}
-      </Text>
-    ) : null}
-    <Text style={styles.scoreSeparator}>x</Text>
-    {score ? (
-      <Text accessibilityLabel={`${awayName}: ${score.awayScore}`} style={styles.score}>
-        {score.awayScore}
-      </Text>
-    ) : null}
-  </View>
-);
+const Score = ({ score, homeName, awayName }: { score: LiveScore | null; homeName: string; awayName: string }) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.scoreRow} accessibilityLiveRegion="polite">
+      {score ? (
+        <Text accessibilityLabel={`${homeName}: ${score.homeScore}`} style={styles.score}>
+          {score.homeScore}
+        </Text>
+      ) : null}
+      <Text style={styles.scoreSeparator}>x</Text>
+      {score ? (
+        <Text accessibilityLabel={`${awayName}: ${score.awayScore}`} style={styles.score}>
+          {score.awayScore}
+        </Text>
+      ) : null}
+    </View>
+  );
+};
 
 const STARTER_LABEL = 'Titular';
 
@@ -210,6 +216,8 @@ const glossaryEntries = (boxScore: GameBoxScore) => {
 type OpenAthlete = ((playerId: string) => void) | undefined;
 
 const BoxScoreSection = ({ boxScore, onPressAthlete }: { boxScore: GameBoxScore; onPressAthlete: OpenAthlete }) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   // Null until a header is tapped: the box score opens in its ranked order.
   // One sort for both sides, so a tap reads the same column across the game.
@@ -269,6 +277,7 @@ type TableProps = {
 
 // The name column stays pinned while the statistics scroll under it.
 const BoxScoreTable = ({ team, columns, sort, onSort, onPressAthlete }: TableProps) => {
+  const styles = useStyles();
   // Logs saved before the API stored the number carry none, and a column of
   // empty slots would only cost width.
   const showNumber = team.rows.some((row) => row.number);
@@ -329,6 +338,7 @@ const BoxScoreTable = ({ team, columns, sort, onSort, onPressAthlete }: TablePro
 // A line with no athlete id, or a game whose tournament is unknown, has no
 // athlete page to open.
 const PlayerNameCell = ({ row, showNumber, onPressAthlete }: { row: BoxScoreRow; showNumber: boolean; onPressAthlete: OpenAthlete }) => {
+  const styles = useStyles();
   const content = (
     <>
       {showNumber ? <Text style={styles.playerNumber}>{row.number ?? ''}</Text> : null}
@@ -365,6 +375,8 @@ const StatHeader = ({
   sort: BoxScoreSort | null;
   onSort: (slug: string) => void;
 }) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const direction = sort?.slug === column.slug ? sort.direction : null;
   return (
     <TouchableOpacity
@@ -383,7 +395,7 @@ const StatHeader = ({
 
 const ROW_HEIGHT = 44;
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   screen: { flex: 1, backgroundColor: theme.colors.background },
   content: { flex: 1 },
   loader: {
@@ -625,7 +637,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  retryText: { color: theme.colors.primary, fontWeight: '900' },
-});
+  retryText: { color: theme.colors.onAccent, fontWeight: '900' },
+}));
 
 export default GameDetailScreen;

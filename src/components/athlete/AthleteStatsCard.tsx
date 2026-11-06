@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SCOPE_LABELS, StatScope } from '../../domain/usecases/shared/statLeaders';
 import { StatColumn } from '../../domain/usecases/shared/tournamentStats';
 import { AthleteStatsRow } from '../../viewmodels/AthleteViewModel';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 
 type Props = {
   columns: StatColumn[];
@@ -23,6 +23,8 @@ const STAT_WIDTH = 52;
 // athlete played, the games in it and every stat, totals or per game as the
 // API aggregated them, and a total band. The phase stays pinned while the numbers scroll under it.
 export const AthleteStatsCard = ({ columns, rows, total, scopes, scope, onSelectScope }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const cellsOf = (row: AthleteStatsRow) => [row.games, ...row.cells];
 
@@ -118,13 +120,16 @@ export const AthleteStatsCard = ({ columns, rows, total, scopes, scope, onSelect
 };
 
 // What the card says before the athlete has a game with stats in it.
-export const AthleteNoStatsCard = () => (
-  <View style={[styles.card, styles.empty]} testID="athlete-stats">
-    <Text style={styles.emptyText}>Sem estatísticas para este atleta ainda.</Text>
-  </View>
-);
+export const AthleteNoStatsCard = () => {
+  const styles = useStyles();
+  return (
+    <View style={[styles.card, styles.empty]} testID="athlete-stats">
+      <Text style={styles.emptyText}>Sem estatísticas para este atleta ainda.</Text>
+    </View>
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   card: {
     overflow: 'hidden',
     borderWidth: 1,
@@ -159,7 +164,7 @@ const styles = StyleSheet.create({
   scope: { flex: 1, minHeight: 34, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.pill },
   scopeSelected: { backgroundColor: theme.colors.olive },
   scopeText: { color: theme.colors.onOliveSoft, fontSize: 13, fontWeight: '700' },
-  scopeTextSelected: { color: theme.colors.surface },
+  scopeTextSelected: { color: theme.colors.onOlive },
   glossary: { padding: theme.spacing.md, gap: 4, borderRadius: theme.radius.md, backgroundColor: theme.colors.surfaceMuted },
   glossaryItem: { color: theme.colors.mutedText, fontSize: theme.typography.caption, lineHeight: 18 },
   glossaryLabel: { color: theme.colors.textPrimary, fontWeight: '900' },
@@ -207,4 +212,4 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   totalsCell: { fontWeight: '800' },
-});
+}));

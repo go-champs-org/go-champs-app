@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 
 export type SelectOption = { id: string | null; label: string };
 
@@ -15,6 +15,8 @@ type Props = {
 // A form select: the field shows the current choice, and tapping it lists
 // every option in a sheet over the screen.
 export const SelectField = ({ label, options, value, onChange }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const [open, setOpen] = useState(false);
   const current = options.find((option) => option.id === value) ?? options[0];
 
@@ -63,7 +65,7 @@ export const SelectField = ({ label, options, value, onChange }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   field: { gap: 6 },
   label: { color: theme.colors.subtleText, fontSize: 12, fontWeight: '700' },
   trigger: {
@@ -78,7 +80,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
   },
   value: { flex: 1, color: theme.colors.ink, fontSize: 14, fontWeight: '700' },
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.35)' },
+  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: theme.colors.backdrop },
   sheet: {
     maxHeight: '70%',
     paddingTop: theme.spacing.md,
@@ -107,4 +109,4 @@ const styles = StyleSheet.create({
   optionSelected: { backgroundColor: theme.colors.tint },
   optionText: { flex: 1, color: theme.colors.ink, fontSize: 14, fontWeight: '600' },
   optionTextSelected: { color: theme.colors.olive, fontWeight: '800' },
-});
+}));

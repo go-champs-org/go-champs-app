@@ -5,7 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { SITE_LINKS, SOCIAL_LINKS } from '../../core/config/siteLinks';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 
 export type SideMenuItem = 'home' | 'organizations';
 
@@ -33,6 +33,8 @@ const MenuRow = ({
   active?: boolean;
   onPress: () => void;
 }) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const color = active ? theme.colors.lime : theme.colors.ink;
   return (
     <TouchableOpacity
@@ -48,19 +50,25 @@ const MenuRow = ({
   );
 };
 
-const SocialButton = ({ label, icon, url }: { label: string; icon: keyof typeof Ionicons.glyphMap; url: string }) => (
-  <TouchableOpacity
-    accessibilityRole="link"
-    accessibilityLabel={label}
-    onPress={() => void Linking.openURL(url)}
-    style={styles.socialButton}
-  >
-    <Ionicons name={icon} size={20} color={theme.colors.ink} />
-  </TouchableOpacity>
-);
+const SocialButton = ({ label, icon, url }: { label: string; icon: keyof typeof Ionicons.glyphMap; url: string }) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <TouchableOpacity
+      accessibilityRole="link"
+      accessibilityLabel={label}
+      onPress={() => void Linking.openURL(url)}
+      style={styles.socialButton}
+    >
+      <Ionicons name={icon} size={20} color={theme.colors.ink} />
+    </TouchableOpacity>
+  );
+};
 
 // The app menu, sliding in from the right over the current tab.
 export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrganizations }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const { width } = useWindowDimensions();
   const panelWidth = Math.min(width * 0.82, PANEL_MAX_WIDTH);
   const [progress] = useState(() => new Animated.Value(0));
@@ -183,7 +191,7 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   root: {
     flex: 1,
   },
@@ -196,6 +204,8 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: theme.colors.background,
+    borderLeftWidth: theme.dark ? 1 : 0,
+    borderLeftColor: theme.colors.chromeBorder,
   },
   safeArea: {
     flex: 1,
@@ -259,4 +269,4 @@ const styles = StyleSheet.create({
     color: theme.colors.subtleText,
     fontSize: theme.typography.caption,
   },
-});
+}));

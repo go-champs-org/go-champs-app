@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TournamentView } from '../../viewmodels/TournamentViewModel';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 
 type Props = {
   value: TournamentView;
@@ -14,27 +14,31 @@ const VIEWS: { key: TournamentView; label: string; icon: keyof typeof Ionicons.g
   { key: 'games', label: 'Jogos', icon: 'basketball-outline' },
 ];
 
-export const ViewSwitch = ({ value, onChange }: Props) => (
-  <View accessibilityRole="tablist" style={styles.container}>
-    {VIEWS.map((view) => {
-      const selected = view.key === value;
-      return (
-        <TouchableOpacity
-          key={view.key}
-          accessibilityRole="tab"
-          accessibilityState={{ selected }}
-          onPress={() => onChange(view.key)}
-          style={[styles.tab, selected && styles.tabSelected]}
-        >
-          <Ionicons name={view.icon} size={18} color={theme.colors.onOliveSoft} />
-          <Text style={styles.label}>{view.label}</Text>
-        </TouchableOpacity>
-      );
-    })}
-  </View>
-);
+export const ViewSwitch = ({ value, onChange }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <View accessibilityRole="tablist" style={styles.container}>
+      {VIEWS.map((view) => {
+        const selected = view.key === value;
+        return (
+          <TouchableOpacity
+            key={view.key}
+            accessibilityRole="tab"
+            accessibilityState={{ selected }}
+            onPress={() => onChange(view.key)}
+            style={[styles.tab, selected && styles.tabSelected]}
+          >
+            <Ionicons name={view.icon} size={18} color={theme.colors.onOliveSoft} />
+            <Text style={styles.label}>{view.label}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: {
     flexDirection: 'row',
     gap: theme.spacing.sm,
@@ -62,4 +66,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
-});
+}));

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Game } from '../../models/GameModel';
 import { formatGameTime } from '../../domain/usecases/shared/gameDateTime';
@@ -8,7 +8,7 @@ import { teamShortName } from '../../domain/usecases/shared/phasePresentation';
 import { useLiveScore } from '../../viewmodels/LiveScoreViewModel';
 import { LiveBadge } from '../competition/LiveBadge';
 import { TeamBadge } from '../competition/TeamBadge';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 
 type Props = {
   phaseTitle: string;
@@ -49,33 +49,37 @@ type SideProps = {
 };
 
 // Only the name is the team's link: a side still to be decided has no team.
-const GameSide = ({ teamId, name, fullName, logoUrl, score, emphasis, onPressTeam }: SideProps) => (
-  <View style={styles.side}>
-    {logoUrl ? <TeamBadge logoUrl={logoUrl} name={name} size={20} /> : null}
-    <View style={styles.sideNameBox}>
-      {teamId ? (
-        <Text
-          accessibilityRole="link"
-          accessibilityLabel={`Abrir time ${fullName}`}
-          numberOfLines={1}
-          onPress={() => onPressTeam(teamId)}
-          style={[styles.sideName, styles[emphasis]]}
-        >
-          {name}
-        </Text>
-      ) : (
-        <Text numberOfLines={1} style={[styles.sideName, styles[emphasis]]}>{name}</Text>
-      )}
+const GameSide = ({ teamId, name, fullName, logoUrl, score, emphasis, onPressTeam }: SideProps) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.side}>
+      {logoUrl ? <TeamBadge logoUrl={logoUrl} name={name} size={20} /> : null}
+      <View style={styles.sideNameBox}>
+        {teamId ? (
+          <Text
+            accessibilityRole="link"
+            accessibilityLabel={`Abrir time ${fullName}`}
+            numberOfLines={1}
+            onPress={() => onPressTeam(teamId)}
+            style={[styles.sideName, styles[emphasis]]}
+          >
+            {name}
+          </Text>
+        ) : (
+          <Text numberOfLines={1} style={[styles.sideName, styles[emphasis]]}>{name}</Text>
+        )}
+      </View>
+      <Text style={[styles.sideScore, styles[emphasis]]}>{score ?? ''}</Text>
     </View>
-    <Text style={[styles.sideScore, styles[emphasis]]}>{score ?? ''}</Text>
-  </View>
-);
+  );
+};
 
 type GameRowProps = { game: Game; apiBaseUrl?: string; onPress: () => void; onPressTeam: (teamId: string) => void };
 
 // One game as the public "Partidas" card prints it: time and a live badge,
 // the venue, then each side by logo and short name with its score.
 const GameRow = ({ game, apiBaseUrl, onPress, onPressTeam }: GameRowProps) => {
+  const styles = useStyles();
   const live = isLiveGame(game.live_state);
   const score = useLiveScore(game.id, live, { homeScore: game.home_score, awayScore: game.away_score }, apiBaseUrl);
   const shown = showsScore(game);
@@ -121,6 +125,8 @@ const GameRow = ({ game, apiBaseUrl, onPress, onPressTeam }: GameRowProps) => {
 };
 
 export const GamesPanel = ({ phaseTitle, dateKeys, selectedDate, onSelectDate, games, onPressGame, onPressTeam, apiBaseUrl }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const index = selectedDate ? dateKeys.indexOf(selectedDate) : -1;
   const previous = index > 0 ? dateKeys[index - 1] : null;
   const next = index >= 0 && index < dateKeys.length - 1 ? dateKeys[index + 1] : null;
@@ -168,7 +174,7 @@ export const GamesPanel = ({ phaseTitle, dateKeys, selectedDate, onSelectDate, g
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: { gap: 12 },
   heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.sm },
   title: { color: theme.colors.ink, fontSize: 18, fontWeight: '900' },
@@ -220,4 +226,4 @@ const styles = StyleSheet.create({
   empty: { padding: theme.spacing.lg, alignItems: 'center', gap: theme.spacing.xs },
   emptyTitle: { color: theme.colors.ink, fontSize: 14, fontWeight: '800' },
   emptyText: { color: theme.colors.subtleText, fontSize: 12, textAlign: 'center' },
-});
+}));

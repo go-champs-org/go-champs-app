@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Draw } from '../../models/PlayoffModel';
 import { TeamMap } from '../../domain/usecases/shared/phasePresentation';
-import { theme } from '../../theme/theme';
+import { makeStyles } from '../../theme/theme';
 import { TeamBadge } from '../competition/TeamBadge';
 import { EmptyState } from '../feedback/EmptyState';
 
@@ -26,6 +26,7 @@ type SideProps = {
 
 // A side still to be decided has no team to open.
 const Side = ({ teamId, name, logoUrl, score, winner, onPressTeam }: SideProps) => {
+  const styles = useStyles();
   const team = (
     <>
       <TeamBadge logoUrl={logoUrl} name={name} size={24} />
@@ -52,6 +53,7 @@ const Side = ({ teamId, name, logoUrl, score, winner, onPressTeam }: SideProps) 
 };
 
 export const DrawBracket = ({ draws, teamMap, onPressTeam }: Props) => {
+  const styles = useStyles();
   if (draws.length === 0) {
     return <EmptyState icon="git-branch-outline" title="Chaveamento indisponível" description="O chaveamento aparecerá quando a fase for publicada." />;
   }
@@ -97,7 +99,7 @@ export const DrawBracket = ({ draws, teamMap, onPressTeam }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: { gap: 12 },
   title: { color: theme.colors.ink, fontSize: 18, fontWeight: '900' },
   round: { gap: theme.spacing.sm },
@@ -119,4 +121,4 @@ const styles = StyleSheet.create({
   winner: { color: theme.colors.ink, fontWeight: '800' },
   winnerScore: { color: theme.colors.lime, fontWeight: '900' },
   loser: { color: theme.colors.subtleText, fontWeight: '500' },
-});
+}));

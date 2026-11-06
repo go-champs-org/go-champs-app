@@ -6,7 +6,7 @@ import { BoxScoreSort } from '../../domain/usecases/shared/boxScore';
 import { SCOPE_LABELS, StatScope } from '../../domain/usecases/shared/statLeaders';
 import { formatStatValue, StatColumn } from '../../domain/usecases/shared/tournamentStats';
 import { PlayerAvatar } from '../competition/PlayerAvatar';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 
 type Props = {
   rows: BoxScoreRow[];
@@ -29,6 +29,8 @@ const STAT_WIDTH = 52;
 // page: shirt number, photo and name pinned while the stats scroll under
 // them, a sortable header band and a totals band that adds the team up.
 export const TeamRosterCard = ({ rows, columns, totals, scopes, scope, sort, onSelectScope, onSort, onPressAthlete }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const [glossaryOpen, setGlossaryOpen] = useState(false);
 
   return (
@@ -132,6 +134,8 @@ export const TeamRosterCard = ({ rows, columns, totals, scopes, scope, sort, onS
 };
 
 const StatHeader = ({ column, sort, onSort }: { column: StatColumn; sort: BoxScoreSort | null; onSort: (key: string) => void }) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const direction = sort?.slug === column.key ? sort.direction : null;
   return (
     <TouchableOpacity
@@ -147,7 +151,7 @@ const StatHeader = ({ column, sort, onSort }: { column: StatColumn; sort: BoxSco
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   card: {
     overflow: 'hidden',
     borderWidth: 1,
@@ -180,7 +184,7 @@ const styles = StyleSheet.create({
   scope: { flex: 1, minHeight: 34, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.pill },
   scopeSelected: { backgroundColor: theme.colors.olive },
   scopeText: { color: theme.colors.onOliveSoft, fontSize: 13, fontWeight: '700' },
-  scopeTextSelected: { color: theme.colors.surface },
+  scopeTextSelected: { color: theme.colors.onOlive },
   glossary: { padding: theme.spacing.md, gap: 4, borderRadius: theme.radius.md, backgroundColor: theme.colors.surfaceMuted },
   glossaryItem: { color: theme.colors.mutedText, fontSize: theme.typography.caption, lineHeight: 18 },
   glossaryLabel: { color: theme.colors.textPrimary, fontWeight: '900' },
@@ -231,4 +235,4 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   totalsCell: { fontWeight: '800' },
-});
+}));

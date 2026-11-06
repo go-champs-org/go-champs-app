@@ -1,8 +1,8 @@
 import React, { useCallback, useRef } from 'react';
-import { ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatStatValue, StatColumn, TournamentStatsRow } from '../../domain/usecases/shared/tournamentStats';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 import { PlayerAvatar } from '../competition/PlayerAvatar';
 import { TeamBadge } from '../competition/TeamBadge';
 
@@ -17,18 +17,22 @@ const TEAM_COLUMN_WIDTH = 48;
 const STAT_COLUMN_WIDTH = 56;
 
 // Each header ranks its column, best first, like the public site's table.
-const StatHeader = ({ column, selected, onPress }: { column: StatColumn; selected: boolean; onPress: () => void }) => (
-  <TouchableOpacity
-    accessibilityRole="button"
-    accessibilityLabel={`Ordenar por ${column.description}`}
-    accessibilityState={{ selected }}
-    onPress={onPress}
-    style={[styles.statHeader, selected && styles.selectedColumn]}
-  >
-    <Text numberOfLines={1} style={[styles.headerText, selected && styles.headerTextSelected]}>{column.label}</Text>
-    {selected ? <Ionicons name="arrow-down" size={11} color={theme.colors.ink} /> : null}
-  </TouchableOpacity>
-);
+const StatHeader = ({ column, selected, onPress }: { column: StatColumn; selected: boolean; onPress: () => void }) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`Ordenar por ${column.description}`}
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={[styles.statHeader, selected && styles.selectedColumn]}
+    >
+      <Text numberOfLines={1} style={[styles.headerText, selected && styles.headerTextSelected]}>{column.label}</Text>
+      {selected ? <Ionicons name="arrow-down" size={11} color={theme.colors.ink} /> : null}
+    </TouchableOpacity>
+  );
+};
 
 // The header sticks to the top while the screen scrolls, so it lives apart
 // from the rows. Scrolling the rows sideways scrolls the stat headers with
@@ -50,23 +54,26 @@ type HeaderProps = {
   onSelectStat: (statKey: string) => void;
 };
 
-export const StatsTableHeader = ({ columns, statKey, scrollRef, onSelectStat }: HeaderProps) => (
-  <View style={[styles.table, styles.headerRow]} testID="tournament-stats-header">
-    <View style={[styles.fixed, styles.headerRow, styles.athleteHeader]}>
-      <Text numberOfLines={1} style={[styles.headerText, styles.rankCell]}>Pos.</Text>
-      <Text style={styles.headerText}>Atleta</Text>
-      <View pointerEvents="none" style={styles.fixedEdge} />
-    </View>
-    <ScrollView ref={scrollRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={styles.scroll}>
-      <View style={styles.headerRow}>
-        <Text style={[styles.headerText, styles.teamCell]}>Time</Text>
-        {columns.map((column) => (
-          <StatHeader key={column.key} column={column} selected={column.key === statKey} onPress={() => onSelectStat(column.key)} />
-        ))}
+export const StatsTableHeader = ({ columns, statKey, scrollRef, onSelectStat }: HeaderProps) => {
+  const styles = useStyles();
+  return (
+    <View style={[styles.table, styles.headerRow]} testID="tournament-stats-header">
+      <View style={[styles.fixed, styles.headerRow, styles.athleteHeader]}>
+        <Text numberOfLines={1} style={[styles.headerText, styles.rankCell]}>Pos.</Text>
+        <Text style={styles.headerText}>Atleta</Text>
+        <View pointerEvents="none" style={styles.fixedEdge} />
       </View>
-    </ScrollView>
-  </View>
-);
+      <ScrollView ref={scrollRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={styles.scroll}>
+        <View style={styles.headerRow}>
+          <Text style={[styles.headerText, styles.teamCell]}>Time</Text>
+          {columns.map((column) => (
+            <StatHeader key={column.key} column={column} selected={column.key === statKey} onPress={() => onSelectStat(column.key)} />
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
 
 type Props = {
   columns: StatColumn[];
@@ -79,64 +86,68 @@ type Props = {
   onPressAthlete: (playerId: string) => void;
 };
 
-export const StatsTable = ({ columns, rows, statKey, loading, emptyLabel, onScroll, onPressAthlete }: Props) => (
-  <View style={styles.container} testID="tournament-stats-table">
-    <View style={styles.table}>
-      <View style={styles.fixed}>
-        {rows.map((row, index) => (
-          <TouchableOpacity
-            key={row.playerId}
-            accessibilityRole="link"
-            accessibilityLabel={`Abrir atleta ${row.name}`}
-            onPress={() => onPressAthlete(row.playerId)}
-            style={[styles.bodyRow, styles.athleteCell, index > 0 && styles.rowDivider]}
-            testID="tournament-stats-athlete"
-          >
-            <Text style={[styles.rank, styles.rankCell]}>{index + 1}</Text>
-            <PlayerAvatar photoUrl={row.photoUrl} name={row.name} size={28} />
-            <Text numberOfLines={1} style={styles.athlete}>{row.name}</Text>
-          </TouchableOpacity>
-        ))}
-        <View pointerEvents="none" style={styles.fixedEdge} />
-      </View>
-      <ScrollView
-        horizontal
-        bounces={false}
-        showsHorizontalScrollIndicator={false}
-        scrollEventThrottle={16}
-        onScroll={onScroll}
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.stats}>
+export const StatsTable = ({ columns, rows, statKey, loading, emptyLabel, onScroll, onPressAthlete }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.container} testID="tournament-stats-table">
+      <View style={styles.table}>
+        <View style={styles.fixed}>
           {rows.map((row, index) => (
-            <View key={row.playerId} style={[styles.bodyRow, index > 0 && styles.rowDivider]}>
-              <View accessibilityLabel={row.team?.name || 'Sem time'} style={[styles.teamCell, styles.team]}>
-                {row.team ? <TeamBadge logoUrl={row.team.logoUrl} name={row.team.name} size={24} /> : <Text style={styles.noTeam}>-</Text>}
-              </View>
-              {columns.map((column) => {
-                const selected = column.key === statKey;
-                return (
-                  <Text key={column.key} style={[styles.statValue, selected && [styles.selectedColumn, styles.statValueSelected]]}>
-                    {formatStatValue(column.key, row.stats[column.key])}
-                  </Text>
-                );
-              })}
-            </View>
+            <TouchableOpacity
+              key={row.playerId}
+              accessibilityRole="link"
+              accessibilityLabel={`Abrir atleta ${row.name}`}
+              onPress={() => onPressAthlete(row.playerId)}
+              style={[styles.bodyRow, styles.athleteCell, index > 0 && styles.rowDivider]}
+              testID="tournament-stats-athlete"
+            >
+              <Text style={[styles.rank, styles.rankCell]}>{index + 1}</Text>
+              <PlayerAvatar photoUrl={row.photoUrl} name={row.name} size={28} />
+              <Text numberOfLines={1} style={styles.athlete}>{row.name}</Text>
+            </TouchableOpacity>
           ))}
+          <View pointerEvents="none" style={styles.fixedEdge} />
         </View>
-      </ScrollView>
-    </View>
-    {rows.length === 0 && !loading ? <Text style={styles.empty}>{emptyLabel}</Text> : null}
-    {loading ? (
-      <View style={[styles.loading, rows.length === 0 && styles.loadingEmpty]}>
-        <ActivityIndicator accessibilityLabel="Carregando estatísticas" color={theme.colors.accent} />
+        <ScrollView
+          horizontal
+          bounces={false}
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={onScroll}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.stats}>
+            {rows.map((row, index) => (
+              <View key={row.playerId} style={[styles.bodyRow, index > 0 && styles.rowDivider]}>
+                <View accessibilityLabel={row.team?.name || 'Sem time'} style={[styles.teamCell, styles.team]}>
+                  {row.team ? <TeamBadge logoUrl={row.team.logoUrl} name={row.team.name} size={24} /> : <Text style={styles.noTeam}>-</Text>}
+                </View>
+                {columns.map((column) => {
+                  const selected = column.key === statKey;
+                  return (
+                    <Text key={column.key} style={[styles.statValue, selected && [styles.selectedColumn, styles.statValueSelected]]}>
+                      {formatStatValue(column.key, row.stats[column.key])}
+                    </Text>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
-    ) : null}
-  </View>
-);
+      {rows.length === 0 && !loading ? <Text style={styles.empty}>{emptyLabel}</Text> : null}
+      {loading ? (
+        <View style={[styles.loading, rows.length === 0 && styles.loadingEmpty]}>
+          <ActivityIndicator accessibilityLabel="Carregando estatísticas" color={theme.colors.accent} />
+        </View>
+      ) : null}
+    </View>
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: { backgroundColor: theme.colors.card },
   table: { flexDirection: 'row' },
   // The athlete column sits above the scrolling stats, with an edge that
@@ -179,7 +190,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 2,
   },
-  selectedColumn: { backgroundColor: 'rgba(79, 102, 40, 0.12)' },
+  selectedColumn: { backgroundColor: theme.colors.oliveWash },
   bodyRow: { height: ROW_HEIGHT, flexDirection: 'row', alignItems: 'center' },
   rowDivider: { borderTopWidth: 1, borderTopColor: theme.colors.subtleBorder },
   athleteCell: { paddingHorizontal: theme.spacing.sm, gap: theme.spacing.sm },
@@ -213,7 +224,7 @@ const styles = StyleSheet.create({
     top: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    backgroundColor: theme.colors.veil,
   },
   loadingEmpty: { position: 'relative', top: 0, height: ROW_HEIGHT * 2 },
-});
+}));

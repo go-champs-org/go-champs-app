@@ -5,5 +5,6 @@ export type Tournament = {
   apiBaseUrl?: string;
   name: string;
   slug: string;
+  logo_url?: string | null;
   organization: Organization;
 };

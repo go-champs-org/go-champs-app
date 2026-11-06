@@ -15,6 +15,7 @@ import TournamentStatsScreen from '../src/views/TournamentStatsScreen';
 import GameDetailScreen from '../src/views/GameDetailScreen';
 import TeamScreen from '../src/views/TeamScreen';
 import AthleteScreen from '../src/views/AthleteScreen';
+import OrganizationScreen from '../src/views/OrganizationScreen';
 import WebAuthFlowScreen from '../src/webauth/WebAuthFlowScreen';
 import { MainTabParamList, RootStackParamList } from '../src/navigation/types';
 
@@ -31,6 +32,7 @@ const linking: LinkingOptions<RootStackParamList> = {
       GameDetailScreen: 'game/:gameId',
       TeamScreen: 'tournament/:tournamentId/team/:teamId',
       AthleteScreen: 'tournament/:tournamentId/athlete/:playerId',
+      OrganizationScreen: 'organization/:organizationSlug',
       AuthScreen: 'auth',
       WebAuthFlowScreen: 'account/:purpose',
     },
@@ -107,6 +109,7 @@ export default function App() {
           <Stack.Screen name="GameDetailScreen" component={GameDetailScreen} options={{ title: 'Jogo' }} />
           <Stack.Screen name="TeamScreen" component={TeamScreen} options={{ title: 'Time' }} />
           <Stack.Screen name="AthleteScreen" component={AthleteScreen} options={{ title: 'Atleta' }} />
+          <Stack.Screen name="OrganizationScreen" component={OrganizationScreen} options={{ title: 'Organização' }} />
           <Stack.Screen name="AuthScreen" component={AuthScreen} options={{ headerShown: false }} />
           <Stack.Screen name="WebAuthFlowScreen" component={WebAuthFlowScreen} options={{ headerShown: false }} />
         </Stack.Navigator>

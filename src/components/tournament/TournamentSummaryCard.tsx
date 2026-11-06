@@ -1,9 +1,10 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TournamentOverview } from '../../domain/usecases/GetTournamentOverviewUseCase';
 import { LeaderCard } from '../../domain/usecases/shared/statLeaders';
 import { theme } from '../../theme/theme';
+import { CardBanner } from '../competition/CardBanner';
 import { TeamBadge } from '../competition/TeamBadge';
 import { HighlightsAccordion } from './HighlightsAccordion';
 import { TournamentTeamsStrip } from './TournamentTeamsStrip';
@@ -14,18 +15,13 @@ type Props = {
   // Opens the stats screen, on a stat key when one is given.
   onOpenStats: (statKey?: string) => void;
   onOpenTeam: (teamId: string) => void;
+  // Opens the organization page; the name is plain text without a slug.
+  onOpenOrganization: (organizationSlug: string) => void;
 };
 
-export const TournamentSummaryCard = ({ tournament, leaders, onOpenStats, onOpenTeam }: Props) => (
+export const TournamentSummaryCard = ({ tournament, leaders, onOpenStats, onOpenTeam, onOpenOrganization }: Props) => (
   <View style={styles.card}>
-    <View style={styles.banner}>
-      <Image
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        source={require('../../../assets/images/tournament-banner-pattern.png')}
-        style={styles.pattern}
-      />
-    </View>
+    <CardBanner />
     <View style={styles.identity}>
       <View style={styles.titleRow}>
         <TeamBadge logoUrl={tournament.logoUrl} name={tournament.name} size={52} />
@@ -33,7 +29,21 @@ export const TournamentSummaryCard = ({ tournament, leaders, onOpenStats, onOpen
       </View>
       {tournament.organizationName || tournament.isActive ? (
         <View style={styles.metaRow}>
-          <Text numberOfLines={1} style={styles.organization}>{tournament.organizationName}</Text>
+          {tournament.organizationSlug ? (
+            <TouchableOpacity
+              accessibilityRole="link"
+              accessibilityLabel={`Abrir organização ${tournament.organizationName}`}
+              hitSlop={{ top: 8, bottom: 8 }}
+              onPress={() => onOpenOrganization(tournament.organizationSlug)}
+              style={styles.organizationLink}
+            >
+              <Text numberOfLines={1} style={[styles.organization, styles.organizationLinkText]}>
+                {tournament.organizationName}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <Text numberOfLines={1} style={styles.organization}>{tournament.organizationName}</Text>
+          )}
           {tournament.isActive ? (
             <View style={styles.status}>
               <Text style={styles.statusText}>● Campeonato ativo</Text>
@@ -61,20 +71,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.card,
   },
-  banner: {
-    height: 44,
-    overflow: 'hidden',
-    backgroundColor: theme.colors.bannerEnd,
-  },
-  pattern: {
-    position: 'absolute',
-    top: -180,
-    left: -60,
-    width: 240,
-    height: 400,
-    opacity: 0.3,
-    transform: [{ rotate: '-118.5deg' }],
-  },
   identity: {
     padding: theme.spacing.md,
     gap: 12,
@@ -101,6 +97,14 @@ const styles = StyleSheet.create({
     flex: 1,
     color: theme.colors.subtleText,
     fontSize: 12,
+  },
+  organizationLink: {
+    flex: 1,
+  },
+  organizationLinkText: {
+    flex: 0,
+    color: theme.colors.olive,
+    fontWeight: '700',
   },
   status: {
     paddingHorizontal: theme.spacing.sm,

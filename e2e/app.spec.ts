@@ -517,6 +517,60 @@ test('[athleteError] permite tentar novamente após falha ao abrir o atleta', as
   await expect(athleteBanner(page).getByTestId('athlete-team-link')).toHaveCount(0);
 });
 
+const organizationSummary = (page: Page) => page.getByTestId('organization-summary').filter({ visible: true });
+
+test('[organizationFromTournament] abre a organização pelo nome no campeonato', async ({ page }) => {
+  await openTournament(page, 'Copa Completa');
+  await page.getByLabel('Abrir organização Go Champs').filter({ visible: true }).click();
+
+  await expect(organizationSummary(page)).toContainText('Go Champs');
+  await expect(organizationSummary(page)).toContainText('5 campeonatos');
+  await expect(page).toHaveURL(/organization\/go-champs/);
+  await page.getByLabel('Abrir Copa Classificação').click();
+  await expect(page).toHaveURL(/tournament\/t-1/);
+});
+
+test('[organizationFromCatalogue] abre a organização pelo card do catálogo', async ({ page }) => {
+  await openHome(page);
+  await page.getByLabel('Abrir organização Go Champs').first().click();
+
+  await expect(organizationSummary(page)).toContainText('Go Champs');
+  for (const tournament of tournaments) await expect(page.getByLabel(`Abrir ${tournament.name}`)).toBeVisible();
+  await expect(organizationSummary(page).getByLabel('Escudo Go Champs')).toBeVisible();
+  await expect(page.getByLabel('Iniciais Copa Grupos')).toBeVisible();
+});
+
+test('[organizationEmpty] mostra organização sem campeonatos', async ({ page }) => {
+  await page.route('**/tournaments?*', (route) => fulfillJson(route, { errors: { detail: 'boom' } }, 500));
+  await openHome(page);
+  await page.getByLabel('Abrir organização Go Champs').first().click();
+
+  await expect(organizationSummary(page)).toContainText('0 campeonatos');
+  await expect(page.getByText('Nenhum campeonato encontrado')).toBeVisible();
+});
+
+test('[organizationError] permite tentar novamente após falha ao abrir a organização', async ({ page }) => {
+  const responses = [
+    { status: 500, json: { errors: { detail: 'boom' } } },
+    { status: 200, json: { data: [] } },
+    { status: 200, json: { data: [{ id: 'org-1', name: 'Go Champs', slug: 'go-champs', logo_url: null }] } },
+  ];
+  await page.route('**/organizations?*', (route) => {
+    const { status, json } = responses.shift() ?? responses[responses.length - 1];
+    return fulfillJson(route, json, status);
+  });
+  await openHome(page);
+  await page.getByLabel('Abrir organização Go Champs').first().click();
+  const retry = page.getByRole('button', { name: 'Tentar novamente' }).filter({ visible: true });
+
+  await expect(page.getByText('Não foi possível abrir a organização. Tente novamente.')).toBeVisible();
+  await retry.click();
+  await expect(page.getByText('Organização não encontrada.')).toBeVisible();
+  await retry.click();
+  await expect(organizationSummary(page)).toContainText('5 campeonatos');
+  await expect(organizationSummary(page).getByLabel('Iniciais Go Champs')).toBeVisible();
+});
+
 test('[liveGameDetail] acompanha jogo ao vivo com período e estatísticas do scoreboard', async ({ page }) => {
   const live = { ...gamesFixture[1], live_state: 'in_progress', is_finished: false, home_score: 0, away_score: 0 };
   const team = (base: typeof live.home_team, player: { id: string; name: string; shirt_number: string }) => ({

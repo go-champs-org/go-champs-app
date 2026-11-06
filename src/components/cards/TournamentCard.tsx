@@ -10,6 +10,7 @@ type Props = {
   tournament: Tournament;
   onPress: () => void;
   onPinPress?: () => void;
+  onOrganizationPress?: () => void;
 };
 
 const initialsFromName = (name: string) =>
@@ -27,6 +28,7 @@ export const TournamentCard = ({
   tournament,
   onPress,
   onPinPress,
+  onOrganizationPress,
 }: Props) => (
   <TouchableOpacity accessibilityRole="button" disabled={loading} onPress={onPress} style={styles.card}>
     <View style={styles.badge}>
@@ -40,9 +42,26 @@ export const TournamentCard = ({
       <Text style={styles.title} numberOfLines={2}>
         {tournament.name}
       </Text>
-      <Text style={styles.subtitle} numberOfLines={1}>
-        {tournament.organization.name}
-      </Text>
+      {onOrganizationPress && tournament.organization.slug ? (
+        <TouchableOpacity
+          accessibilityRole="link"
+          accessibilityLabel={`Abrir organização ${tournament.organization.name}`}
+          hitSlop={{ top: 6, bottom: 6 }}
+          onPress={(event) => {
+            event.stopPropagation?.();
+            onOrganizationPress();
+          }}
+          style={styles.organizationLink}
+        >
+          <Text style={[styles.subtitle, styles.organizationLinkText]} numberOfLines={1}>
+            {tournament.organization.name}
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <Text style={styles.subtitle} numberOfLines={1}>
+          {tournament.organization.name}
+        </Text>
+      )}
     </View>
     {loading ? (
       <ActivityIndicator size="small" color={theme.colors.textSecondary} style={styles.loading} />
@@ -116,6 +135,13 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontSize: 13,
     marginTop: 2,
+  },
+  organizationLink: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+  },
+  organizationLinkText: {
+    fontWeight: '700',
   },
   followButton: {
     height: 34,

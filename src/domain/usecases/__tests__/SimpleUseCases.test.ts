@@ -2,12 +2,10 @@ import { CreateAthleteProfileUseCase } from '../CreateAthleteProfileUseCase';
 import { GetAccountProfileUseCase } from '../GetAccountProfileUseCase';
 import { GetAthleteProfileByUsernameUseCase } from '../GetAthleteProfileByUsernameUseCase';
 import { GetAthleteSchedulesUseCase } from '../GetAthleteSchedulesUseCase';
-import { GetOrganizationsUseCase } from '../GetOrganizationsUseCase';
 import { GetRecentTournamentsUseCase } from '../GetRecentTournamentsUseCase';
 import { UpdateAthleteProfileUseCase } from '../UpdateAthleteProfileUseCase';
 import { AccountRepository } from '../../repositories/AccountRepository';
 import { AthleteProfileRepository } from '../../repositories/AthleteProfileRepository';
-import { OrganizationRepository } from '../../repositories/OrganizationRepository';
 import { TournamentRepository } from '../../repositories/TournamentRepository';
 import { tournamentFixture } from '../../../test/fixtures/tournamentFixtures';
 
@@ -18,14 +16,6 @@ describe('simple use cases', () => {
     } as unknown as TournamentRepository;
 
     await expect(new GetRecentTournamentsUseCase(repository).execute()).resolves.toEqual([tournamentFixture]);
-  });
-
-  it('delegates organizations to repository', async () => {
-    const repository = {
-      getOrganizations: jest.fn().mockResolvedValue([tournamentFixture.organization]),
-    } as unknown as OrganizationRepository;
-
-    await expect(new GetOrganizationsUseCase(repository).execute()).resolves.toEqual([tournamentFixture.organization]);
   });
 
   it('delegates account and athlete profile use cases', async () => {

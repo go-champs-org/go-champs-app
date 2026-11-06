@@ -14,7 +14,8 @@ const historyPayload = (index: number, selectedPhases = phases) => ({
 
 const openHome = async (page: Page) => {
   await page.goto('/');
-  await expect(page.getByText('Campeonatos em andamento')).toBeVisible();
+  await expect(page.getByPlaceholder('Pesquisar campeonatos, times...')).toBeVisible();
+  await expect(page.getByRole('progressbar')).toHaveCount(0);
 };
 
 const openTournament = async (page: Page, name: string) => {
@@ -25,10 +26,26 @@ const openTournament = async (page: Page, name: string) => {
 const fulfillJson = (route: Route, json: unknown, status = 200) =>
   route.fulfill({ status, json, headers: { 'access-control-allow-origin': '*' } });
 
-test('[catalogue] carrega identidade, banner e campeonatos', async ({ page }) => {
+test('[catalogue] carrega identidade e campeonatos', async ({ page }) => {
   await openHome(page);
-  await expect(page.getByText('GO CHAMPS', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Logo Go Champs')).toBeVisible();
   await expect(page.getByText('Copa Completa', { exact: true })).toBeVisible();
+  await expect(page.getByText('Campeonatos em andamento')).toBeHidden();
+  await expect(page.getByText('GO CHAMPS', { exact: true })).toBeHidden();
+});
+
+test('[pinTournament] fixa um campeonato no topo da lista', async ({ page }) => {
+  await openHome(page);
+  const pinButtons = page.getByRole('button', { name: 'Fixar campeonato', exact: true });
+  await expect(pinButtons).toHaveCount(tournaments.length);
+  await pinButtons.nth(2).click();
+  await expect(page.getByRole('button', { name: 'Desafixar campeonato', exact: true })).toHaveCount(1);
+  await expect(page.getByText('Fixado', { exact: true })).toBeVisible();
+  const names = page.getByText(/^Copa /);
+  await expect(names.first()).toHaveText('Copa Grupos');
+  await page.getByRole('button', { name: 'Desafixar campeonato', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Fixar campeonato', exact: true })).toHaveCount(tournaments.length);
+  await expect(names.first()).toHaveText('Copa Completa');
 });
 
 test('[search] filtra por campeonato', async ({ page }) => {
@@ -320,7 +337,7 @@ const signInAsAna = async (page: Page) => {
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page.getByText('Entrar na minha conta')).toBeHidden();
   await expect(page.getByLabel('Abrir perfil')).toBeHidden();
-  await expect(page.getByText('Campeonatos em andamento')).toBeVisible();
+  await expect(page.getByText('Copa Completa', { exact: true })).toBeVisible();
 };
 
 test('[authProfile] mostra conta autenticada e permite sair', async ({ page }) => {
@@ -342,7 +359,8 @@ test('[authGames] mostra agenda do atleta autenticado', async ({ page }) => {
 
 test('[authNavigation] navega entre entrar, cadastro e recuperação', async ({ page }) => {
   await openHome(page);
-  await page.getByLabel('Criar conta').click();
+  await page.getByLabel('Abrir perfil').click();
+  await page.getByText('Criar conta', { exact: true }).click();
   await expect(page.getByText('Criar minha conta')).toBeVisible();
   await page.getByText('Voltar para entrar').click();
   await page.getByText('Recuperar senha').click();
@@ -353,7 +371,8 @@ test('[authNavigation] navega entre entrar, cadastro e recuperação', async ({ 
 
 test('[webAuthSignUp] abre fluxo WebAuth de cadastro', async ({ page }) => {
   await openHome(page);
-  await page.getByLabel('Criar conta').click();
+  await page.getByLabel('Abrir perfil').click();
+  await page.getByText('Criar conta', { exact: true }).click();
   await expect(page.getByText('Criar minha conta')).toBeVisible();
   await page.getByRole('button', { name: 'Abrir cadastro' }).click();
   await expect(page.getByText(/cadastro é feito no site da Go Champs/i)).toBeVisible();
@@ -633,12 +652,6 @@ test('[profileEdit] edita perfil de atleta autenticado', async ({ page }) => {
   await page.getByRole('button', { name: 'Salvar alterações' }).click();
   await expect(page.getByText('Perfil de atleta atualizado.')).toBeVisible();
   await expect(page.getByText('Ana Atualizada')).toBeVisible();
-});
-
-test('[highlights] mostra destaques do mês sem estatísticas inventadas', async ({ page }) => {
-  await openHome(page);
-  await expect(page.getByText('Destaques do mês')).toBeVisible();
-  await expect(page.getByText('Os destaques aparecem após a publicação das estatísticas.')).toBeVisible();
 });
 
 test('[pwaShell] expõe manifest e registra o service worker', async ({ page }) => {

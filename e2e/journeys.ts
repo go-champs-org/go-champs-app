@@ -1,5 +1,6 @@
 export const journeys = {
   catalogue: 'Carregar o catalogo e a identidade do app',
+  pinTournament: 'Fixar e desafixar um campeonato no topo da lista',
   search: 'Buscar por campeonato ou organizacao',
   noResults: 'Busca sem resultados e recuperacao',
   emptyCatalogue: 'Catalogo vazio',
@@ -43,6 +44,5 @@ export const journeys = {
   organizationError: 'Falha ao abrir organizacao e nova tentativa',
   liveGameDetail: 'Acompanhar jogo ao vivo com periodo e estatisticas do scoreboard',
   profileEdit: 'Editar perfil de atleta autenticado',
-  highlights: 'Mostrar destaques do mes sem inventar estatisticas',
   pwaShell: 'Disponibilizar manifest e service worker instalavel',
 } as const;

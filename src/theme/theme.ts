@@ -25,6 +25,7 @@ export const theme = {
     subtleText: '#73776c',
     tint: '#f3f7e9',
     cardBorder: '#dde3c8',
+    outline: '#c5c8b9',
     subtleBorder: '#e8e9dc',
     bannerStart: '#111111',
     bannerEnd: '#2e502c',

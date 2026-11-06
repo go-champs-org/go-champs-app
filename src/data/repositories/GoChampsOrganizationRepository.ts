@@ -24,4 +24,16 @@ export class GoChampsOrganizationRepository implements OrganizationRepository {
     );
     return response.data ?? [];
   }
+
+  async getRecentlyViewedOrganizations(): Promise<Organization[]> {
+    const response = await this.apiClient.get<ApiResponse<{ organization: Organization }[]>>(
+      '/organizations/recently-viewed'
+    );
+    return (response.data ?? []).map((entry) => entry.organization);
+  }
+
+  async getOrganizations(): Promise<Organization[]> {
+    const response = await this.apiClient.get<ApiResponse<Organization[]>>('/organizations');
+    return response.data ?? [];
+  }
 }

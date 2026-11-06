@@ -21,17 +21,9 @@ export const sortWithPinnedFirst = (tournaments: Tournament[], pinnedIds: string
   return [...tournaments].sort((left, right) => rank(left) - rank(right));
 };
 
-const matchesQuery = (tournament: Tournament, query: string) =>
-  `${tournament.name} ${tournament.organization.name}`.toLowerCase().includes(query);
+/** The recent tournaments the home lists: pinned first, capped like the public home. */
+export const homeTournaments = (tournaments: Tournament[], pinnedIds: string[]): Tournament[] =>
+  sortWithPinnedFirst(tournaments, pinnedIds).slice(0, MAX_HOME_TOURNAMENTS);
 
-/**
- * What the home lists: the tournaments matching the search by name or
- * organization, pinned first, capped like the public home. The cap applies
- * after the search, so a match is never lost behind the first 15.
- */
-export const homeTournaments = (tournaments: Tournament[], pinnedIds: string[], query: string): Tournament[] => {
-  const term = query.trim().toLowerCase();
-  const matching = term ? tournaments.filter((tournament) => matchesQuery(tournament, term)) : tournaments;
-
-  return sortWithPinnedFirst(matching, pinnedIds).slice(0, MAX_HOME_TOURNAMENTS);
-};
+/** Search results keep the API order, capped like the public search. */
+export const searchResults = (tournaments: Tournament[]): Tournament[] => tournaments.slice(0, MAX_HOME_TOURNAMENTS);

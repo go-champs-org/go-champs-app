@@ -50,6 +50,16 @@ export class GoChampsTournamentRepository implements TournamentRepository {
     }
   }
 
+  // The endpoint behind the public home search (packages/api-client search).
+  // A failure is left to the caller, which shows no results.
+  async searchTournaments(term: string): Promise<Tournament[]> {
+    const response = await this.apiClient.get<ApiResponse<Tournament[]>>(
+      `/search?term=${encodeURIComponent(term)}`,
+      API_CONFIG.goChampsBaseUrl
+    );
+    return (response.data ?? []).map((tournament) => ({ ...tournament, apiBaseUrl: API_CONFIG.goChampsBaseUrl }));
+  }
+
   async getTournamentHistory(id: string, apiBaseUrl?: string): Promise<TournamentHistory> {
     const response = await this.apiClient.get<TournamentHistory | TournamentHistory['data']>(
       `/tournaments/${id}`,

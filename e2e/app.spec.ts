@@ -14,8 +14,22 @@ const historyPayload = (index: number, selectedPhases = phases) => ({
 
 const openHome = async (page: Page) => {
   await page.goto('/');
-  await expect(page.getByPlaceholder('Pesquisar campeonatos, times...')).toBeVisible();
+  await expect(page.getByLabel('Abrir menu')).toBeVisible();
   await expect(page.getByRole('progressbar')).toHaveCount(0);
+};
+
+const openSearch = async (page: Page) => {
+  await page.getByRole('button', { name: 'Abrir busca' }).click();
+  const search = page.getByPlaceholder('Nome do campeonato, organização');
+  await expect(search).toBeVisible();
+  return search;
+};
+
+const openSignIn = async (page: Page) => {
+  await openHome(page);
+  await page.getByRole('tab', { name: /Perfil/ }).click();
+  await page.getByRole('button', { name: /Entrar$/ }).click();
+  await expect(page.getByText('Entrar na minha conta')).toBeVisible();
 };
 
 const openTournament = async (page: Page, name: string) => {
@@ -34,6 +48,74 @@ test('[catalogue] carrega identidade e campeonatos', async ({ page }) => {
   await expect(page.getByText('GO CHAMPS', { exact: true })).toBeHidden();
 });
 
+test('[searchToggle] abre e fecha a busca pelo topo', async ({ page }) => {
+  await openHome(page);
+  await expect(page.getByPlaceholder('Nome do campeonato, organização')).toBeHidden();
+  const search = await openSearch(page);
+  await search.fill('norte');
+  await expect(page.getByText('Nenhum campeonato encontrado')).toBeVisible();
+  await page.getByRole('button', { name: 'Fechar busca' }).click();
+  await expect(search).toBeHidden();
+  await expect(page.getByText('Copa Completa', { exact: true })).toBeVisible();
+  await openSearch(page);
+  await expect(page.getByPlaceholder('Nome do campeonato, organização')).toHaveValue('');
+});
+
+test('[searchOrganization] busca campeonatos pelo nome da organização', async ({ page }) => {
+  await openHome(page);
+  await (await openSearch(page)).fill('go champs');
+  await expect(page.getByText('Copa Grupos', { exact: true })).toBeVisible();
+  await expect(page.getByText('Copa Completa', { exact: true })).toBeVisible();
+});
+
+test('[sideMenu] abre o menu com links e redes sociais', async ({ page }) => {
+  await openHome(page);
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await expect(page.getByRole('button', { name: 'Início' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Organizações' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Perguntas frequentes' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Instagram da Go Champs' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeHidden();
+  await expect(page.getByText('Campeonatos', { exact: true })).toBeHidden();
+  await page.getByRole('button', { name: 'Fechar menu' }).first().click();
+  await expect(page.getByRole('button', { name: 'Perguntas frequentes' })).toBeHidden();
+});
+
+test('[menuLinks] abre as páginas do site pelo menu', async ({ page }) => {
+  await page.context().route('https://go-champs.com/**', (route) => route.fulfill({ contentType: 'text/html', body: '<p>Go Champs</p>' }));
+  await openHome(page);
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  const popup = page.waitForEvent('popup');
+  await page.getByRole('button', { name: 'Perguntas frequentes' }).click();
+  expect((await popup).url()).toBe('https://go-champs.com/faq');
+});
+
+test('[organizationsList] lista e busca organizações pelo menu', async ({ page }) => {
+  await openHome(page);
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await page.getByRole('button', { name: 'Organizações' }).click();
+  await expect(page.getByRole('button', { name: 'Perguntas frequentes' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Abrir organização Go Champs' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Abrir organização Liga Norte' })).toBeHidden();
+  const search = page.getByPlaceholder('Buscar organização');
+  await search.fill('norte');
+  await expect(page.getByRole('button', { name: 'Abrir organização Liga Norte' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Abrir organização Go Champs' })).toBeHidden();
+  await search.fill('inexistente');
+  await expect(page.getByText('Nenhuma organização encontrada')).toBeVisible();
+  await search.fill('champs');
+  await page.getByRole('button', { name: 'Abrir organização Go Champs' }).click();
+  await expect(page.getByTestId('organization-screen')).toBeVisible();
+});
+
+test('[organizationsEmpty] mostra lista de organizações vazia', async ({ page }) => {
+  await page.route('**/organizations/recently-viewed', (route) => route.fulfill({ status: 503 }));
+  await openHome(page);
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await page.getByRole('button', { name: 'Organizações' }).click();
+  await expect(page.getByText('Nenhuma organização vista ainda')).toBeVisible();
+});
+
 test('[pinTournament] fixa um campeonato no topo da lista', async ({ page }) => {
   await openHome(page);
   const pinButtons = page.getByRole('button', { name: 'Fixar campeonato', exact: true });
@@ -50,14 +132,14 @@ test('[pinTournament] fixa um campeonato no topo da lista', async ({ page }) => 
 
 test('[search] filtra por campeonato', async ({ page }) => {
   await openHome(page);
-  await page.getByPlaceholder('Pesquisar campeonatos, times...').fill('grupos');
+  await (await openSearch(page)).fill('grupos');
   await expect(page.getByText('Copa Grupos', { exact: true })).toBeVisible();
   await expect(page.getByText('Copa Playoffs', { exact: true })).toBeHidden();
 });
 
 test('[noResults] mostra busca vazia e permite recuperar', async ({ page }) => {
   await openHome(page);
-  const search = page.getByPlaceholder('Pesquisar campeonatos, times...');
+  const search = await openSearch(page);
   await search.fill('inexistente');
   await expect(page.getByText('Nenhum campeonato encontrado')).toBeVisible();
   await search.clear();
@@ -304,7 +386,7 @@ test('[teamLogos] carrega escudos nas tabelas e no campeonato', async ({ page })
 
 test('[backNavigation] volta ao catálogo preservando a busca', async ({ page }) => {
   await openHome(page);
-  const search = page.getByPlaceholder('Pesquisar campeonatos, times...');
+  const search = await openSearch(page);
   await search.fill('classificação');
   await page.getByText('Copa Classificação', { exact: true }).click();
   await expect(page.getByText('Tabela de classificação')).toBeVisible();
@@ -318,26 +400,22 @@ test('[gamesTab] abre a agenda do visitante', async ({ page }) => {
   await expect(page.getByText('Sua agenda começa aqui')).toBeVisible();
 });
 
-test('[auth] entra pela home e atualiza a sessão', async ({ page }) => {
-  await openHome(page);
-  await page.getByLabel('Abrir perfil').click();
-  await expect(page.getByText('Entrar na minha conta')).toBeVisible();
-  await page.getByLabel('Usuário/E-mail').fill('ana');
-  await page.getByRole('textbox', { name: 'Senha', exact: true }).fill('secret');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByLabel('Logo Go Champs')).toBeVisible();
-  await expect(page.getByLabel('Abrir perfil')).toBeHidden();
-});
-
-const signInAsAna = async (page: Page) => {
-  await openHome(page);
-  await page.getByLabel('Abrir perfil').click();
+test('[auth] entra pelo perfil e atualiza a sessão', async ({ page }) => {
+  await openSignIn(page);
   await page.getByLabel('Usuário/E-mail').fill('ana');
   await page.getByRole('textbox', { name: 'Senha', exact: true }).fill('secret');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page.getByText('Entrar na minha conta')).toBeHidden();
-  await expect(page.getByLabel('Abrir perfil')).toBeHidden();
-  await expect(page.getByText('Copa Completa', { exact: true })).toBeVisible();
+  await expect(page.getByText('Olá, ana', { exact: true })).toBeVisible();
+});
+
+const signInAsAna = async (page: Page) => {
+  await openSignIn(page);
+  await page.getByLabel('Usuário/E-mail').fill('ana');
+  await page.getByRole('textbox', { name: 'Senha', exact: true }).fill('secret');
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await expect(page.getByText('Entrar na minha conta')).toBeHidden();
+  await expect(page.getByText('Olá, ana', { exact: true })).toBeVisible();
 };
 
 test('[authProfile] mostra conta autenticada e permite sair', async ({ page }) => {
@@ -358,8 +436,7 @@ test('[authGames] mostra agenda do atleta autenticado', async ({ page }) => {
 });
 
 test('[authNavigation] navega entre entrar, cadastro e recuperação', async ({ page }) => {
-  await openHome(page);
-  await page.getByLabel('Abrir perfil').click();
+  await openSignIn(page);
   await page.getByText('Criar conta', { exact: true }).click();
   await expect(page.getByText('Criar minha conta')).toBeVisible();
   await page.getByText('Voltar para entrar').click();
@@ -370,8 +447,7 @@ test('[authNavigation] navega entre entrar, cadastro e recuperação', async ({ 
 });
 
 test('[webAuthSignUp] abre fluxo WebAuth de cadastro', async ({ page }) => {
-  await openHome(page);
-  await page.getByLabel('Abrir perfil').click();
+  await openSignIn(page);
   await page.getByText('Criar conta', { exact: true }).click();
   await expect(page.getByText('Criar minha conta')).toBeVisible();
   await page.getByRole('button', { name: 'Abrir cadastro' }).click();

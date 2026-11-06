@@ -53,7 +53,7 @@ const MyGamesScreen = () => {
 
   return (
     <Screen>
-      <AppHeader onProfilePress={() => navigation.navigate('AuthScreen', { initialMode: 'signIn' })} />
+      <AppHeader />
       <ContentShell style={styles.container}>
         <Text style={styles.eyebrow}>SUA AGENDA</Text>
         <Text style={styles.title}>Meus jogos</Text>

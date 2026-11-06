@@ -30,7 +30,9 @@ Figma de referência: https://www.figma.com/design/ejLZZAUH3CLh1PNsvjs4jp/Home?n
 - O app foi reorganizado em camadas `core`, `data`, `domain`, `viewmodels` e `views`.
 - Serviços legados duplicados em `src/services` foram removidos após verificar que não possuíam importadores.
 - As telas atuais usam componentes compartilhados e tokens do design system em `src/theme/theme.ts`.
-- A home segue o frame Figma Home / TournamentList: busca no topo e lista de até 15 campeonatos (fixados primeiro), sem hero nem cabeçalho de seção; área segura para notch e navegação inferior fixa.
+- A home segue o frame Figma Home / TournamentList: lista de até 15 campeonatos (fixados primeiro), sem hero nem cabeçalho de seção. A busca desce do topo pelo ícone de lupa e usa `GET /v1/search?term=` (debounce de 500 ms, até 15 resultados), como a home pública.
+- `AppHeader`: logo, lupa (só na home) e menu lateral (`SideMenu`): Início, Organizações (lista das mais vistas, `GET /v1/organizations/recently-viewed`, com busca em todas, `GET /v1/organizations`), FAQ/Sobre nós/Fale com a gente (go-champs.com no navegador do app) e redes sociais. Entrar fica na aba Perfil.
+- `app/+not-found.tsx` renderiza o app em caminhos desconhecidos do Expo Router: na web, voltar pelo histórico para /profile (após o login) mostrava "Unmatched Route".
 - A escolha de fase deixou de ser uma tela dedicada: uma única fase navega direto e múltiplas fases usam modal.
 - Telas de classificação, grupos, playoffs, partidas, perfil, organização e histórico foram alinhadas ao novo padrão visual.
 - **Auth MVP nativo:** login `POST /v1/accounts/signin`; token persistido (`expo-secure-store` / `localStorage` na web) via `SecureAuthTokenStore`; `GoChampsApiClient` injeta `Authorization: Bearer <token>`; perfil de conta via `GET /v1/users/:username`; perfil de atleta via `athlete-profiles`; Meus jogos via `GET /v1/athlete-profiles/me/schedules`; logout local (API sem revoke).
@@ -38,7 +40,6 @@ Figma de referência: https://www.figma.com/design/ejLZZAUH3CLh1PNsvjs4jp/Home?n
 - **Detalhe do jogo:** `GameDetailScreen` com placar + súmula (`GET /v1/games/:id` + `GET /v1/player-stats-logs?where[game_id]=`). Navegação a partir de `GamesList` e `MyGamesScreen`.
 - **Perfil:** conta read-only + CTA “Alterar e-mail ou senha” (WebAuth); criação e edição nativa do perfil de atleta (nome, redes, URL da foto).
 - Plano/spec auth: `docs/superpowers/specs/2026-09-15-auth-mvp-design.md` e `docs/superpowers/plans/2026-09-15-auth-mvp.md`.
-- `AppHeader`: marca à esquerda para visitante (login pelo ícone); centralizada após autenticação.
 
 ## PWA
 

@@ -99,6 +99,9 @@ const TournamentsScreen = () => {
               onPinPress={() => {
                 void togglePin(item.id);
               }}
+              onOrganizationPress={() =>
+                navigation.navigate('OrganizationScreen', { organizationSlug: item.organization.slug, apiBaseUrl: item.apiBaseUrl })
+              }
             />
           )}
         />

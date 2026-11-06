@@ -1,57 +1,84 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../theme/theme';
+import React from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 import { useOrganizationViewModel } from '../viewmodels/OrganizationViewModel';
-import { AppHeader } from '../components/layout/AppHeader';
-import { SearchBar } from '../components/search/SearchBar';
+import { tournamentsCountLabel } from '../domain/usecases/GetOrganizationOverviewUseCase';
+import { theme } from '../theme/theme';
+import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
+import { OrganizationSummaryCard } from '../components/organization/OrganizationSummaryCard';
+import { OrganizationTournamentRow } from '../components/organization/OrganizationTournamentRow';
 
-const OrganizationScreen = () => {
-  const { organizations, loading } = useOrganizationViewModel();
-  const [searchQuery, setSearchQuery] = useState('');
-  const filtered = organizations.filter((organization) => organization.name.toLowerCase().includes(searchQuery.toLowerCase()));
+type Props = { route: RouteProp<RootStackParamList, 'OrganizationScreen'> };
+
+// The public organization page: who runs the tournaments, then each of them.
+const OrganizationScreen: React.FC<Props> = ({ route }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { organizationSlug, apiBaseUrl } = route.params;
+  const { overview, loading, error, retry } = useOrganizationViewModel(organizationSlug, apiBaseUrl);
+
+  if (loading) {
+    return <View style={styles.centered}><ActivityIndicator size="large" color={theme.colors.accent} /></View>;
+  }
+
+  if (!overview) {
+    return (
+      <View style={styles.centered}>
+        <View style={styles.retry}>
+          <Text style={styles.retryText}>{error}</Text>
+          <TouchableOpacity accessibilityRole="button" onPress={retry} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Tentar novamente</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
-      <AppHeader />
-      <View style={styles.searchWrap}><SearchBar value={searchQuery} onChangeText={setSearchQuery} /></View>
-      {loading ? (
-        <View style={styles.loader}><ActivityIndicator size="large" color={theme.colors.accent} /></View>
-      ) : (
+      <ContentShell style={styles.content}>
         <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.id}
+          testID="organization-screen"
+          data={overview.tournaments}
+          keyExtractor={(tournament) => tournament.id}
           contentContainerStyle={styles.list}
-          ListHeaderComponent={<Text style={styles.pageTitle}>Organizações</Text>}
-          ListEmptyComponent={<EmptyState icon="people-outline" title="Nenhuma organização encontrada" />}
+          ListHeaderComponent={
+            <OrganizationSummaryCard
+              name={overview.organization.name}
+              logoUrl={overview.organization.logoUrl}
+              tournamentsCountLabel={tournamentsCountLabel(overview.tournaments.length)}
+            />
+          }
+          ListEmptyComponent={<EmptyState icon="trophy-outline" title="Nenhum campeonato encontrado" />}
           renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.icon}><Ionicons name="people-outline" size={20} color={theme.colors.success} /></View>
-              <View style={styles.cardContent}>
-                <Text style={styles.title}>{item.name}</Text>
-                <Text style={styles.subtitle}>{item.slug}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
-            </View>
+            <OrganizationTournamentRow
+              tournament={item}
+              onPress={() => navigation.navigate('TournamentScreen', { tournamentId: item.id, apiBaseUrl })}
+            />
           )}
         />
-      )}
+      </ContentShell>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.colors.background },
-  searchWrap: { paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.sm, backgroundColor: theme.colors.primary },
-  loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  list: { width: '100%', maxWidth: theme.layout.contentMaxWidth, alignSelf: 'center', padding: theme.spacing.md },
-  pageTitle: { marginBottom: theme.spacing.md, color: theme.colors.textPrimary, fontSize: theme.typography.title, fontWeight: '900' },
-  card: { minHeight: 76, marginBottom: theme.spacing.sm, padding: theme.spacing.md, borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.card, flexDirection: 'row', alignItems: 'center', ...theme.shadow.card },
-  icon: { width: 40, height: 40, borderRadius: theme.radius.md, backgroundColor: theme.colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  cardContent: { flex: 1, minWidth: 0, marginHorizontal: theme.spacing.md },
-  title: { color: theme.colors.textPrimary, fontSize: theme.typography.body, fontWeight: '800' },
-  subtitle: { marginTop: 2, color: theme.colors.mutedText, fontSize: theme.typography.bodySmall },
+  content: { flex: 1 },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.background },
+  list: { padding: theme.spacing.md, paddingBottom: theme.spacing.xl, gap: theme.spacing.md },
+  retry: { padding: theme.spacing.lg, alignItems: 'center', gap: theme.spacing.md },
+  retryText: { color: theme.colors.textPrimary, fontSize: theme.typography.body, textAlign: 'center' },
+  retryButton: {
+    minHeight: theme.layout.touchTarget,
+    paddingHorizontal: theme.spacing.lg,
+    justifyContent: 'center',
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.oliveSoft,
+  },
+  retryButtonText: { color: theme.colors.onOliveSoft, fontSize: 14, fontWeight: '800' },
 });
 
 export default OrganizationScreen;

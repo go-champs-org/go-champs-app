@@ -9,6 +9,7 @@ export type RootStackParamList = {
   GameDetailScreen: { gameId: string; apiBaseUrl?: string };
   TeamScreen: { tournamentId: string; teamId: string; apiBaseUrl?: string };
   AthleteScreen: { tournamentId: string; playerId: string; apiBaseUrl?: string };
+  OrganizationScreen: { organizationSlug: string; apiBaseUrl?: string };
   AuthScreen: { initialMode?: 'signIn' | 'signUp' | 'recovery' };
   WebAuthFlowScreen: { purpose: WebAuthPurpose };
 };

@@ -75,6 +75,7 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
             leaders={viewModel.leaders}
             onOpenStats={(statKey) => navigation.navigate('TournamentStatsScreen', { tournamentId, statKey, apiBaseUrl })}
             onOpenTeam={openTeam}
+            onOpenOrganization={(organizationSlug) => navigation.navigate('OrganizationScreen', { organizationSlug, apiBaseUrl })}
           />
           {selectedPhase ? (
             <>

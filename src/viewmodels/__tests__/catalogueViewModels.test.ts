@@ -1,13 +1,11 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { container } from '../../di/container';
 import { tournamentFixture } from '../../test/fixtures/tournamentFixtures';
-import { useOrganizationViewModel } from '../OrganizationViewModel';
 import { useTournamentsViewModel } from '../TournamentsViewModel';
 
 jest.mock('../../di/container', () => ({
   container: {
     getRecentTournaments: { execute: jest.fn() },
-    getOrganizations: { execute: jest.fn() },
     getPinnedTournamentIds: { execute: jest.fn() },
     togglePinnedTournament: { execute: jest.fn() },
   },
@@ -59,12 +57,5 @@ describe('catalogue viewmodels', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     await result.current.togglePin('tournament-1');
     await waitFor(() => expect(result.current.pinnedIds.has('tournament-1')).toBe(true));
-  });
-
-  it('loads organizations', async () => {
-    (container.getOrganizations.execute as jest.Mock).mockResolvedValue([tournamentFixture.organization]);
-    const { result } = renderHook(() => useOrganizationViewModel());
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.organizations).toEqual([tournamentFixture.organization]);
   });
 });

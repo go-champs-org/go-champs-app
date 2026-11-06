@@ -16,7 +16,7 @@ import { GetAthleteProfileByUsernameUseCase } from '../domain/usecases/GetAthlet
 import { GetAthleteSchedulesUseCase } from '../domain/usecases/GetAthleteSchedulesUseCase';
 import { GetGameOverviewUseCase } from '../domain/usecases/GetGameOverviewUseCase';
 import { GetLiveScoreUseCase } from '../domain/usecases/GetLiveScoreUseCase';
-import { GetOrganizationsUseCase } from '../domain/usecases/GetOrganizationsUseCase';
+import { GetOrganizationOverviewUseCase } from '../domain/usecases/GetOrganizationOverviewUseCase';
 import { GetPhaseOverviewUseCase } from '../domain/usecases/GetPhaseOverviewUseCase';
 import { GetPinnedTournamentIdsUseCase } from '../domain/usecases/GetPinnedTournamentIdsUseCase';
 import { GetRecentTournamentsUseCase } from '../domain/usecases/GetRecentTournamentsUseCase';
@@ -51,7 +51,7 @@ export const container = {
   getGameOverview: new GetGameOverviewUseCase(tournamentRepository),
   getTeamOverview: new GetTeamOverviewUseCase(tournamentRepository),
   getAthleteOverview: new GetAthleteOverviewUseCase(tournamentRepository),
-  getOrganizations: new GetOrganizationsUseCase(organizationRepository),
+  getOrganizationOverview: new GetOrganizationOverviewUseCase(organizationRepository),
   signIn: new SignInUseCase(accountRepository),
   getAccountProfile: new GetAccountProfileUseCase(accountRepository),
   getAthleteProfileByUsername: new GetAthleteProfileByUsernameUseCase(athleteProfileRepository),

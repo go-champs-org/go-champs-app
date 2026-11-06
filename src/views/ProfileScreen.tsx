@@ -45,7 +45,7 @@ const ProfileScreen = () => {
   if (bootstrapping) {
     return (
       <Screen>
-        <AppHeader onProfilePress={() => navigation.navigate('AuthScreen', { initialMode: 'signIn' })} />
+        <AppHeader />
         <ContentShell style={styles.centered}>
           <ActivityIndicator color={theme.colors.accent} />
         </ContentShell>
@@ -56,7 +56,7 @@ const ProfileScreen = () => {
   if (!user) {
     return (
       <Screen>
-        <AppHeader onProfilePress={() => navigation.navigate('AuthScreen', { initialMode: 'signIn' })} />
+        <AppHeader />
         <ContentShell style={styles.container}>
           <View style={styles.card}>
             <View style={styles.icon}>
@@ -120,7 +120,7 @@ const ProfileScreen = () => {
 
   return (
     <Screen>
-      <AppHeader onProfilePress={() => navigation.navigate('AuthScreen', { initialMode: 'signIn' })} />
+      <AppHeader />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}

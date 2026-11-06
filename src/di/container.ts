@@ -19,6 +19,8 @@ import { GetLiveScoreUseCase } from '../domain/usecases/GetLiveScoreUseCase';
 import { GetOrganizationOverviewUseCase } from '../domain/usecases/GetOrganizationOverviewUseCase';
 import { GetPhaseOverviewUseCase } from '../domain/usecases/GetPhaseOverviewUseCase';
 import { GetPinnedTournamentIdsUseCase } from '../domain/usecases/GetPinnedTournamentIdsUseCase';
+import { GetOrganizationDirectoryUseCase } from '../domain/usecases/GetOrganizationDirectoryUseCase';
+import { SearchTournamentsUseCase } from '../domain/usecases/SearchTournamentsUseCase';
 import { GetRecentTournamentsUseCase } from '../domain/usecases/GetRecentTournamentsUseCase';
 import { GetStatLeadersUseCase } from '../domain/usecases/GetStatLeadersUseCase';
 import { GetTournamentOverviewUseCase } from '../domain/usecases/GetTournamentOverviewUseCase';
@@ -43,6 +45,8 @@ const pinnedTournamentsRepository = new LocalPinnedTournamentsRepository(pinnedT
 
 export const container = {
   getRecentTournaments: new GetRecentTournamentsUseCase(tournamentRepository),
+  searchTournaments: new SearchTournamentsUseCase(tournamentRepository),
+  getOrganizationDirectory: new GetOrganizationDirectoryUseCase(organizationRepository),
   getTournamentOverview: new GetTournamentOverviewUseCase(tournamentRepository),
   getLiveScore: new GetLiveScoreUseCase(scoreboardRepository),
   getPhaseOverview: new GetPhaseOverviewUseCase(tournamentRepository),

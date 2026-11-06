@@ -8,6 +8,8 @@ export const tournaments = ['Copa Completa', 'Copa Classificação', 'Copa Grupo
 }));
 const selectedPhases = [phases, [phases[0]], [phases[1]], [phases[2]], []];
 const logo = 'https://example.com/alpha.png';
+export const otherOrganization = { id: 'org-2', name: 'Liga Norte', slug: 'liga-norte', logo_url: null };
+const searchable = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const athleteNames: Record<string, string> = { 'player-a': 'Ana Silva', 'player-b': 'Bia Souza' };
 
 export const test = base.extend({
@@ -22,6 +24,15 @@ export const test = base.extend({
       if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } });
       let payload: unknown;
       if (path === '/recently-view') payload = { data: tournaments.map((tournament) => ({ tournament })) };
+      else if (path === '/search') {
+        const term = searchable(url.searchParams.get('term') || '');
+        payload = { data: tournaments.filter((tournament) => searchable(`${tournament.name} ${tournament.organization.name}`).includes(term)) };
+      } else if (path === '/organizations/recently-viewed') payload = {
+        data: [{ organization: { ...tournamentFixture.organization, logo_url: logo } }],
+      };
+      else if (path === '/organizations' && !url.searchParams.has('where[slug]')) payload = {
+        data: [{ ...tournamentFixture.organization, logo_url: logo }, otherOrganization],
+      };
       else if (path === '/organizations') payload = {
         data: url.searchParams.get('where[slug]') === tournamentFixture.organization.slug
           ? [{ ...tournamentFixture.organization, logo_url: logo }]

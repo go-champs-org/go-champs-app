@@ -47,6 +47,22 @@ describe('GoChampsTournamentRepository', () => {
     ]);
   });
 
+  it('searches tournaments on the public api', async () => {
+    const get = jest.fn().mockResolvedValue({ data: [tournamentFixture] });
+    const repository = new GoChampsTournamentRepository(createApiClient(get), createFallback());
+
+    await expect(repository.searchTournaments('copa sul')).resolves.toEqual([
+      { ...tournamentFixture, apiBaseUrl: API_CONFIG.goChampsBaseUrl },
+    ]);
+    expect(get).toHaveBeenCalledWith('/search?term=copa%20sul', API_CONFIG.goChampsBaseUrl);
+  });
+
+  it('answers no search results when the response has no data', async () => {
+    const repository = new GoChampsTournamentRepository(createApiClient(jest.fn().mockResolvedValue({})), createFallback());
+
+    await expect(repository.searchTournaments('copa')).resolves.toEqual([]);
+  });
+
   it('keeps tournament history errors explicit', async () => {
     const repository = new GoChampsTournamentRepository(
       createApiClient(jest.fn().mockResolvedValue(tournamentHistoryFixture.data)),

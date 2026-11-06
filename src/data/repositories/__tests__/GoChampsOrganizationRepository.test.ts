@@ -51,4 +51,27 @@ describe('GoChampsOrganizationRepository', () => {
 
     await expect(repository.getTournamentsByOrganizationSlug('go-champs')).resolves.toEqual([]);
   });
+
+  it('lists the most viewed organizations', async () => {
+    const get = jest.fn().mockResolvedValue({ data: [{ organization: tournamentFixture.organization, total_views: 3 }] });
+    const repository = new GoChampsOrganizationRepository(createApiClient(get));
+
+    await expect(repository.getRecentlyViewedOrganizations()).resolves.toEqual([tournamentFixture.organization]);
+    expect(get).toHaveBeenCalledWith('/organizations/recently-viewed');
+  });
+
+  it('lists every organization', async () => {
+    const get = jest.fn().mockResolvedValue({ data: [tournamentFixture.organization] });
+    const repository = new GoChampsOrganizationRepository(createApiClient(get));
+
+    await expect(repository.getOrganizations()).resolves.toEqual([tournamentFixture.organization]);
+    expect(get).toHaveBeenCalledWith('/organizations');
+  });
+
+  it('answers empty organization lists when the response has no data', async () => {
+    const repository = new GoChampsOrganizationRepository(createApiClient(jest.fn().mockResolvedValue({})));
+
+    await expect(repository.getRecentlyViewedOrganizations()).resolves.toEqual([]);
+    await expect(repository.getOrganizations()).resolves.toEqual([]);
+  });
 });

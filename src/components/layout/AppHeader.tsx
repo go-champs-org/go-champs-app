@@ -1,32 +1,56 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { theme } from '../../theme/theme';
-import { useAuthSession } from '../../auth/AuthSessionContext';
+import { SideMenu } from './SideMenu';
 
 type Props = {
-  onProfilePress?: () => void;
+  // Only the home has a search; without these the header shows no search icon.
+  searchOpen?: boolean;
+  onSearchPress?: () => void;
 };
 
-export const AppHeader = ({ onProfilePress }: Props) => {
-  const { user } = useAuthSession();
+// The top bar of the tabs: the logo, the home search toggle and the menu.
+export const AppHeader = ({ searchOpen = false, onSearchPress }: Props) => {
+  const navigation = useNavigation<any>();
+  const route = useRoute();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
-      <View style={[styles.container, user ? styles.containerAuthenticated : styles.containerGuest]}>
+      <View style={styles.container}>
         <Image accessibilityLabel="Logo Go Champs" source={require('../../../assets/images/logo-white-name.png')} style={styles.logo} />
-        {!user ? (
+        <View style={styles.actions}>
+          {onSearchPress ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={searchOpen ? 'Fechar busca' : 'Abrir busca'}
+              accessibilityState={{ expanded: searchOpen }}
+              onPress={onSearchPress}
+              style={styles.iconButton}
+            >
+              <Ionicons name={searchOpen ? 'close' : 'search'} size={24} color="#ffffff" />
+            </TouchableOpacity>
+          ) : null}
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Abrir perfil"
-            onPress={onProfilePress}
-            style={styles.profileButton}
+            accessibilityLabel="Abrir menu"
+            onPress={() => setMenuOpen(true)}
+            style={styles.iconButton}
           >
-            <Ionicons name="person-outline" size={22} color="#ffffff" />
+            <Ionicons name="menu" size={28} color="#ffffff" />
           </TouchableOpacity>
-        ) : null}
+        </View>
       </View>
+      <SideMenu
+        visible={menuOpen}
+        activeItem={route.name === 'HomeTab' ? 'home' : undefined}
+        onClose={() => setMenuOpen(false)}
+        onOpenHome={() => navigation.navigate('MainTabs', { screen: 'HomeTab' })}
+        onOpenOrganizations={() => navigation.navigate('OrganizationsScreen')}
+      />
     </SafeAreaView>
   );
 };
@@ -42,18 +66,21 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  containerGuest: { justifyContent: 'space-between' },
-  containerAuthenticated: { justifyContent: 'center' },
   logo: {
     height: 52,
     width: 72,
     resizeMode: 'contain',
   },
-  profileButton: {
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  iconButton: {
     width: 44,
     height: 44,
-    borderRadius: theme.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },

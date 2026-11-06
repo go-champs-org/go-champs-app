@@ -1,11 +1,11 @@
 import React from 'react';
-import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Tournament } from '../../models/Tournament';
 import { theme } from '../../theme/theme';
+import { TeamBadge } from '../competition/TeamBadge';
 
 type Props = {
-  loading?: boolean;
   pinned?: boolean;
   tournament: Tournament;
   onPress: () => void;
@@ -13,162 +13,109 @@ type Props = {
   onOrganizationPress?: () => void;
 };
 
-const initialsFromName = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase();
-
-export const TournamentCard = ({
-  loading = false,
-  pinned = false,
-  tournament,
-  onPress,
-  onPinPress,
-  onOrganizationPress,
-}: Props) => (
-  <TouchableOpacity accessibilityRole="button" disabled={loading} onPress={onPress} style={styles.card}>
-    <View style={styles.badge}>
-      {tournament.organization.logo_url ? (
-        <Image source={{ uri: tournament.organization.logo_url }} style={styles.logo} resizeMode="contain" />
-      ) : (
-        <Text style={styles.badgeText}>{initialsFromName(tournament.name).slice(0, 3)}</Text>
-      )}
-    </View>
-    <View style={styles.content}>
+// A tournament on the home list (Figma Home / TournamentList, public
+// TournamentMiniCard): the organization logo, the tournament name and the pin
+// badge on top, the organization name below, opening the organization page.
+export const TournamentCard = ({ pinned = false, tournament, onPress, onPinPress, onOrganizationPress }: Props) => (
+  <TouchableOpacity accessibilityRole="button" onPress={onPress} style={styles.card}>
+    <View style={styles.header}>
+      <TeamBadge logoUrl={tournament.organization.logo_url} name={tournament.organization.name} size={36} />
       <Text style={styles.title} numberOfLines={2}>
         {tournament.name}
       </Text>
-      {onOrganizationPress && tournament.organization.slug ? (
+      {onPinPress ? (
         <TouchableOpacity
-          accessibilityRole="link"
-          accessibilityLabel={`Abrir organização ${tournament.organization.name}`}
-          hitSlop={{ top: 6, bottom: 6 }}
+          accessibilityRole="button"
+          accessibilityLabel={pinned ? 'Desafixar campeonato' : 'Fixar campeonato'}
+          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
           onPress={(event) => {
             event.stopPropagation?.();
-            onOrganizationPress();
+            onPinPress();
           }}
-          style={styles.organizationLink}
+          style={[styles.pinBadge, pinned && styles.pinBadgePinned]}
         >
-          <Text style={[styles.subtitle, styles.organizationLinkText]} numberOfLines={1}>
-            {tournament.organization.name}
-          </Text>
+          <Ionicons
+            name={pinned ? 'pin' : 'pin-outline'}
+            size={12}
+            color={pinned ? theme.colors.surface : theme.colors.ink}
+          />
+          <Text style={[styles.pinText, pinned && styles.pinTextPinned]}>{pinned ? 'Fixado' : 'Fixar'}</Text>
         </TouchableOpacity>
-      ) : (
-        <Text style={styles.subtitle} numberOfLines={1}>
-          {tournament.organization.name}
-        </Text>
-      )}
+      ) : null}
     </View>
-    {loading ? (
-      <ActivityIndicator size="small" color={theme.colors.textSecondary} style={styles.loading} />
-    ) : (
+    {onOrganizationPress && tournament.organization.slug ? (
       <TouchableOpacity
-        accessibilityRole="button"
-        accessibilityLabel={pinned ? 'Desafixar campeonato' : 'Fixar campeonato'}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        accessibilityRole="link"
+        accessibilityLabel={`Abrir organização ${tournament.organization.name}`}
+        hitSlop={{ top: 6, bottom: 6 }}
         onPress={(event) => {
           event.stopPropagation?.();
-          onPinPress?.();
+          onOrganizationPress();
         }}
-        style={[styles.followButton, pinned && styles.followButtonPinned]}
+        style={styles.organizationLink}
       >
-        <Ionicons
-          name={pinned ? 'pin' : 'pin-outline'}
-          size={13}
-          color={pinned ? theme.colors.primary : theme.colors.success}
-        />
-        <Text style={[styles.followText, pinned && styles.followTextPinned]}>
-          {pinned ? 'Fixado' : 'Fixar'}
+        <Text style={styles.organization} numberOfLines={1}>
+          {tournament.organization.name}
         </Text>
       </TouchableOpacity>
+    ) : (
+      <Text style={styles.organization} numberOfLines={1}>
+        {tournament.organization.name}
+      </Text>
     )}
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 96,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    gap: 12,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.card,
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    ...theme.shadow.card,
-  },
-  badge: {
-    width: 52,
-    height: 52,
-    borderRadius: theme.radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.surfaceMuted,
-    marginRight: theme.spacing.md,
-    overflow: 'hidden',
-  },
-  logo: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-  },
-  badgeText: {
-    color: theme.colors.mutedText,
-    fontWeight: '800',
-    fontSize: 14,
-  },
-  content: {
-    flex: 1,
-    minWidth: 0,
+    gap: 12,
   },
   title: {
-    color: theme.colors.textPrimary,
+    flex: 1,
+    minWidth: 0,
+    color: theme.colors.ink,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
-  subtitle: {
-    color: theme.colors.textSecondary,
-    fontSize: 13,
-    marginTop: 2,
+  pinBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.oliveSoft,
+  },
+  pinBadgePinned: {
+    backgroundColor: theme.colors.olive,
+  },
+  pinText: {
+    color: theme.colors.ink,
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  pinTextPinned: {
+    color: theme.colors.surface,
   },
   organizationLink: {
     alignSelf: 'flex-start',
     maxWidth: '100%',
   },
-  organizationLinkText: {
+  organization: {
+    color: theme.colors.lime,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: '700',
-  },
-  followButton: {
-    height: 34,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: theme.colors.surfaceStrong,
-    backgroundColor: theme.colors.accentSoft,
-    paddingHorizontal: theme.spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 4,
-    marginLeft: theme.spacing.sm,
-  },
-  followButtonPinned: {
-    borderColor: theme.colors.accent,
-    backgroundColor: theme.colors.accent,
-  },
-  followText: {
-    color: theme.colors.success,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  followTextPinned: {
-    color: theme.colors.primary,
-  },
-  loading: {
-    marginLeft: theme.spacing.md,
   },
 });

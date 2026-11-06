@@ -1,28 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Tournament } from '../models/Tournament';
 import { container } from '../di/container';
+import { homeTournaments, searchResults } from '../domain/usecases/shared/homeTournaments';
 
-const sortWithPinnedFirst = (tournaments: Tournament[], pinnedIds: string[]) => {
-  if (pinnedIds.length === 0) {
-    return tournaments;
-  }
+// The public home waits this long after the last keystroke before searching.
+export const SEARCH_DEBOUNCE_MS = 500;
 
-  const pinnedIndex = new Map(pinnedIds.map((id, index) => [id, index]));
-  return [...tournaments].sort((left, right) => {
-    const leftPinned = pinnedIndex.has(left.id);
-    const rightPinned = pinnedIndex.has(right.id);
-    if (leftPinned && rightPinned) {
-      return (pinnedIndex.get(left.id) ?? 0) - (pinnedIndex.get(right.id) ?? 0);
-    }
-    if (leftPinned) return -1;
-    if (rightPinned) return 1;
-    return 0;
-  });
+type SearchState = {
+  // The term these results answer, which trails the input by the debounce.
+  term: string;
+  results: Tournament[];
 };
 
 export const useTournamentsViewModel = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [search, setSearch] = useState<SearchState>({ term: '', results: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,6 +39,27 @@ export const useTournamentsViewModel = () => {
     loadTournaments();
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (!debouncedQuery) return undefined;
+
+    let isCurrent = true;
+    container.searchTournaments
+      .execute(debouncedQuery)
+      .catch(() => [])
+      .then((results) => {
+        if (isCurrent) setSearch({ term: debouncedQuery, results });
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [debouncedQuery]);
+
   const togglePin = useCallback(async (tournamentId: string) => {
     try {
       const next = await container.togglePinnedTournament.execute(tournamentId);
@@ -53,16 +69,25 @@ export const useTournamentsViewModel = () => {
     }
   }, []);
 
-  const sortedTournaments = useMemo(
-    () => sortWithPinnedFirst(tournaments, pinnedIds),
-    [tournaments, pinnedIds]
-  );
+  const term = searchQuery.trim();
+  const isSearchMode = term.length > 0;
+  // Until the results answer what is typed now, the search is still running.
+  const searching = isSearchMode && search.term !== term;
+
+  const visibleTournaments = useMemo(() => {
+    if (!isSearchMode) return homeTournaments(tournaments, pinnedIds);
+    return searching ? [] : searchResults(search.results);
+  }, [isSearchMode, searching, tournaments, pinnedIds, search.results]);
 
   const pinnedIdSet = useMemo(() => new Set(pinnedIds), [pinnedIds]);
 
   return {
-    tournaments: sortedTournaments,
+    tournaments: visibleTournaments,
     pinnedIds: pinnedIdSet,
+    searchQuery,
+    setSearchQuery,
+    isSearchMode,
+    searching,
     togglePin,
     loading,
   };

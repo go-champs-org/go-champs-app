@@ -1,5 +1,12 @@
 export const journeys = {
   catalogue: 'Carregar o catalogo e a identidade do app',
+  pinTournament: 'Fixar e desafixar um campeonato no topo da lista',
+  searchToggle: 'Abrir e fechar a busca pelo topo da home',
+  searchOrganization: 'Buscar campeonatos pelo nome da organizacao',
+  sideMenu: 'Abrir o menu com links e redes sociais',
+  menuLinks: 'Abrir as paginas do site pelo menu',
+  organizationsList: 'Listar e buscar organizacoes pelo menu',
+  organizationsEmpty: 'Lista de organizacoes vazia',
   search: 'Buscar por campeonato ou organizacao',
   noResults: 'Busca sem resultados e recuperacao',
   emptyCatalogue: 'Catalogo vazio',
@@ -22,7 +29,7 @@ export const journeys = {
   teamLogos: 'Carregar escudos nas tabelas e partidas',
   backNavigation: 'Voltar do campeonato para a busca preservada',
   gamesTab: 'Abrir Meus jogos como visitante',
-  auth: 'Entrar pela home e atualizar a sessao',
+  auth: 'Entrar pelo perfil e atualizar a sessao',
   authProfile: 'Ver perfil autenticado e sair',
   authGames: 'Ver agenda do atleta autenticado',
   authNavigation: 'Navegar entre entrar cadastro e recuperacao',
@@ -43,6 +50,5 @@ export const journeys = {
   organizationError: 'Falha ao abrir organizacao e nova tentativa',
   liveGameDetail: 'Acompanhar jogo ao vivo com periodo e estatisticas do scoreboard',
   profileEdit: 'Editar perfil de atleta autenticado',
-  highlights: 'Mostrar destaques do mes sem inventar estatisticas',
   pwaShell: 'Disponibilizar manifest e service worker instalavel',
 } as const;

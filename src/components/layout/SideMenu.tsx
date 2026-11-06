@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Animated, Easing, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
@@ -67,6 +67,15 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
   // The modal stays mounted until the closing slide ends.
   const [mounted, setMounted] = useState(visible);
   if (visible && !mounted) setMounted(true);
+  // An action that must wait until the menu is gone, like opening the in-app
+  // browser: iOS cannot present it while the menu's modal is still on screen.
+  const afterClose = useRef<(() => void) | null>(null);
+
+  const runAfterClose = () => {
+    const action = afterClose.current;
+    afterClose.current = null;
+    action?.();
+  };
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -75,7 +84,10 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(({ finished }) => {
-      if (finished && !visible) setMounted(false);
+      if (!finished || visible) return;
+      setMounted(false);
+      // iOS reports the end of the modal's dismissal through onDismiss.
+      if (Platform.OS !== 'ios') runAfterClose();
     });
   }, [visible, progress]);
 
@@ -84,11 +96,21 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
     action();
   };
 
-  const openSitePage = (url: string) => run(() => void WebBrowser.openBrowserAsync(url));
+  const openSitePage = (url: string) => {
+    afterClose.current = () => void WebBrowser.openBrowserAsync(url);
+    onClose();
+  };
   const version = Constants.expoConfig?.version;
 
   return (
-    <Modal transparent visible={mounted} animationType="none" onRequestClose={onClose} statusBarTranslucent>
+    <Modal
+      transparent
+      visible={mounted}
+      animationType="none"
+      onRequestClose={onClose}
+      onDismiss={runAfterClose}
+      statusBarTranslucent
+    >
       <View style={styles.root}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]}>
           <Pressable accessibilityLabel="Fechar menu" style={StyleSheet.absoluteFill} onPress={onClose} />

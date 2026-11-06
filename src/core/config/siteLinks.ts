@@ -7,6 +7,6 @@ export const SITE_LINKS = {
 
 export const SOCIAL_LINKS = {
   instagram: 'https://www.instagram.com/gochampsapp/',
-  linkedin: 'https://www.linkedin.com/company/gochamps/',
+  linkedin: 'https://www.linkedin.com/company/go-champs',
   youtube: 'https://www.youtube.com/@GoChampsApp',
 } as const;

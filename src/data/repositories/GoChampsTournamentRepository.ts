@@ -16,6 +16,7 @@ import {
 import { PhaseData, PhaseResponse } from '../../models/PhaseModel';
 import { StatLeadersGroup, StatLeadersResponse } from '../../models/StatLeaders';
 import { Tournament } from '../../models/Tournament';
+import { TournamentAthlete, TournamentAthleteResponse } from '../../models/TournamentAthlete';
 import { TournamentHistory } from '../../models/TournamentHistory';
 import { TournamentRepository } from '../../domain/repositories/TournamentRepository';
 import { TournamentFallbackDataSource } from '../datasources/local/TournamentFallbackDataSource';
@@ -99,12 +100,13 @@ export class GoChampsTournamentRepository implements TournamentRepository {
   // first by `sort`; without one, in its own order.
   async getAggregatedPlayerStats(
     tournamentId: string,
-    { sort, phaseId, teamId, minStats = {} }: AggregatedPlayerStatsQuery,
+    { sort, phaseId, teamId, playerId, minStats = {} }: AggregatedPlayerStatsQuery,
     apiBaseUrl?: string
   ): Promise<AggregatedPlayerStatsLog[]> {
     const params = [`where[tournament_id]=${tournamentId}`];
     if (phaseId) params.push(`where[phase_id]=${phaseId}`);
     if (teamId) params.push(`where[team_id]=${teamId}`);
+    if (playerId) params.push(`where[player_id]=${playerId}`);
     Object.entries(minStats).forEach(([slug, minimum]) => params.push(`where[${slug}][gte]=${minimum}`));
     if (sort) params.push(`sort=${sort}`);
     const response = await this.apiClient.get<AggregatedPlayerStatsResponse>(
@@ -143,5 +145,10 @@ export class GoChampsTournamentRepository implements TournamentRepository {
       apiBaseUrl
     );
     return response.data ?? [];
+  }
+
+  async getPlayer(playerId: string, apiBaseUrl?: string): Promise<TournamentAthlete> {
+    const response = await this.apiClient.get<TournamentAthleteResponse>(`/players/${playerId}`, apiBaseUrl);
+    return response.data;
   }
 }

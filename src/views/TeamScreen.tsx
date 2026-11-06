@@ -63,6 +63,7 @@ const TeamScreen: React.FC<Props> = ({ route }) => {
               sort={viewModel.sort}
               onSelectScope={viewModel.selectScope}
               onSort={viewModel.sortBy}
+              onPressAthlete={(playerId) => navigation.navigate('AthleteScreen', { tournamentId, playerId, apiBaseUrl })}
             />
           ) : null}
           {overview.coaches.length > 0 ? <CoachingStaffCard coaches={overview.coaches} /> : null}

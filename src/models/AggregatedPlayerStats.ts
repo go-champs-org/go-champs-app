@@ -10,10 +10,11 @@ export interface AggregatedPlayerStatsResponse {
 }
 
 // What narrows a tournament's ranking: the stat it is sorted by (best first),
-// a phase, a team, and minimums keyed by stat slug.
+// a phase, a team, one athlete, and minimums keyed by stat slug.
 export interface AggregatedPlayerStatsQuery {
   sort?: string | null;
   phaseId?: string | null;
   teamId?: string | null;
+  playerId?: string | null;
   minStats?: Record<string, number>;
 }

@@ -426,6 +426,97 @@ test('[teamFromGameDetail] abre o time pelo placar do jogo', async ({ page }) =>
   await expectTeamScreen(page, 'Alpha');
 });
 
+// Only the athlete screen showing counts: the stack keeps the others in the page.
+const athleteLink = (page: Page, name: string) => page.getByLabel(`Abrir atleta ${name}`).filter({ visible: true });
+const athleteBanner = (page: Page) => page.getByTestId('athlete-banner').filter({ visible: true });
+const athleteStats = (page: Page) => page.getByTestId('athlete-stats').filter({ visible: true });
+
+// The API's aggregate of one athlete, the same for the tournament and each phase.
+const routeAthleteStats = (page: Page, stats: Record<string, number>) =>
+  page.route('**/aggregated-player-stats-by-tournament?*', (route) => {
+    const playerId = new URL(route.request().url()).searchParams.get('where[player_id]');
+    return fulfillJson(route, { data: playerId ? [{ id: 'agg', player_id: playerId, stats }] : [] });
+  });
+
+test('[athleteFromRoster] abre o atleta pelo elenco do time', async ({ page }) => {
+  await page.route('**/tournaments/t-1', (route) => fulfillJson(route, statsTournament(1, [phases[0]])));
+  await page.route('**/aggregated-player-stats-leaders?*', (route) => fulfillJson(route, { data: [] }));
+  await routeAthleteStats(page, { game_played: 4, points: 40, assists: 2, points_per_game: 10 });
+  await openTournament(page, 'Copa Classificação');
+  await page.getByLabel('Times do campeonato').getByLabel('Abrir time Alpha').click();
+  await athleteLink(page, 'Ana Silva').click();
+
+  await expect(athleteBanner(page)).toContainText('Ana Silva');
+  await expect(athleteBanner(page)).toContainText('Copa Classificação');
+  await expect(athleteBanner(page)).toContainText('Alpha · 4 jogos disputados');
+  await expect(athleteBanner(page).getByLabel('Instagram')).toBeVisible();
+  await expect(athleteStats(page)).toContainText('Estatísticas detalhadas');
+  await expect(athleteStats(page).getByTestId('athlete-stats-phase')).toHaveText(['Classificação']);
+  await expect(athleteStats(page).getByTestId('athlete-stats-total')).toHaveText('4402');
+  await page.getByRole('tab', { name: 'Por jogo' }).filter({ visible: true }).click();
+  await expect(athleteStats(page).getByTestId('athlete-stats-total')).toHaveText('410.0');
+  await athleteStats(page).getByRole('button', { name: 'Glossário' }).click();
+  await expect(athleteStats(page).getByTestId('athlete-glossary')).toContainText('JG — Jogos');
+
+  await athleteBanner(page).getByTestId('athlete-team-link').click();
+  await expect(page.getByTestId('team-banner').filter({ visible: true })).toContainText('Alpha');
+});
+
+test('[athleteFromStats] abre o atleta pela tabela de estatísticas', async ({ page }) => {
+  await page.route('**/tournaments/t-0', (route) => fulfillJson(route, statsTournament(0)));
+  await page.route('**/aggregated-player-stats-leaders?*', (route) => fulfillJson(route, { data: [] }));
+  await routeStatsRanking(page);
+  await openTournament(page, 'Copa Completa');
+  await page.getByRole('button', { name: 'Estatísticas' }).click();
+  await athleteLink(page, 'Bia Souza').click();
+
+  await expect(athleteBanner(page)).toContainText('Bia SouzaAlpha · 3 jogos disputados');
+  // Every phase the API has numbers for, each read from its own aggregate.
+  await expect(athleteStats(page).getByTestId('athlete-stats-phase')).toHaveText(['Classificação', 'Grupos', 'Playoffs']);
+  await expect(athleteStats(page).getByTestId('athlete-stats-total')).toHaveText('3309');
+});
+
+test('[athleteFromBoxScore] abre o atleta pelo box score do jogo', async ({ page }) => {
+  await basketballTournament(page);
+  await openTournament(page, 'Copa Classificação');
+  await gamesTab(page).click();
+  await page.getByLabel('Data anterior').click();
+  await page.getByLabel(/Abrir jogo/).first().click();
+  await athleteLink(page, 'Ana Silva').click();
+
+  await expect(athleteBanner(page)).toContainText('Ana Silva');
+  // The API has no aggregate for the athlete yet.
+  await expect(athleteStats(page)).toHaveText('Sem estatísticas para este atleta ainda.');
+});
+
+test('[athleteError] permite tentar novamente após falha ao abrir o atleta', async ({ page }) => {
+  const responses = [
+    { status: 500, json: { errors: { detail: 'boom' } } },
+    { status: 404, json: { errors: { detail: 'Not found' } } },
+    { status: 200, json: { data: { id: 'player-a', name: 'Ana Silva', team_id: null } } },
+  ];
+  await page.route('**/tournaments/t-1', (route) => fulfillJson(route, statsTournament(1, [phases[0]])));
+  await page.route('**/aggregated-player-stats-leaders?*', (route) => fulfillJson(route, { data: [] }));
+  await page.route('**/players/player-a', (route) => {
+    const { status, json } = responses.shift() ?? responses[responses.length - 1];
+    return fulfillJson(route, json, status);
+  });
+  await routeAthleteStats(page, { game_played: 1, points: 12 });
+  await openTournament(page, 'Copa Classificação');
+  await page.getByLabel('Times do campeonato').getByLabel('Abrir time Alpha').click();
+  await athleteLink(page, 'Ana Silva').click();
+  const retry = page.getByRole('button', { name: 'Tentar novamente' }).filter({ visible: true });
+
+  await expect(page.getByText('Não foi possível abrir o atleta. Tente novamente.')).toBeVisible();
+  await retry.click();
+  await expect(page.getByText('Atleta não encontrado neste campeonato.')).toBeVisible();
+  await retry.click();
+  await expect(athleteBanner(page)).toContainText('Ana Silva');
+  // No team to link to: the banner reads only the games.
+  await expect(athleteBanner(page)).toContainText('1 jogo disputado');
+  await expect(athleteBanner(page).getByTestId('athlete-team-link')).toHaveCount(0);
+});
+
 test('[liveGameDetail] acompanha jogo ao vivo com período e estatísticas do scoreboard', async ({ page }) => {
   const live = { ...gamesFixture[1], live_state: 'in_progress', is_finished: false, home_score: 0, away_score: 0 };
   const team = (base: typeof live.home_team, player: { id: string; name: string; shirt_number: string }) => ({

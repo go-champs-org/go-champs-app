@@ -79,8 +79,8 @@ const AppearancePicker = () => {
   const preference = useThemePreference();
   return (
     <View style={styles.appearance}>
-      <Text style={styles.sectionTitle}>Aparência</Text>
-      <View accessibilityRole="radiogroup" accessibilityLabel="Aparência" style={styles.segments}>
+      <Text style={styles.sectionTitle}>Tema</Text>
+      <View accessibilityRole="radiogroup" accessibilityLabel="Tema" style={styles.segments}>
         {APPEARANCE_OPTIONS.map((option) => {
           const selected = option.value === preference;
           const color = selected ? theme.colors.onOlive : theme.colors.ink;

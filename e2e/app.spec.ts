@@ -90,7 +90,7 @@ test('[menuLinks] abre as páginas do site pelo menu', async ({ page }) => {
   expect((await popup).url()).toBe('https://go-champs.com/faq');
 });
 
-test('[appearance] troca a aparência pelo menu e a mantém', async ({ page }) => {
+test('[appearance] troca o tema pelo menu e o mantém', async ({ page }) => {
   const pageBackground = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   await openHome(page);
   await page.getByRole('button', { name: 'Abrir menu' }).click();

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LeaderCard, SCOPE_LABELS } from '../../domain/usecases/shared/statLeaders';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 import { PlayerAvatar } from '../competition/PlayerAvatar';
 
 type Props = {
@@ -20,6 +20,7 @@ type CardProps = {
 // One stat's leaders, like the public site's card: a scope toggle when the
 // stat ranks both totals and per-game averages, and a link to the full list.
 const StatLeaderCard = ({ card, onSeeAll }: CardProps) => {
+  const styles = useStyles();
   const [scopeIndex, setScopeIndex] = useState(0);
   const current = card.scopes[scopeIndex] ?? card.scopes[0];
 
@@ -79,6 +80,8 @@ const GRADIENT_END = { x: 1, y: 0.7 };
 
 // Shown only when the tournament has stat leaders to rank.
 export const HighlightsAccordion = ({ cards, onSeeAll }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const [open, setOpen] = useState(false);
   if (cards.length === 0) return null;
 
@@ -97,7 +100,7 @@ export const HighlightsAccordion = ({ cards, onSeeAll }: Props) => {
       >
         <Ionicons name="flame" size={20} color={theme.colors.flame} />
         <Text style={styles.title}>Destaques</Text>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={theme.colors.surface} />
+        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={theme.colors.onDark} />
       </TouchableOpacity>
       {open ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cards}>
@@ -110,7 +113,7 @@ export const HighlightsAccordion = ({ cards, onSeeAll }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   header: {
     minHeight: 52,
     paddingHorizontal: theme.spacing.md,
@@ -120,7 +123,7 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: theme.colors.surface,
+    color: theme.colors.onDark,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -173,7 +176,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   scopeTextSelected: {
-    color: theme.colors.surface,
+    color: theme.colors.onOlive,
   },
   rows: {
     paddingHorizontal: 12,
@@ -230,4 +233,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
-});
+}));

@@ -1,9 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TournamentOverview } from '../../domain/usecases/GetTournamentOverviewUseCase';
 import { LeaderCard } from '../../domain/usecases/shared/statLeaders';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 import { CardBanner } from '../competition/CardBanner';
 import { TeamBadge } from '../competition/TeamBadge';
 import { HighlightsAccordion } from './HighlightsAccordion';
@@ -19,51 +19,55 @@ type Props = {
   onOpenOrganization: (organizationSlug: string) => void;
 };
 
-export const TournamentSummaryCard = ({ tournament, leaders, onOpenStats, onOpenTeam, onOpenOrganization }: Props) => (
-  <View style={styles.card}>
-    <CardBanner />
-    <View style={styles.identity}>
-      <View style={styles.titleRow}>
-        <TeamBadge logoUrl={tournament.logoUrl} name={tournament.name} size={52} />
-        <Text style={styles.title}>{tournament.name}</Text>
-      </View>
-      {tournament.organizationName || tournament.isActive ? (
-        <View style={styles.metaRow}>
-          {tournament.organizationSlug ? (
-            <TouchableOpacity
-              accessibilityRole="link"
-              accessibilityLabel={`Abrir organização ${tournament.organizationName}`}
-              hitSlop={{ top: 8, bottom: 8 }}
-              onPress={() => onOpenOrganization(tournament.organizationSlug)}
-              style={styles.organizationLink}
-            >
-              <Text numberOfLines={1} style={[styles.organization, styles.organizationLinkText]}>
-                {tournament.organizationName}
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <Text numberOfLines={1} style={styles.organization}>{tournament.organizationName}</Text>
-          )}
-          {tournament.isActive ? (
-            <View style={styles.status}>
-              <Text style={styles.statusText}>● Campeonato ativo</Text>
-            </View>
-          ) : null}
+export const TournamentSummaryCard = ({ tournament, leaders, onOpenStats, onOpenTeam, onOpenOrganization }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.card}>
+      <CardBanner />
+      <View style={styles.identity}>
+        <View style={styles.titleRow}>
+          <TeamBadge logoUrl={tournament.logoUrl} name={tournament.name} size={52} />
+          <Text style={styles.title}>{tournament.name}</Text>
         </View>
-      ) : null}
-      {tournament.hasAggregatedPlayerStats ? (
-        <TouchableOpacity accessibilityRole="button" onPress={() => onOpenStats()} style={styles.statsButton}>
-          <Ionicons name="podium-outline" size={18} color={theme.colors.ink} />
-          <Text style={styles.statsButtonText}>Estatísticas</Text>
-        </TouchableOpacity>
-      ) : null}
+        {tournament.organizationName || tournament.isActive ? (
+          <View style={styles.metaRow}>
+            {tournament.organizationSlug ? (
+              <TouchableOpacity
+                accessibilityRole="link"
+                accessibilityLabel={`Abrir organização ${tournament.organizationName}`}
+                hitSlop={{ top: 8, bottom: 8 }}
+                onPress={() => onOpenOrganization(tournament.organizationSlug)}
+                style={styles.organizationLink}
+              >
+                <Text numberOfLines={1} style={[styles.organization, styles.organizationLinkText]}>
+                  {tournament.organizationName}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <Text numberOfLines={1} style={styles.organization}>{tournament.organizationName}</Text>
+            )}
+            {tournament.isActive ? (
+              <View style={styles.status}>
+                <Text style={styles.statusText}>● Campeonato ativo</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+        {tournament.hasAggregatedPlayerStats ? (
+          <TouchableOpacity accessibilityRole="button" onPress={() => onOpenStats()} style={styles.statsButton}>
+            <Ionicons name="podium-outline" size={18} color={theme.colors.ink} />
+            <Text style={styles.statsButtonText}>Estatísticas</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+      <TournamentTeamsStrip teams={tournament.teams} onPressTeam={onOpenTeam} />
+      <HighlightsAccordion cards={leaders} onSeeAll={onOpenStats} />
     </View>
-    <TournamentTeamsStrip teams={tournament.teams} onPressTeam={onOpenTeam} />
-    <HighlightsAccordion cards={leaders} onSeeAll={onOpenStats} />
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   card: {
     overflow: 'hidden',
     borderWidth: 1,
@@ -128,8 +132,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   statusText: {
-    color: theme.colors.surface,
+    color: theme.colors.onOlive,
     fontSize: 10,
     fontWeight: '700',
   },
-});
+}));

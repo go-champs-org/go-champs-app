@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 
 type Props = {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -9,17 +9,21 @@ type Props = {
   description?: string;
 };
 
-export const EmptyState = ({ icon = 'basketball-outline', title, description }: Props) => (
-  <View style={styles.container}>
-    <View style={styles.icon}>
-      <Ionicons name={icon} size={24} color={theme.colors.textSecondary} />
+export const EmptyState = ({ icon = 'basketball-outline', title, description }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.container}>
+      <View style={styles.icon}>
+        <Ionicons name={icon} size={24} color={theme.colors.textSecondary} />
+      </View>
+      <Text style={styles.title}>{title}</Text>
+      {description ? <Text style={styles.description}>{description}</Text> : null}
     </View>
-    <Text style={styles.title}>{title}</Text>
-    {description ? <Text style={styles.description}>{description}</Text> : null}
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: {
     margin: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
@@ -52,4 +56,4 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     textAlign: 'center',
   },
-});
+}));

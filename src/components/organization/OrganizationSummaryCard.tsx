@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { theme } from '../../theme/theme';
+import { Text, View } from 'react-native';
+import { makeStyles } from '../../theme/theme';
 import { CardBanner } from '../competition/CardBanner';
 import { TeamBadge } from '../competition/TeamBadge';
 
@@ -12,20 +12,23 @@ type Props = {
 
 // The public organization header: banner strip, logo and name, then the
 // tournament count in its own row under a divider.
-export const OrganizationSummaryCard = ({ name, logoUrl, tournamentsCountLabel }: Props) => (
-  <View style={styles.card} testID="organization-summary">
-    <CardBanner />
-    <View style={styles.identity}>
-      <TeamBadge logoUrl={logoUrl} name={name} size={64} />
-      <Text accessibilityRole="header" style={styles.name}>{name}</Text>
+export const OrganizationSummaryCard = ({ name, logoUrl, tournamentsCountLabel }: Props) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.card} testID="organization-summary">
+      <CardBanner />
+      <View style={styles.identity}>
+        <TeamBadge logoUrl={logoUrl} name={name} size={64} />
+        <Text accessibilityRole="header" style={styles.name}>{name}</Text>
+      </View>
+      <View style={styles.countRow}>
+        <Text style={styles.count}>{tournamentsCountLabel}</Text>
+      </View>
     </View>
-    <View style={styles.countRow}>
-      <Text style={styles.count}>{tournamentsCountLabel}</Text>
-    </View>
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   card: {
     overflow: 'hidden',
     borderWidth: 1,
@@ -59,4 +62,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
-});
+}));

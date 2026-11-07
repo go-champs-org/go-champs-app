@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { initials } from '../../core/text/initials';
-import { theme } from '../../theme/theme';
+import { makeStyles } from '../../theme/theme';
 
 type Props = {
   photoUrl?: string | null;
@@ -11,6 +11,7 @@ type Props = {
 
 // A photo that is missing, or fails to load, falls back to the athlete's initials.
 export const PlayerAvatar = ({ photoUrl, name, size = 36 }: Props) => {
+  const styles = useStyles();
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const shape = { width: size, height: size, borderRadius: size / 2 };
 
@@ -32,7 +33,7 @@ export const PlayerAvatar = ({ photoUrl, name, size = 36 }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   base: {
     flexShrink: 0,
     backgroundColor: theme.colors.tint,
@@ -47,4 +48,4 @@ const styles = StyleSheet.create({
     color: theme.colors.olive,
     fontWeight: '900',
   },
-});
+}));

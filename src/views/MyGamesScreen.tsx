@@ -1,9 +1,9 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '../components/layout/Screen';
 import { AppHeader } from '../components/layout/AppHeader';
-import { theme } from '../theme/theme';
+import { makeStyles, useTheme } from '../theme/theme';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { ContentShell } from '../components/layout/ContentShell';
 import { useAuthSession } from '../auth/AuthSessionContext';
@@ -18,6 +18,7 @@ const GameCard = ({
   game: ScheduleGame;
   onPress: () => void;
 }) => {
+  const styles = useStyles();
   const home = game.home_team?.name || game.home_placeholder || 'A definir';
   const away = game.away_team?.name || game.away_placeholder || 'A definir';
   const score =
@@ -47,6 +48,8 @@ const GameCard = ({
 };
 
 const MyGamesScreen = () => {
+  const theme = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const { user, bootstrapping } = useAuthSession();
   const { loading, error, games, needsAuth, needsAthleteProfile } = useMyGamesViewModel(Boolean(user));
@@ -124,7 +127,7 @@ const MyGamesScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: {
     flex: 1,
     padding: theme.spacing.md,
@@ -145,7 +148,7 @@ const styles = StyleSheet.create({
   },
   error: {
     marginTop: theme.spacing.md,
-    color: '#B42318',
+    color: theme.colors.danger,
     fontWeight: '700',
   },
   list: {
@@ -185,9 +188,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ctaText: {
-    color: theme.colors.primary,
+    color: theme.colors.onAccent,
     fontWeight: '900',
   },
-});
+}));
 
 export default MyGamesScreen;

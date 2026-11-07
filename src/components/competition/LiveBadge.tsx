@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../../theme/theme';
+import { Animated, Easing, Platform, Text, View } from 'react-native';
+import { makeStyles } from '../../theme/theme';
 
 // The same red the public site and the CMS use for live; only the dot carries
 // it, the label stays in the text color for contrast.
@@ -11,6 +11,7 @@ const PULSE_HALF_MS = 1000;
 const PULSE_EASING = Easing.bezier(0.4, 0, 0.6, 1);
 
 export const LiveBadge = () => {
+  const styles = useStyles();
   const [opacity] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
@@ -33,8 +34,8 @@ export const LiveBadge = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   live: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: LIVE_RED },
   liveText: { color: theme.colors.ink, fontSize: 12, fontWeight: '800' },
-});
+}));

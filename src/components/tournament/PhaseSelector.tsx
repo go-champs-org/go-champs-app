@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TournamentPhaseOption } from '../../domain/usecases/GetTournamentOverviewUseCase';
-import { theme } from '../../theme/theme';
+import { makeStyles, useTheme } from '../../theme/theme';
 
 type Props = {
   phases: TournamentPhaseOption[];
@@ -14,6 +14,8 @@ type Props = {
 // with a "Trocar" chip so it reads as something to change; a tournament with
 // a single phase has nothing to expand and shows no chip.
 export const PhaseSelector = ({ phases, selected, onSelect }: Props) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const [open, setOpen] = useState(false);
   const others = phases.filter((phase) => phase.id !== selected.id);
   const canExpand = others.length > 0;
@@ -40,7 +42,7 @@ export const PhaseSelector = ({ phases, selected, onSelect }: Props) => {
         {canExpand ? (
           <View style={styles.chip}>
             <Text style={styles.chipText}>{open ? 'Fechar' : 'Trocar'}</Text>
-            <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={theme.colors.surface} />
+            <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={theme.colors.onOlive} />
           </View>
         ) : null}
       </TouchableOpacity>
@@ -66,7 +68,7 @@ export const PhaseSelector = ({ phases, selected, onSelect }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: {
     padding: 12,
     gap: 10,
@@ -130,7 +132,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   chipText: {
-    color: theme.colors.surface,
+    color: theme.colors.onOlive,
     fontSize: 13,
     fontWeight: '800',
   },
@@ -159,4 +161,4 @@ const styles = StyleSheet.create({
     color: theme.colors.olive,
     fontSize: theme.typography.caption,
   },
-});
+}));

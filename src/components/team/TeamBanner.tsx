@@ -1,9 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { TeamTab, TeamTabId } from '../../viewmodels/TeamViewModel';
 import { BANNER_ACCENT, BANNER_TEXT, ProfileBanner } from '../competition/ProfileBanner';
 import { TeamBadge } from '../competition/TeamBadge';
-import { theme } from '../../theme/theme';
+import { makeStyles } from '../../theme/theme';
 
 type Props = {
   name: string;
@@ -17,36 +17,39 @@ type Props = {
 // What a phone shows of the public team banner: logo, name, tri code and the
 // section tabs. The overline and the highlights box are what a narrow screen
 // drops there, so they are not here either.
-export const TeamBanner = ({ name, logoUrl, triCode, tabs, activeTab, onSelectTab }: Props) => (
-  <ProfileBanner testID="team-banner">
-    <View style={styles.identity}>
-      <TeamBadge logoUrl={logoUrl} name={name} size={84} />
-      <Text accessibilityRole="header" style={styles.name}>{name}</Text>
-      {triCode ? <Text style={styles.triCode}>{triCode}</Text> : null}
-    </View>
-    {/* A single section has nothing to switch between: no tab bar. */}
-    {tabs.length > 1 ? (
-      <View accessibilityRole="tablist" accessibilityLabel="Seções do time" style={styles.tabs}>
-        {tabs.map((tab) => {
-          const selected = tab.id === activeTab;
-          return (
-            <TouchableOpacity
-              key={tab.id}
-              accessibilityRole="tab"
-              accessibilityState={{ selected }}
-              onPress={() => onSelectTab(tab.id)}
-              style={[styles.tab, selected && styles.tabSelected]}
-            >
-              <Text style={[styles.tabText, selected && styles.tabTextSelected]}>{tab.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
+export const TeamBanner = ({ name, logoUrl, triCode, tabs, activeTab, onSelectTab }: Props) => {
+  const styles = useStyles();
+  return (
+    <ProfileBanner testID="team-banner">
+      <View style={styles.identity}>
+        <TeamBadge logoUrl={logoUrl} name={name} size={84} />
+        <Text accessibilityRole="header" style={styles.name}>{name}</Text>
+        {triCode ? <Text style={styles.triCode}>{triCode}</Text> : null}
       </View>
-    ) : null}
-  </ProfileBanner>
-);
+      {/* A single section has nothing to switch between: no tab bar. */}
+      {tabs.length > 1 ? (
+        <View accessibilityRole="tablist" accessibilityLabel="Seções do time" style={styles.tabs}>
+          {tabs.map((tab) => {
+            const selected = tab.id === activeTab;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                accessibilityRole="tab"
+                accessibilityState={{ selected }}
+                onPress={() => onSelectTab(tab.id)}
+                style={[styles.tab, selected && styles.tabSelected]}
+              >
+                <Text style={[styles.tabText, selected && styles.tabTextSelected]}>{tab.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ) : null}
+    </ProfileBanner>
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   identity: { alignItems: 'center', gap: 12 },
   name: {
     color: BANNER_TEXT,
@@ -76,4 +79,4 @@ const styles = StyleSheet.create({
   tabSelected: { borderColor: BANNER_TEXT, backgroundColor: BANNER_TEXT },
   tabText: { color: BANNER_TEXT, fontSize: 12, fontWeight: '700' },
   tabTextSelected: { color: BANNER_ACCENT },
-});
+}));

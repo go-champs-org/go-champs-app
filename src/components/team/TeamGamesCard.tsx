@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Game } from '../../models/GameModel';
 import { formatGameTime } from '../../domain/usecases/shared/gameDateTime';
 import { isLiveGame, showsScore } from '../../domain/usecases/shared/liveScore';
@@ -7,7 +7,7 @@ import { GameDay, gameWinner, SideEmphasis, sideEmphasis } from '../../domain/us
 import { useLiveScore } from '../../viewmodels/LiveScoreViewModel';
 import { LiveBadge } from '../competition/LiveBadge';
 import { TeamBadge } from '../competition/TeamBadge';
-import { theme } from '../../theme/theme';
+import { makeStyles } from '../../theme/theme';
 
 type Props = {
   days: GameDay[];
@@ -20,16 +20,19 @@ const UNDECIDED = 'A definir';
 type SideProps = { name: string; logoUrl?: string | null; emphasis: SideEmphasis; align: 'left' | 'right' };
 
 // The logo faces the score in the middle: the home side reads right to left.
-const GameSide = ({ name, logoUrl, emphasis, align }: SideProps) => (
-  <View style={[styles.side, align === 'right' && styles.sideRight]}>
-    {logoUrl ? (
-      <View style={emphasis === 'loser' && styles.loserLogo}>
-        <TeamBadge logoUrl={logoUrl} name={name} size={28} />
-      </View>
-    ) : null}
-    <Text numberOfLines={2} style={[styles.sideName, align === 'right' && styles.sideNameRight, styles[emphasis]]}>{name}</Text>
-  </View>
-);
+const GameSide = ({ name, logoUrl, emphasis, align }: SideProps) => {
+  const styles = useStyles();
+  return (
+    <View style={[styles.side, align === 'right' && styles.sideRight]}>
+      {logoUrl ? (
+        <View style={emphasis === 'loser' && styles.loserLogo}>
+          <TeamBadge logoUrl={logoUrl} name={name} size={28} />
+        </View>
+      ) : null}
+      <Text numberOfLines={2} style={[styles.sideName, align === 'right' && styles.sideNameRight, styles[emphasis]]}>{name}</Text>
+    </View>
+  );
+};
 
 type RowProps = { game: Game; apiBaseUrl?: string; onPress: () => void; first: boolean };
 
@@ -37,6 +40,7 @@ type RowProps = { game: Game; apiBaseUrl?: string; onPress: () => void; first: b
 // time (and the live badge), away. A live game keeps its score running from
 // the scoreboard, like the Jogos panel.
 const GameRow = ({ game, apiBaseUrl, onPress, first }: RowProps) => {
+  const styles = useStyles();
   const live = isLiveGame(game.live_state);
   const score = useLiveScore(game.id, live, { homeScore: game.home_score, awayScore: game.away_score }, apiBaseUrl);
   const winner = gameWinner(game);
@@ -72,22 +76,25 @@ const GameRow = ({ game, apiBaseUrl, onPress, first }: RowProps) => {
 
 // The team's games by day, newest first; a day's games share one bordered
 // block, the way the public team page stacks them.
-export const TeamGamesCard = ({ days, onPressGame, apiBaseUrl }: Props) => (
-  <View style={styles.card} testID="team-games">
-    {days.map((day) => (
-      <View key={day.key || 'undated'} style={styles.day}>
-        {day.label ? <Text style={styles.dayLabel}>{day.label}</Text> : null}
-        <View style={styles.dayGames}>
-          {day.games.map((game, index) => (
-            <GameRow key={game.id} game={game} apiBaseUrl={apiBaseUrl} first={index === 0} onPress={() => onPressGame(game.id)} />
-          ))}
+export const TeamGamesCard = ({ days, onPressGame, apiBaseUrl }: Props) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.card} testID="team-games">
+      {days.map((day) => (
+        <View key={day.key || 'undated'} style={styles.day}>
+          {day.label ? <Text style={styles.dayLabel}>{day.label}</Text> : null}
+          <View style={styles.dayGames}>
+            {day.games.map((game, index) => (
+              <GameRow key={game.id} game={game} apiBaseUrl={apiBaseUrl} first={index === 0} onPress={() => onPressGame(game.id)} />
+            ))}
+          </View>
         </View>
-      </View>
-    ))}
-  </View>
-);
+      ))}
+    </View>
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   card: {
     padding: theme.spacing.md,
     gap: theme.spacing.lg,
@@ -133,4 +140,4 @@ const styles = StyleSheet.create({
   winner: { color: theme.colors.textPrimary, fontWeight: '800' },
   loser: { color: theme.colors.mutedText, fontWeight: '500' },
   neutral: { color: theme.colors.textPrimary, fontWeight: '500' },
-});
+}));

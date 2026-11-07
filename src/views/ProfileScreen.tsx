@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -15,12 +14,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '../components/layout/Screen';
 import { AppHeader } from '../components/layout/AppHeader';
-import { theme } from '../theme/theme';
+import { makeStyles, useTheme } from '../theme/theme';
 import { ContentShell } from '../components/layout/ContentShell';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useProfileViewModel } from '../viewmodels/ProfileViewModel';
 
 const ProfileScreen = () => {
+  const theme = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const { user, bootstrapping, signOut } = useAuthSession();
   const {
@@ -72,7 +73,7 @@ const ProfileScreen = () => {
               onPress={() => navigation.navigate('AuthScreen', { initialMode: 'signIn' })}
               style={styles.button}
             >
-              <Ionicons name="log-in-outline" size={18} color={theme.colors.primary} />
+              <Ionicons name="log-in-outline" size={18} color={theme.colors.onAccent} />
               <Text style={styles.buttonText}>Entrar</Text>
             </TouchableOpacity>
           </View>
@@ -295,7 +296,7 @@ const ProfileScreen = () => {
               </View>
 
               <TouchableOpacity accessibilityRole="button" onPress={() => void signOut()} style={styles.button}>
-                <Ionicons name="log-out-outline" size={18} color={theme.colors.primary} />
+                <Ionicons name="log-out-outline" size={18} color={theme.colors.onAccent} />
                 <Text style={styles.buttonText}>Sair da conta</Text>
               </TouchableOpacity>
             </View>
@@ -318,23 +319,27 @@ const Field = ({
   onChangeText: (value: string) => void;
   placeholder: string;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-}) => (
-  <View style={styles.field}>
-    <Text style={styles.fieldLabel}>{label}</Text>
-    <TextInput
-      accessibilityLabel={label}
-      value={value}
-      onChangeText={onChangeText}
-      placeholder={placeholder}
-      placeholderTextColor={theme.colors.mutedText}
-      style={styles.input}
-      autoCapitalize={autoCapitalize}
-      autoCorrect={false}
-    />
-  </View>
-);
+}) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.field}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={theme.colors.mutedText}
+        style={styles.input}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
+      />
+    </View>
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   flex: {
     flex: 1,
   },
@@ -506,7 +511,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.lg,
   },
   buttonText: {
-    color: theme.colors.primary,
+    color: theme.colors.onAccent,
     fontSize: theme.typography.body,
     fontWeight: '900',
   },
@@ -514,11 +519,13 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.primary,
+    borderWidth: theme.dark ? 1 : 0,
+    borderColor: theme.colors.chromeBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   secondaryButtonText: {
-    color: '#fff',
+    color: theme.colors.onPrimary,
     fontWeight: '900',
   },
   cancelButton: {
@@ -535,6 +542,6 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.6,
   },
-});
+}));
 
 export default ProfileScreen;

@@ -1,8 +1,8 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { StandingsGroup } from '../../domain/usecases/GetPhaseOverviewUseCase';
 import { StandingsColumn } from '../../domain/usecases/shared/standingsPresentation';
-import { theme } from '../../theme/theme';
+import { makeStyles } from '../../theme/theme';
 import { TeamBadge } from '../competition/TeamBadge';
 import { EmptyState } from '../feedback/EmptyState';
 
@@ -29,6 +29,7 @@ type TableProps = { group: StandingsGroup; columns: StandingsColumn[]; onPressTe
 
 // Logo and name open the team; a slot still to be decided has no team to open.
 const TeamCell = ({ row, onPressTeam }: { row: StandingsGroup['rows'][number]; onPressTeam: (teamId: string) => void }) => {
+  const styles = useStyles();
   const name = row.team.name || row.shortName;
   const content = (
     <>
@@ -50,64 +51,68 @@ const TeamCell = ({ row, onPressTeam }: { row: StandingsGroup['rows'][number]; o
   );
 };
 
-const StandingsTable = ({ group, columns, onPressTeam }: TableProps) => (
-  <View style={styles.card}>
-    {group.title ? (
-      <View style={styles.groupHeader}>
-        <Text numberOfLines={1} style={styles.groupTitle}>{group.title}</Text>
-      </View>
-    ) : null}
-    <View style={styles.table}>
-      <View style={styles.fixed}>
-        <View style={[styles.headerRow, styles.teamHeader]}>
-          <Text style={[styles.headerText, styles.rankCell]}>#</Text>
-          <Text style={styles.headerText}>TIME</Text>
+const StandingsTable = ({ group, columns, onPressTeam }: TableProps) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.card}>
+      {group.title ? (
+        <View style={styles.groupHeader}>
+          <Text numberOfLines={1} style={styles.groupTitle}>{group.title}</Text>
         </View>
-        {group.rows.map((row, index) => (
-          <View key={row.id} style={[styles.bodyRow, styles.teamCell, index > 0 && styles.rowDivider]}>
-            <Text style={[styles.rank, styles.rankCell]}>{index + 1}</Text>
-            <TeamCell row={row} onPressTeam={onPressTeam} />
-          </View>
-        ))}
-        <View pointerEvents="none" style={styles.fixedEdge} />
-      </View>
-      <ScrollView
-        horizontal
-        bounces={false}
-        showsHorizontalScrollIndicator={false}
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.stats}>
-          <View style={styles.headerRow}>
-            {columns.map((column) => (
-              <Text key={column.id} numberOfLines={1} style={[styles.headerText, styles.statCell, { minWidth: columnWidth(column.title) }]}>
-                {column.title}
-              </Text>
-            ))}
+      ) : null}
+      <View style={styles.table}>
+        <View style={styles.fixed}>
+          <View style={[styles.headerRow, styles.teamHeader]}>
+            <Text style={[styles.headerText, styles.rankCell]}>#</Text>
+            <Text style={styles.headerText}>TIME</Text>
           </View>
           {group.rows.map((row, index) => (
-            <View key={row.id} style={[styles.bodyRow, index > 0 && styles.rowDivider]}>
-              {columns.map((column) => {
-                const value = row.values[column.id];
-                return (
-                  <Text
-                    key={column.id}
-                    style={[styles.statValue, styles.statCell, { minWidth: columnWidth(column.title) }, isNegative(value) && styles.statNegative]}
-                  >
-                    {value}
-                  </Text>
-                );
-              })}
+            <View key={row.id} style={[styles.bodyRow, styles.teamCell, index > 0 && styles.rowDivider]}>
+              <Text style={[styles.rank, styles.rankCell]}>{index + 1}</Text>
+              <TeamCell row={row} onPressTeam={onPressTeam} />
             </View>
           ))}
+          <View pointerEvents="none" style={styles.fixedEdge} />
         </View>
-      </ScrollView>
+        <ScrollView
+          horizontal
+          bounces={false}
+          showsHorizontalScrollIndicator={false}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.stats}>
+            <View style={styles.headerRow}>
+              {columns.map((column) => (
+                <Text key={column.id} numberOfLines={1} style={[styles.headerText, styles.statCell, { minWidth: columnWidth(column.title) }]}>
+                  {column.title}
+                </Text>
+              ))}
+            </View>
+            {group.rows.map((row, index) => (
+              <View key={row.id} style={[styles.bodyRow, index > 0 && styles.rowDivider]}>
+                {columns.map((column) => {
+                  const value = row.values[column.id];
+                  return (
+                    <Text
+                      key={column.id}
+                      style={[styles.statValue, styles.statCell, { minWidth: columnWidth(column.title) }, isNegative(value) && styles.statNegative]}
+                    >
+                      {value}
+                    </Text>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 export const StandingsSection = ({ columns, groups, onPressTeam }: Props) => {
+  const styles = useStyles();
   if (groups.length === 0) {
     return <EmptyState icon="list-outline" title="Classificação indisponível" description="Os dados desta fase ainda não foram publicados." />;
   }
@@ -123,7 +128,7 @@ export const StandingsSection = ({ columns, groups, onPressTeam }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: { gap: 12 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { color: theme.colors.ink, fontSize: 18, fontWeight: '900' },
@@ -186,4 +191,4 @@ const styles = StyleSheet.create({
   statCell: { flexGrow: 1, flexBasis: 0, textAlign: 'center' },
   statValue: { color: theme.colors.ink, fontSize: 14 },
   statNegative: { color: theme.colors.danger, fontWeight: '900' },
-});
+}));

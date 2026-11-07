@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -12,7 +11,7 @@ import { RouteProp, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { RootStackParamList } from '../navigation/types';
-import { theme } from '../theme/theme';
+import { makeStyles, useTheme } from '../theme/theme';
 import { createWebAuthFlow } from './createWebAuthFlow';
 import { webAuthCopy } from './WebAuthPurpose';
 import { isWebAuthSuccessUrl } from './webAuthUrls';
@@ -20,6 +19,8 @@ import { isWebAuthSuccessUrl } from './webAuthUrls';
 type Props = { route: RouteProp<RootStackParamList, 'WebAuthFlowScreen'> };
 
 const WebAuthFlowScreen: React.FC<Props> = ({ route }) => {
+  const theme = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation();
   const purpose = route.params.purpose;
   const flow = useMemo(() => createWebAuthFlow(purpose), [purpose]);
@@ -42,7 +43,7 @@ const WebAuthFlowScreen: React.FC<Props> = ({ route }) => {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{copy.title}</Text>
           <TouchableOpacity accessibilityLabel="Fechar" onPress={close} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#ffffff" />
+            <Ionicons name="close" size={24} color={theme.colors.onPrimary} />
           </TouchableOpacity>
         </View>
         <View style={styles.webFallback}>
@@ -71,7 +72,7 @@ const WebAuthFlowScreen: React.FC<Props> = ({ route }) => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{copy.title}</Text>
         <TouchableOpacity accessibilityLabel="Fechar" onPress={close} style={styles.closeButton}>
-          <Ionicons name="close" size={24} color="#ffffff" />
+          <Ionicons name="close" size={24} color={theme.colors.onPrimary} />
         </TouchableOpacity>
       </View>
       {loading ? (
@@ -95,7 +96,7 @@ const WebAuthFlowScreen: React.FC<Props> = ({ route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   safeArea: { flex: 1, backgroundColor: theme.colors.primary },
   header: {
     minHeight: 56,
@@ -105,7 +106,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: theme.colors.primary,
   },
-  headerTitle: { color: '#ffffff', fontSize: theme.typography.titleSmall, fontWeight: '800' },
+  headerTitle: { color: theme.colors.onPrimary, fontSize: theme.typography.titleSmall, fontWeight: '800' },
   closeButton: {
     width: theme.layout.touchTarget,
     height: theme.layout.touchTarget,
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.accent,
   },
   primaryButtonText: {
-    color: theme.colors.primary,
+    color: theme.colors.onAccent,
     fontSize: theme.typography.body,
     fontWeight: '900',
   },
@@ -166,6 +167,6 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.bodySmall,
     fontWeight: '900',
   },
-});
+}));
 
 export default WebAuthFlowScreen;

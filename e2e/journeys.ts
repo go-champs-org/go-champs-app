@@ -5,6 +5,7 @@ export const journeys = {
   searchOrganization: 'Buscar campeonatos pelo nome da organizacao',
   sideMenu: 'Abrir o menu com links e redes sociais',
   menuLinks: 'Abrir as paginas do site pelo menu',
+  appearance: 'Trocar o tema (sistema, claro, escuro) pelo menu',
   organizationsList: 'Listar e buscar organizacoes pelo menu',
   organizationsEmpty: 'Lista de organizacoes vazia',
   search: 'Buscar por campeonato ou organizacao',

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { initials } from '../../core/text/initials';
-import { theme } from '../../theme/theme';
+import { makeStyles } from '../../theme/theme';
 
 type Props = {
   logoUrl?: string | null;
@@ -13,6 +13,7 @@ type Props = {
 // one that is missing, or fails to load, falls back to the name's initials in
 // a circle.
 export const TeamBadge = ({ logoUrl, name, size = 32 }: Props) => {
+  const styles = useStyles();
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const box = { width: size, height: size };
 
@@ -35,7 +36,7 @@ export const TeamBadge = ({ logoUrl, name, size = 32 }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   base: {
     flexShrink: 0,
   },
@@ -50,4 +51,4 @@ const styles = StyleSheet.create({
     color: theme.colors.success,
     fontWeight: '900',
   },
-});
+}));

@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { SITE_LINKS, SOCIAL_LINKS } from '../../core/config/siteLinks';
 import { makeStyles, useTheme } from '../../theme/theme';
+import { ThemePreference, setThemePreference, useThemePreference } from '../../theme/themePreference';
 
 export type SideMenuItem = 'home' | 'organizations';
 
@@ -62,6 +63,43 @@ const SocialButton = ({ label, icon, url }: { label: string; icon: keyof typeof 
     >
       <Ionicons name={icon} size={20} color={theme.colors.ink} />
     </TouchableOpacity>
+  );
+};
+
+const APPEARANCE_OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 'system', label: 'Sistema', icon: 'phone-portrait-outline' },
+  { value: 'light', label: 'Claro', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Escuro', icon: 'moon-outline' },
+];
+
+// Follow the system appearance, or keep the app light or dark.
+const AppearancePicker = () => {
+  const theme = useTheme();
+  const styles = useStyles();
+  const preference = useThemePreference();
+  return (
+    <View style={styles.appearance}>
+      <Text style={styles.sectionTitle}>Aparência</Text>
+      <View accessibilityRole="radiogroup" accessibilityLabel="Aparência" style={styles.segments}>
+        {APPEARANCE_OPTIONS.map((option) => {
+          const selected = option.value === preference;
+          const color = selected ? theme.colors.onOlive : theme.colors.ink;
+          return (
+            <TouchableOpacity
+              key={option.value}
+              accessibilityRole="radio"
+              accessibilityLabel={option.label}
+              aria-checked={selected}
+              onPress={() => setThemePreference(option.value)}
+              style={[styles.segment, selected && styles.segmentSelected]}
+            >
+              <Ionicons name={option.icon} size={16} color={color} />
+              <Text style={[styles.segmentText, { color }]}>{option.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
   );
 };
 
@@ -175,6 +213,7 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
                   onPress={() => openSitePage(SITE_LINKS.contact)}
                 />
               </View>
+              <AppearancePicker />
             </ScrollView>
             <View style={styles.footer}>
               <View style={styles.socials}>
@@ -246,6 +285,38 @@ const useStyles = makeStyles((theme) => ({
   rowText: {
     fontSize: 15,
     fontWeight: '500',
+  },
+  appearance: {
+    gap: theme.spacing.sm,
+    padding: theme.spacing.md,
+  },
+  sectionTitle: {
+    color: theme.colors.subtleText,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  segments: {
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+    padding: theme.spacing.xs,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.surfaceMuted,
+  },
+  segment: {
+    flex: 1,
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    borderRadius: theme.radius.sm,
+  },
+  segmentSelected: {
+    backgroundColor: theme.colors.olive,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   footer: {
     gap: theme.spacing.sm,

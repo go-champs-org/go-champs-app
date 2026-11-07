@@ -90,6 +90,26 @@ test('[menuLinks] abre as páginas do site pelo menu', async ({ page }) => {
   expect((await popup).url()).toBe('https://go-champs.com/faq');
 });
 
+test('[appearance] troca a aparência pelo menu e a mantém', async ({ page }) => {
+  const pageBackground = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  await openHome(page);
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await expect(page.getByRole('radio', { name: 'Sistema' })).toBeChecked();
+  await expect.poll(pageBackground).toBe('rgb(250, 250, 238)');
+
+  await page.getByRole('radio', { name: 'Escuro' }).click();
+  await expect(page.getByRole('radio', { name: 'Escuro' })).toBeChecked();
+  await expect.poll(pageBackground).toBe('rgb(29, 29, 27)');
+
+  await openHome(page);
+  await expect.poll(pageBackground).toBe('rgb(29, 29, 27)');
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await expect(page.getByRole('radio', { name: 'Escuro' })).toBeChecked();
+
+  await page.getByRole('radio', { name: 'Sistema' }).click();
+  await expect.poll(pageBackground).toBe('rgb(250, 250, 238)');
+});
+
 test('[organizationsList] lista e busca organizações pelo menu', async ({ page }) => {
   await openHome(page);
   await page.getByRole('button', { name: 'Abrir menu' }).click();

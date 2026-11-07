@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { Appearance, ImageStyle, StyleSheet, TextStyle, ViewStyle } from 'react-native';
+import { getThemePreference, subscribeToThemePreference } from './themePreference';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -160,20 +161,27 @@ export const darkTheme: Theme = buildTheme('dark', darkColors);
 export const getTheme = (scheme: string | null | undefined): Theme =>
   scheme === 'dark' ? darkTheme : lightTheme;
 
-const subscribeToAppearance = (onChange: () => void) => {
+const subscribeToScheme = (onChange: () => void) => {
   const subscription = Appearance.addChangeListener(onChange);
-  return () => subscription.remove();
+  const unsubscribePreference = subscribeToThemePreference(onChange);
+  return () => {
+    subscription.remove();
+    unsubscribePreference();
+  };
 };
-const currentScheme = () => Appearance.getColorScheme();
+const currentScheme = () => {
+  const preference = getThemePreference();
+  return preference === 'system' ? Appearance.getColorScheme() : preference;
+};
 // The static web export is rendered without a system appearance, in light.
 // Hydration starts from that and then re-renders in the visitor's scheme;
 // reading the scheme straight away would keep the server's light classes on
 // the hydrated nodes.
 const serverScheme = () => null;
 
-/** The active theme, following the system appearance. */
+/** The active theme: the appearance picked in the menu, else the system's. */
 export function useTheme(): Theme {
-  return getTheme(useSyncExternalStore(subscribeToAppearance, currentScheme, serverScheme));
+  return getTheme(useSyncExternalStore(subscribeToScheme, currentScheme, serverScheme));
 }
 
 type NamedStyles = { [key: string]: ViewStyle | TextStyle | ImageStyle };

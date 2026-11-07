@@ -12,7 +12,21 @@ const serviceWorkerRegistration = `
 // The page background before the app paints, matching src/theme/theme.ts.
 const pageStyle =
   'html,body{background:#fafaee}body{margin:0}*{box-sizing:border-box}' +
-  '@media (prefers-color-scheme: dark){html,body{background:#1d1d1b}}';
+  '@media (prefers-color-scheme: dark){html,body{background:#1d1d1b}}' +
+  'html.theme-light,html.theme-light body{background:#fafaee}' +
+  'html.theme-dark,html.theme-dark body{background:#1d1d1b}';
+
+// The appearance picked in the menu (ThemePreferenceLocalStore), applied
+// before the first paint so the page does not flash the system's colors.
+const themePreference = `
+  try {
+    var preference = localStorage.getItem('go_champs.theme.preference');
+    if (preference === 'light' || preference === 'dark') {
+      document.documentElement.classList.add('theme-' + preference);
+      document.documentElement.style.colorScheme = preference;
+    }
+  } catch (error) {}
+`;
 
 export default function Root({ children }: { children: React.ReactNode }) {
   return (
@@ -29,6 +43,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: pageStyle }} />
+        <script dangerouslySetInnerHTML={{ __html: themePreference }} />
       </head>
       <body>
         {children}

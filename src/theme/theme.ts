@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { Appearance, ImageStyle, StyleSheet, TextStyle, ViewStyle } from 'react-native';
+import { Appearance, StyleSheet } from 'react-native';
 import { getThemePreference, subscribeToThemePreference } from './themePreference';
 
 export type ColorScheme = 'light' | 'dark';
@@ -184,7 +184,9 @@ export function useTheme(): Theme {
   return getTheme(useSyncExternalStore(subscribeToScheme, currentScheme, serverScheme));
 }
 
-type NamedStyles = { [key: string]: ViewStyle | TextStyle | ImageStyle };
+// StyleSheet.create's own input type. The web-only style values that
+// `expo/types` (expo-env.d.ts) adds to ViewStyle are not accepted by it.
+type NamedStyles = Parameters<typeof StyleSheet.create>[0];
 
 /**
  * Builds a `useStyles()` hook from a theme-aware style factory. Each theme's
@@ -195,7 +197,7 @@ export function makeStyles<S extends NamedStyles>(factory: (theme: Theme) => S &
   const stylesFor = (theme: Theme): Readonly<S> => {
     const cached = sheets.get(theme);
     if (cached) return cached;
-    const sheet = StyleSheet.create(factory(theme));
+    const sheet = StyleSheet.create(factory(theme)) as Readonly<S>;
     sheets.set(theme, sheet);
     return sheet;
   };

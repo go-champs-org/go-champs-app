@@ -92,7 +92,6 @@ const ProfileScreen = () => {
         >
           <View style={styles.hero}>
             <ContentShell style={styles.heroContent}>
-              <Text style={styles.heroKicker}>MINHA CONTA</Text>
               <Text accessibilityRole="header" style={styles.heroTitle}>
                 Sua conta
               </Text>
@@ -431,15 +430,9 @@ const useStyles = makeStyles((theme) => ({
   },
   heroContent: {
     paddingHorizontal: 22,
-    paddingTop: theme.spacing.sm,
+    paddingTop: theme.spacing.md,
     paddingBottom: 28,
     gap: 7,
-  },
-  heroKicker: {
-    color: theme.colors.lime,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.4,
   },
   heroTitle: {
     color: theme.colors.onPrimary,

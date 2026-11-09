@@ -211,8 +211,8 @@ export const EmptyProfileCard = ({ title, description, actionLabel, onAction }: 
     <View style={[styles.card, styles.emptyCard]}>
       <Text style={styles.emptyTitle}>{title}</Text>
       <Text style={styles.emptyDescription}>{description}</Text>
-      <TouchableOpacity accessibilityRole="button" onPress={onAction} style={[styles.textButton, styles.emptyAction]}>
-        <Text style={styles.textButtonLabel}>{actionLabel}</Text>
+      <TouchableOpacity accessibilityRole="button" onPress={onAction} style={[styles.saveButton, styles.emptyAction]}>
+        <Text style={styles.saveButtonLabel}>{actionLabel}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -388,6 +388,7 @@ const useStyles = makeStyles((theme) => ({
     lineHeight: 17,
   },
   emptyAction: {
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
+    marginTop: theme.spacing.xs,
   },
 }));

@@ -83,7 +83,6 @@ const MyGamesScreen = () => {
               view={model.view}
               tournamentId={model.tournamentId}
               tournaments={model.tournaments}
-              onBack={() => navigation.navigate('ProfileTab')}
               onSelectView={model.selectView}
               onSelectTournament={model.selectTournament}
             />

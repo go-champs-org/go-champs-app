@@ -31,23 +31,20 @@ type HeaderProps = {
   view: MyGamesView;
   tournamentId: string | null;
   tournaments: MyGamesTournament[];
-  onBack: () => void;
   onSelectView: (view: MyGamesView) => void;
   onSelectTournament: (id: string | null) => void;
 };
 
-// The dark band under the header: back to the profile, the title, the
+// The dark band under the header: the title, the
 // athlete and the filters, which only narrow the games already loaded.
 export const MyGamesHeader = ({
   subtitle,
   view,
   tournamentId,
   tournaments,
-  onBack,
   onSelectView,
   onSelectTournament,
 }: HeaderProps) => {
-  const theme = useTheme();
   const styles = useStyles();
   const options: SelectOption[] = [
     { id: null, label: 'Todos os campeonatos' },
@@ -56,10 +53,6 @@ export const MyGamesHeader = ({
   return (
     <View style={styles.header}>
       <ContentShell style={styles.headerContent}>
-        <TouchableOpacity accessibilityRole="link" onPress={onBack} style={styles.back}>
-          <Ionicons name="chevron-back" size={20} color={theme.colors.onDark} />
-          <Text style={styles.backText}>Perfil de atleta</Text>
-        </TouchableOpacity>
         <View style={styles.titleBlock}>
           <Text accessibilityRole="header" style={styles.title}>
             Meus jogos
@@ -221,18 +214,6 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing.sm,
     paddingBottom: 22,
     gap: 14,
-  },
-  back: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: theme.spacing.sm,
-    minHeight: 36,
-  },
-  backText: {
-    color: theme.colors.onDark,
-    fontSize: 13,
-    fontWeight: '500',
   },
   titleBlock: {
     gap: 3,

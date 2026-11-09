@@ -1,5 +1,5 @@
 import { AthleteProfile, AthleteProfileRepository, AthleteRecentGame } from '../repositories/AthleteProfileRepository';
-import { emptyWhenMissing } from './shared/emptyWhenMissing';
+import { withProfileLists } from './shared/profileLists';
 
 export type AthleteHome = {
   profile: AthleteProfile | null;
@@ -11,10 +11,11 @@ export class GetAthleteHomeUseCase {
   constructor(private readonly athleteProfileRepository: AthleteProfileRepository) {}
 
   async execute(username: string): Promise<AthleteHome> {
-    const [profile, recentGames] = await Promise.all([
+    const loaded = await withProfileLists(
       this.athleteProfileRepository.getByUsername(username),
-      emptyWhenMissing(this.athleteProfileRepository.getRecentGames(username)),
-    ]);
-    return { profile, recentGames: profile ? recentGames : [] };
+      this.athleteProfileRepository.getRecentGames(username)
+    );
+    if (!loaded) return { profile: null, recentGames: [] };
+    return { profile: loaded.profile, recentGames: loaded.lists };
   }
 }

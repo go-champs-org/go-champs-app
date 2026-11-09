@@ -48,6 +48,11 @@ describe('GetAthleteHomeUseCase', () => {
     });
     await expect(new GetAthleteHomeUseCase(repository).execute('ana')).rejects.toMatchObject({ status: 500 });
   });
+
+  it('fails when the profile exists but its recent games are not found', async () => {
+    const repository = repositoryWith({ getRecentGames: jest.fn().mockImplementation(notFound) });
+    await expect(new GetAthleteHomeUseCase(repository).execute('ana')).rejects.toMatchObject({ status: 404 });
+  });
 });
 
 describe('GetAthleteGamesUseCase', () => {
@@ -77,5 +82,23 @@ describe('GetAthleteGamesUseCase', () => {
   it('fails when the schedule fails', async () => {
     const repository = repositoryWith({ getTeamSchedule: jest.fn().mockRejectedValue(new TypeError('offline')) });
     await expect(new GetAthleteGamesUseCase(repository).execute('ana')).rejects.toThrow('offline');
+  });
+
+  it('fails when the profile exists but its recent games are not found', async () => {
+    const repository = repositoryWith({ getRecentGames: jest.fn().mockImplementation(notFound) });
+    await expect(new GetAthleteGamesUseCase(repository).execute('ana')).rejects.toMatchObject({ status: 404 });
+  });
+
+  it('ignores failed lists without an athlete profile', async () => {
+    const repository = repositoryWith({
+      getByUsername: jest.fn().mockResolvedValue(null),
+      getTeamSchedule: jest.fn().mockRejectedValue(new AppError('offline', 500)),
+    });
+    await expect(new GetAthleteGamesUseCase(repository).execute('ana')).resolves.toMatchObject({ profile: null });
+  });
+
+  it('fails when the profile fails', async () => {
+    const repository = repositoryWith({ getByUsername: jest.fn().mockRejectedValue(new AppError('offline', 500)) });
+    await expect(new GetAthleteGamesUseCase(repository).execute('ana')).rejects.toMatchObject({ status: 500 });
   });
 });

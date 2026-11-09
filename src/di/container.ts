@@ -1,15 +1,18 @@
 import { MutableTokenProvider } from '../core/auth/MutableTokenProvider';
+import { FetchFileTransport } from '../core/http/FetchFileTransport';
 import { FetchHttpClient } from '../core/http/FetchHttpClient';
 import { PinnedTournamentsLocalStore } from '../data/datasources/local/PinnedTournamentsLocalStore';
 import { TournamentFallbackDataSource } from '../data/datasources/local/TournamentFallbackDataSource';
 import { GoChampsApiClient } from '../data/datasources/remote/GoChampsApiClient';
+import { GoChampsAccountIdentityRepository } from '../data/repositories/GoChampsAccountIdentityRepository';
 import { GoChampsAccountRepository } from '../data/repositories/GoChampsAccountRepository';
 import { GoChampsAthleteProfileRepository } from '../data/repositories/GoChampsAthleteProfileRepository';
+import { GoChampsMediaUploadRepository } from '../data/repositories/GoChampsMediaUploadRepository';
 import { GoChampsScoreboardRepository } from '../data/repositories/GoChampsScoreboardRepository';
 import { GoChampsOrganizationRepository } from '../data/repositories/GoChampsOrganizationRepository';
 import { GoChampsTournamentRepository } from '../data/repositories/GoChampsTournamentRepository';
 import { LocalPinnedTournamentsRepository } from '../data/repositories/LocalPinnedTournamentsRepository';
-import { CreateAthleteProfileUseCase } from '../domain/usecases/CreateAthleteProfileUseCase';
+import { GetAccountIdentityUseCase } from '../domain/usecases/GetAccountIdentityUseCase';
 import { GetAccountProfileUseCase } from '../domain/usecases/GetAccountProfileUseCase';
 import { GetAthleteOverviewUseCase } from '../domain/usecases/GetAthleteOverviewUseCase';
 import { GetAthleteProfileByUsernameUseCase } from '../domain/usecases/GetAthleteProfileByUsernameUseCase';
@@ -20,6 +23,8 @@ import { GetOrganizationOverviewUseCase } from '../domain/usecases/GetOrganizati
 import { GetPhaseOverviewUseCase } from '../domain/usecases/GetPhaseOverviewUseCase';
 import { GetPinnedTournamentIdsUseCase } from '../domain/usecases/GetPinnedTournamentIdsUseCase';
 import { GetOrganizationDirectoryUseCase } from '../domain/usecases/GetOrganizationDirectoryUseCase';
+import { SaveAccountIdentityUseCase } from '../domain/usecases/SaveAccountIdentityUseCase';
+import { SaveAthleteProfileUseCase } from '../domain/usecases/SaveAthleteProfileUseCase';
 import { SearchTournamentsUseCase } from '../domain/usecases/SearchTournamentsUseCase';
 import { GetRecentTournamentsUseCase } from '../domain/usecases/GetRecentTournamentsUseCase';
 import { GetStatLeadersUseCase } from '../domain/usecases/GetStatLeadersUseCase';
@@ -28,7 +33,6 @@ import { GetTeamOverviewUseCase } from '../domain/usecases/GetTeamOverviewUseCas
 import { GetTournamentStatsUseCase } from '../domain/usecases/GetTournamentStatsUseCase';
 import { SignInUseCase } from '../domain/usecases/SignInUseCase';
 import { TogglePinnedTournamentUseCase } from '../domain/usecases/TogglePinnedTournamentUseCase';
-import { UpdateAthleteProfileUseCase } from '../domain/usecases/UpdateAthleteProfileUseCase';
 
 const httpClient = new FetchHttpClient();
 export const tokenProvider = new MutableTokenProvider();
@@ -40,6 +44,8 @@ const tournamentRepository = new GoChampsTournamentRepository(apiClient, fallbac
 const organizationRepository = new GoChampsOrganizationRepository(apiClient);
 const accountRepository = new GoChampsAccountRepository(apiClient);
 const athleteProfileRepository = new GoChampsAthleteProfileRepository(apiClient);
+const accountIdentityRepository = new GoChampsAccountIdentityRepository(apiClient);
+const mediaUploadRepository = new GoChampsMediaUploadRepository(apiClient, new FetchFileTransport());
 const scoreboardRepository = new GoChampsScoreboardRepository(httpClient);
 const pinnedTournamentsRepository = new LocalPinnedTournamentsRepository(pinnedTournamentsStore);
 
@@ -59,8 +65,9 @@ export const container = {
   signIn: new SignInUseCase(accountRepository),
   getAccountProfile: new GetAccountProfileUseCase(accountRepository),
   getAthleteProfileByUsername: new GetAthleteProfileByUsernameUseCase(athleteProfileRepository),
-  createAthleteProfile: new CreateAthleteProfileUseCase(athleteProfileRepository),
-  updateAthleteProfile: new UpdateAthleteProfileUseCase(athleteProfileRepository),
+  saveAthleteProfile: new SaveAthleteProfileUseCase(athleteProfileRepository, mediaUploadRepository),
+  getAccountIdentity: new GetAccountIdentityUseCase(accountIdentityRepository),
+  saveAccountIdentity: new SaveAccountIdentityUseCase(accountIdentityRepository),
   getAthleteSchedules: new GetAthleteSchedulesUseCase(athleteProfileRepository),
   getPinnedTournamentIds: new GetPinnedTournamentIdsUseCase(pinnedTournamentsRepository),
   togglePinnedTournament: new TogglePinnedTournamentUseCase(pinnedTournamentsRepository),

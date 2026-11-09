@@ -1,9 +1,7 @@
-import { CreateAthleteProfileUseCase } from '../CreateAthleteProfileUseCase';
 import { GetAccountProfileUseCase } from '../GetAccountProfileUseCase';
 import { GetAthleteProfileByUsernameUseCase } from '../GetAthleteProfileByUsernameUseCase';
 import { GetAthleteSchedulesUseCase } from '../GetAthleteSchedulesUseCase';
 import { GetRecentTournamentsUseCase } from '../GetRecentTournamentsUseCase';
-import { UpdateAthleteProfileUseCase } from '../UpdateAthleteProfileUseCase';
 import { AccountRepository } from '../../repositories/AccountRepository';
 import { AthleteProfileRepository } from '../../repositories/AthleteProfileRepository';
 import { TournamentRepository } from '../../repositories/TournamentRepository';
@@ -35,16 +33,6 @@ describe('simple use cases', () => {
       organizations: [],
     });
     await expect(new GetAthleteProfileByUsernameUseCase(athleteRepository).execute('ana')).resolves.toBeNull();
-    await expect(new CreateAthleteProfileUseCase(athleteRepository).execute({ name: 'Ana' })).resolves.toEqual({
-      id: '1',
-      username: 'ana',
-      name: 'Ana',
-    });
-    await expect(new UpdateAthleteProfileUseCase(athleteRepository).execute('ana', { name: 'Ana 2' })).resolves.toEqual({
-      id: '1',
-      username: 'ana',
-      name: 'Ana 2',
-    });
     await expect(new GetAthleteSchedulesUseCase(athleteRepository).execute()).resolves.toEqual([]);
   });
 });

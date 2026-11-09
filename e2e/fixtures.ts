@@ -11,12 +11,41 @@ const logo = 'https://example.com/alpha.png';
 export const otherOrganization = { id: 'org-2', name: 'Liga Norte', slug: 'liga-norte', logo_url: null };
 const searchable = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const athleteNames: Record<string, string> = { 'player-a': 'Ana Silva', 'player-b': 'Bia Souza' };
+export const storageUploadUrl = 'https://storage.example.test/uploads/foto.jpg?signature=1';
+export const uploadedPhotoUrl = 'https://example.com/media/athlete-profiles-photos/uploads/foto.jpg';
+export const accountIdentity = {
+  id: 'identity-1',
+  account_id: 'account-1',
+  full_legal_name: 'Ana Maria Silva',
+  tax_id_type: 'CPF',
+  tax_id_last4: '4725',
+  government_id_type: null,
+  government_id_last4: null,
+  date_of_birth: '1997-05-21',
+};
+type IdentityWrite = { account_identity?: Record<string, string | null | undefined> };
+const writtenIdentity = (body: IdentityWrite | null, base: typeof accountIdentity | null) => {
+  const write = body?.account_identity ?? {};
+  const current = base ?? { ...accountIdentity, full_legal_name: null, tax_id_type: null, tax_id_last4: null, date_of_birth: null };
+  return {
+    ...current,
+    ...('full_legal_name' in write ? { full_legal_name: write.full_legal_name } : {}),
+    ...(write.tax_id ? { tax_id_type: 'CPF', tax_id_last4: write.tax_id.slice(-4) } : {}),
+    ...(write.government_id ? { government_id_type: 'RG', government_id_last4: write.government_id.replace(/[^0-9a-zA-Z]/g, '').slice(-4) } : {}),
+    ...('date_of_birth' in write ? { date_of_birth: write.date_of_birth } : {}),
+  };
+};
 
 export const test = base.extend({
   page: async ({ page }, use) => {
     await page.route('https://example.com/**', (route) => route.fulfill({
       contentType: 'image/png',
       body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jfXkAAAAASUVORK5CYII=', 'base64'),
+    }));
+    // Presigned R2 upload (cross-origin PUT, so it is preflighted).
+    await page.route('https://storage.example.test/**', (route) => route.fulfill({
+      status: route.request().method() === 'OPTIONS' ? 204 : 200,
+      headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'PUT' },
     }));
     await page.route(/https:\/\/(api\.go-champs\.com|go-champs-api-staging\.herokuapp\.com)\//, async (route) => {
       const url = new URL(route.request().url());
@@ -136,19 +165,29 @@ export const test = base.extend({
         },
       };
       else if (path.startsWith('/athlete-profiles/username/') && route.request().method() === 'PATCH') {
-        const body = route.request().postDataJSON?.() as { athlete_profile?: { name?: string; instagram?: string } } | null;
+        const body = route.request().postDataJSON?.() as { athlete_profile?: Record<string, string | null> } | null;
         payload = {
           data: {
             id: 'athlete-1',
             username: 'ana',
             name: body?.athlete_profile?.name || 'Ana Silva',
-            photo_url: null,
-            facebook: null,
-            instagram: body?.athlete_profile?.instagram || null,
-            twitter: null,
+            photo_url: body?.athlete_profile?.photo_url ?? null,
+            facebook: body?.athlete_profile?.facebook ?? null,
+            instagram: body?.athlete_profile?.instagram ?? null,
+            twitter: body?.athlete_profile?.twitter ?? null,
           },
         };
       }
+      else if (path === '/account-identity' && route.request().method() === 'GET') payload = { data: accountIdentity };
+      else if (path === '/account-identity' && route.request().method() === 'PUT') {
+        payload = { data: writtenIdentity(route.request().postDataJSON() as IdentityWrite, accountIdentity) };
+      }
+      else if (path === '/account-identity' && route.request().method() === 'POST') {
+        payload = { data: writtenIdentity(route.request().postDataJSON() as IdentityWrite, null) };
+      }
+      else if (path === '/upload/presigned-url') payload = {
+        data: { filename: 'foto.jpg', url: storageUploadUrl, public_url: uploadedPhotoUrl },
+      };
       else if (path.startsWith('/athlete-profiles/username/')) payload = {
         data: {
           id: 'athlete-1',
@@ -162,17 +201,20 @@ export const test = base.extend({
           career_stats: [],
         },
       };
-      else if (path === '/athlete-profiles' && route.request().method() === 'POST') payload = {
-        data: {
-          id: 'athlete-1',
-          username: 'ana',
-          name: 'Ana Silva',
-          photo_url: null,
-          facebook: null,
-          instagram: null,
-          twitter: null,
-        },
-      };
+      else if (path === '/athlete-profiles' && route.request().method() === 'POST') {
+        const body = route.request().postDataJSON?.() as { athlete_profile?: Record<string, string | null> } | null;
+        payload = {
+          data: {
+            id: 'athlete-1',
+            username: 'ana',
+            name: body?.athlete_profile?.name || 'Ana Silva',
+            photo_url: body?.athlete_profile?.photo_url ?? null,
+            facebook: body?.athlete_profile?.facebook ?? null,
+            instagram: body?.athlete_profile?.instagram ?? null,
+            twitter: body?.athlete_profile?.twitter ?? null,
+          },
+        };
+      }
       else if (path === '/athlete-profiles/me/schedules') payload = {
         data: [{
           id: 'game-1',

@@ -1,19 +1,32 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AppError } from '../core/errors/AppError';
-import { UserAccountProfile } from '../domain/repositories/AccountRepository';
-import { AthleteProfile, AthleteProfileInput } from '../domain/repositories/AthleteProfileRepository';
+import { LocalFile } from '../core/http/FileTransport';
 import { container } from '../di/container';
+import { AthleteProfile } from '../domain/repositories/AthleteProfileRepository';
+import {
+  AthleteField,
+  AthleteFieldErrors,
+  athleteFieldErrorsFromApi,
+  AthleteFormValues,
+  AthletePhotoChange,
+  athleteToFormValues,
+  validateAthleteForm,
+} from '../domain/usecases/shared/athleteProfileForm';
+import { fieldsFromError, messageFromError, withoutField } from './formErrors';
+import { useFlashNotice } from './useFlashNotice';
 
-const messageFromError = (error: unknown, fallback: string) =>
-  error instanceof AppError ? error.message : fallback;
-
+/** The Perfil tab: the signed-in user's athlete profile. */
 export const useProfileViewModel = (username: string | undefined) => {
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [account, setAccount] = useState<UserAccountProfile | null>(null);
   const [athlete, setAthlete] = useState<AthleteProfile | null>(null);
-  const [athleteMissing, setAthleteMissing] = useState(false);
+  const { notice, showNotice, clearNotice } = useFlashNotice();
+
+  const [editing, setEditing] = useState(false);
+  const [values, setValues] = useState<AthleteFormValues>(() => athleteToFormValues(null));
+  const [photo, setPhoto] = useState<AthletePhotoChange>({ kind: 'keep' });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<AthleteFieldErrors>({});
 
   const [refreshVersion, setRefreshVersion] = useState(0);
   const refresh = useCallback(() => setRefreshVersion((version) => version + 1), []);
@@ -21,11 +34,11 @@ export const useProfileViewModel = (username: string | undefined) => {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
+      setEditing(false);
       if (!username) {
-        setAccount(null);
         setAthlete(null);
-        setAthleteMissing(false);
         setError(null);
+        setLoading(false);
         return;
       }
 
@@ -33,77 +46,106 @@ export const useProfileViewModel = (username: string | undefined) => {
       setError(null);
 
       try {
-        const [accountProfile, athleteProfile] = await Promise.all([
-          container.getAccountProfile.execute(username),
-          container.getAthleteProfileByUsername.execute(username),
-        ]);
+        const athleteProfile = await container.getAthleteProfileByUsername.execute(username);
         if (!mounted) return;
-        setAccount(accountProfile);
         setAthlete(athleteProfile);
-        setAthleteMissing(athleteProfile === null);
       } catch (requestError) {
         if (!mounted) return;
-        setError(messageFromError(requestError, 'Não foi possível carregar seu perfil.'));
+        setError(messageFromError(requestError, 'Não foi possível carregar seu perfil de atleta.'));
       } finally {
         if (mounted) setLoading(false);
       }
     };
     void load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [username, refreshVersion]);
 
-  const createAthlete = async (input: AthleteProfileInput) => {
-    if (!input.name.trim()) {
-      setError('Informe o nome do perfil de atleta.');
-      return false;
-    }
-
-    setSaving(true);
-    setError(null);
-    try {
-      const created = await container.createAthleteProfile.execute({
-        ...input,
-        name: input.name.trim(),
-      });
-      setAthlete(created);
-      setAthleteMissing(false);
-      return true;
-    } catch (requestError) {
-      setError(messageFromError(requestError, 'Não foi possível criar o perfil de atleta.'));
-      return false;
-    } finally {
-      setSaving(false);
-    }
+  const resetForm = () => {
+    setValues(athleteToFormValues(athlete));
+    setPhoto({ kind: 'keep' });
+    setSaveError(null);
+    setFieldErrors({});
   };
 
-  const updateAthlete = async (input: AthleteProfileInput) => {
+  const startEdit = () => {
+    resetForm();
+    clearNotice();
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    resetForm();
+    setEditing(false);
+  };
+
+  const setField = (field: AthleteField, value: string) => {
+    setValues((current) => ({ ...current, [field]: value }));
+    setFieldErrors((errors) => withoutField(errors, field));
+  };
+
+  const selectPhoto = (file: LocalFile) => {
+    setPhoto({ kind: 'replace', file });
+    setFieldErrors((errors) => withoutField(errors, 'photo'));
+  };
+
+  const removePhoto = () => {
+    setPhoto({ kind: 'remove' });
+    setFieldErrors((errors) => withoutField(errors, 'photo'));
+  };
+
+  const save = async () => {
     if (!username) return false;
+    const errors = validateAthleteForm(values);
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
+      setSaveError('Confira os campos destacados.');
+      return false;
+    }
+
     setSaving(true);
-    setError(null);
+    setSaveError(null);
+    setFieldErrors({});
     try {
-      const updated = await container.updateAthleteProfile.execute(username, {
-        ...input,
-        name: input.name.trim(),
-      });
-      setAthlete(updated);
+      const saved = await container.saveAthleteProfile.execute({ username, original: athlete, values, photo });
+      setAthlete(saved);
+      setPhoto({ kind: 'keep' });
+      setEditing(false);
+      showNotice(athlete ? 'Perfil de atleta atualizado.' : 'Perfil de atleta criado.');
       return true;
     } catch (requestError) {
-      setError(messageFromError(requestError, 'Não foi possível atualizar o perfil de atleta.'));
+      setSaveError(messageFromError(requestError, 'Não foi possível salvar o perfil de atleta.'));
+      setFieldErrors(athleteFieldErrorsFromApi(fieldsFromError(requestError)));
       return false;
     } finally {
       setSaving(false);
     }
   };
+
+  const photoUri =
+    photo.kind === 'replace' ? photo.file.uri : photo.kind === 'remove' ? null : (athlete?.photo_url ?? null);
 
   return {
     loading,
-    saving,
     error,
-    account,
-    athlete,
-    athleteMissing,
     refresh,
-    createAthlete,
-    updateAthlete,
+    notice,
+    clearNotice,
+    athlete: {
+      data: athlete,
+      editing,
+      values,
+      photoUri,
+      saving,
+      error: saveError,
+      fieldErrors,
+      startEdit,
+      cancelEdit,
+      setField,
+      selectPhoto,
+      removePhoto,
+      save,
+    },
   };
 };

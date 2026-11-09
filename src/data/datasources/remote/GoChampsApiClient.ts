@@ -1,10 +1,19 @@
 import { TokenProvider } from '../../../core/auth/TokenProvider';
 import { API_CONFIG } from '../../../core/config/apiConfig';
-import { AppError } from '../../../core/errors/AppError';
+import { AppError, AppFieldErrors } from '../../../core/errors/AppError';
 import { HttpClient, HttpHeaders } from '../../../core/http/HttpClient';
 
 const nullTokenProvider: TokenProvider = {
   getToken: () => null,
+};
+
+/** Changeset errors come as `{ errors: { field: ["message"] } }`. */
+const fieldErrorsFrom = (errors: Record<string, unknown> | undefined): AppFieldErrors | undefined => {
+  if (!errors) return undefined;
+  const entries = Object.entries(errors).filter(
+    (entry): entry is [string, string[]] => Array.isArray(entry[1])
+  );
+  return entries.length ? Object.fromEntries(entries) : undefined;
 };
 
 export class GoChampsApiClient {
@@ -48,9 +57,14 @@ export class GoChampsApiClient {
     });
 
     if (!response.ok) {
-      const payload = response.data as { errors?: { detail?: string } } | null;
-      const detail = payload && typeof payload === 'object' ? payload.errors?.detail : undefined;
-      throw new AppError(detail || `HTTP error! status: ${response.status}`, response.status);
+      const payload = response.data as { errors?: Record<string, unknown> } | null;
+      const errors = payload && typeof payload === 'object' ? payload.errors : undefined;
+      const detail = typeof errors?.detail === 'string' ? errors.detail : undefined;
+      throw new AppError(
+        detail || `HTTP error! status: ${response.status}`,
+        response.status,
+        fieldErrorsFrom(errors)
+      );
     }
 
     return response.data;

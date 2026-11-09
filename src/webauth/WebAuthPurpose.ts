@@ -1,4 +1,4 @@
-export type WebAuthPurpose = 'signUp' | 'accountRecovery' | 'accountCredentials';
+export type WebAuthPurpose = 'signUp' | 'accountRecovery';
 
 export const webAuthCopy: Record<
   WebAuthPurpose,
@@ -13,10 +13,5 @@ export const webAuthCopy: Record<
     title: 'Recuperar conta',
     description: 'Recupere o acesso no site oficial. Depois volte ao app para entrar.',
     action: 'Abrir recuperação',
-  },
-  accountCredentials: {
-    title: 'Alterar e-mail ou senha',
-    description: 'Atualize suas credenciais no site. Depois volte e entre novamente se necessário.',
-    action: 'Abrir alteração',
   },
 };

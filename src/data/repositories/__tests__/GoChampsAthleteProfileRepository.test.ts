@@ -72,4 +72,22 @@ describe('GoChampsAthleteProfileRepository', () => {
     request.mockResolvedValue({ ok: false, status: 500, data: {} });
     await expect(repository.getByUsername('ana')).rejects.toEqual(new AppError('HTTP error! status: 500', 500));
   });
+
+  it('keeps field errors when a write is rejected', async () => {
+    request.mockResolvedValue({ ok: false, status: 422, data: { errors: { instagram: ['must be valid'] } } });
+    const error = await repository.updateByUsername('ana', { name: 'Ana' }).catch((caught: AppError) => caught);
+    expect(error).toEqual(new AppError('Confira os campos destacados.', 422));
+    expect((error as AppError).fields).toEqual({ instagram: ['must be valid'] });
+  });
+
+  it('maps other write failures', async () => {
+    request.mockResolvedValue({ ok: false, status: 500, data: {} });
+    await expect(repository.create({ name: 'Ana' })).rejects.toEqual(
+      new AppError('Não foi possível salvar o perfil de atleta.', 500)
+    );
+    request.mockRejectedValue(new TypeError('offline'));
+    await expect(repository.create({ name: 'Ana' })).rejects.toEqual(
+      new AppError('Não foi possível salvar o perfil de atleta.')
+    );
+  });
 });

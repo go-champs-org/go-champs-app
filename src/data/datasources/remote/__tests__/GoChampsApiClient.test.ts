@@ -116,4 +116,25 @@ describe('GoChampsApiClient', () => {
 
     await expect(apiClient.get('/users/ana')).rejects.toEqual(new AppError('Unauthorized', 401));
   });
+
+  it('keeps changeset field errors on the AppError', async () => {
+    const apiClient = new GoChampsApiClient(
+      createHttpClient({
+        ok: false,
+        status: 422,
+        data: { errors: { tax_id: ['is invalid'], detail: 'ignored', other: 'not a list' } },
+      })
+    );
+
+    const error = await apiClient.put('/account-identity', {}).catch((caught: AppError) => caught);
+    expect(error).toEqual(new AppError('ignored', 422));
+    expect((error as AppError).fields).toEqual({ tax_id: ['is invalid'] });
+  });
+
+  it('leaves fields empty when the API sends none', async () => {
+    const apiClient = new GoChampsApiClient(createHttpClient({ ok: false, status: 500, data: null }));
+    const error = await apiClient.get('/x').catch((caught: AppError) => caught);
+    expect((error as AppError).fields).toBeUndefined();
+  });
 });
+

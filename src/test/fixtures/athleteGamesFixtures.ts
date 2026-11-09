@@ -8,8 +8,8 @@ import {
 export const copa = { id: 'copa', name: 'Copa Central', slug: 'copa-central' };
 export const liga = { id: 'liga', name: 'Liga Norte', slug: 'liga-norte' };
 
-const alpha = { id: 'team-a', name: 'Alpha' };
-const beta = { id: 'team-b', name: 'Beta' };
+const alpha = { id: 'team-a', name: 'Alpha', tri_code: 'ALP', logo_url: 'https://cdn/alpha.png' };
+const beta = { id: 'team-b', name: 'Beta', tri_code: 'BET', logo_url: null };
 
 export const teamGame = (overrides: Partial<AthleteTeamGame> = {}): AthleteTeamGame => ({
   id: 'g1',
@@ -56,7 +56,7 @@ export const membership = (overrides: Partial<AthleteMembership> = {}): AthleteM
     sport_name: 'Basketball 5x5',
     organization: { id: 'org-1', name: 'Federação Paulista', slug: 'fpb' },
   },
-  team: { ...alpha, logo_url: null, tri_code: 'ALP' },
+  team: { id: alpha.id, name: alpha.name, logo_url: null, tri_code: 'ALP' },
   shirt_number: '7',
   ...overrides,
 });

@@ -79,7 +79,6 @@ const MyGamesScreen = () => {
         >
           {!model.loading && !model.error ? (
             <MyGamesHeader
-              subtitle={model.subtitle}
               view={model.view}
               tournamentId={model.tournamentId}
               tournaments={model.tournaments}

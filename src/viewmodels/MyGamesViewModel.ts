@@ -8,7 +8,6 @@ import {
   MyGamesFilter,
   myGamesTournaments,
   MyGamesView,
-  scheduleSubtitle,
 } from '../domain/usecases/shared/myGames';
 import { useLoadRequest } from './useLoadRequest';
 
@@ -68,7 +67,6 @@ export const useMyGamesViewModel = (username: string | undefined) => {
   const tournaments = useMemo(() => myGamesTournaments(data), [data]);
   const tournamentId = effectiveTournamentId(data, filter.tournamentId);
   const sections = useMemo(() => filterMyGames(data, filter, now), [data, filter, now]);
-  const subtitle = games?.profile ? scheduleSubtitle(games.profile, tournamentId) : '';
 
   const selectView = useCallback((view: MyGamesView) => setFilter((current) => ({ ...current, view })), []);
   const selectTournament = useCallback(
@@ -86,7 +84,6 @@ export const useMyGamesViewModel = (username: string | undefined) => {
     needsAuth: !username,
     needsAthleteProfile: Boolean(games && !games.profile),
     now,
-    subtitle,
     view: filter.view,
     tournamentId,
     tournaments,

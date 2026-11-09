@@ -1,8 +1,6 @@
 import {
-  athleteProfile,
   copa,
   liga,
-  membership,
   recentGame,
   teamGame,
 } from '../../../../test/fixtures/athleteGamesFixtures';
@@ -15,16 +13,16 @@ import {
   filterMyGames,
   kickoffTime,
   longDate,
-  membershipFor,
   monthHeading,
   myGamesTournaments,
   resultHeading,
   resultLabel,
   resultMatchup,
-  scheduleSubtitle,
+  resultTone,
   statLine,
   statusLabel,
   teamLabel,
+  teamMark,
   upcomingMeta,
   venueLabel,
 } from '../myGames';
@@ -151,8 +149,19 @@ describe('game presentation', () => {
   });
 
   it("reads the game from the athlete's side", () => {
-    expect(athleteSides(next, 'team-a')).toEqual({ isHome: true, team: 'Alpha', opponent: 'Beta' });
-    expect(athleteSides(next, 'team-b')).toEqual({ isHome: false, team: 'Beta', opponent: 'Alpha' });
+    expect(athleteSides(next, 'team-a')).toMatchObject({ isHome: true, team: 'Alpha', opponent: 'Beta' });
+    expect(athleteSides(next, 'team-b')).toMatchObject({ isHome: false, team: 'Beta', opponent: 'Alpha' });
+    expect(athleteSides(next, 'team-b').opponentMark).toEqual({ name: 'Alpha', code: 'ALP', logoUrl: 'https://cdn/alpha.png' });
+  });
+
+  it('shows a team by its logo and tri code, the name standing in', () => {
+    expect(teamMark({ id: 't', name: 'Alpha', tri_code: 'ALP', logo_url: 'https://cdn/a.png' })).toEqual({
+      name: 'Alpha',
+      code: 'ALP',
+      logoUrl: 'https://cdn/a.png',
+    });
+    expect(teamMark({ id: 't', name: 'Alpha' })).toEqual({ name: 'Alpha', code: 'Alpha', logoUrl: null });
+    expect(teamMark(null, 'Vencedor A')).toEqual({ name: 'Vencedor A', code: 'Vencedor A', logoUrl: null });
   });
 
   it('formats the kickoff in the wall clock the API stores', () => {
@@ -198,9 +207,18 @@ describe('result presentation', () => {
     expect(resultLabel(recentGame({ home_score: null, away_score: null }, { result: null }))).toBeNull();
   });
 
+  it('tones the badge by the result', () => {
+    expect(resultTone(copaResult)).toBe('win');
+    expect(resultTone(recentGame({}, { result: 'loss' }))).toBe('loss');
+    expect(resultTone(recentGame({ home_score: 70, away_score: 70 }, { result: null }))).toBe('tie');
+    expect(resultTone(recentGame({ home_score: null, away_score: null }, { result: null }))).toBeNull();
+  });
+
   it("puts the athlete's side first", () => {
-    expect(resultMatchup(copaResult)).toEqual({ title: 'Alpha vs Beta', score: '84–76' });
-    expect(resultMatchup(recentGame({}, { athlete_team_id: 'team-b' }))).toEqual({ title: 'Beta vs Alpha', score: '76–84' });
+    expect(resultMatchup(copaResult)).toMatchObject({ title: 'Alpha vs Beta', score: '84–76' });
+    expect(resultMatchup(copaResult).opponent.code).toBe('BET');
+    expect(resultMatchup(recentGame({}, { athlete_team_id: 'team-b' }))).toMatchObject({ title: 'Beta vs Alpha', score: '76–84' });
+    expect(resultMatchup(recentGame({}, { athlete_team_id: 'team-b' })).team.code).toBe('BET');
     expect(resultMatchup(recentGame({ home_score: null })).score).toBe('–');
   });
 
@@ -208,24 +226,5 @@ describe('result presentation', () => {
     expect(statLine(copaResult.stats)).toBe('28 PTS  ·  8 REB  ·  6 AST  ·  32 MIN');
     expect(statLine({ points: 12, rebounds: null, assists: '' })).toBe('12 PTS');
     expect(statLine({})).toBe('');
-  });
-});
-
-describe('schedule header', () => {
-  const profile = athleteProfile({
-    memberships: [membership(), membership({ tournament: { ...membership().tournament, ...liga }, team: { id: 'team-l', name: 'Leões' }, shirt_number: null })],
-  });
-
-  it("reads the selected tournament's team, else the most recent one", () => {
-    expect(membershipFor(profile.memberships, 'liga')?.team.name).toBe('Leões');
-    expect(membershipFor(profile.memberships, 'gone')?.team.name).toBe('Alpha');
-    expect(membershipFor(profile.memberships, null)?.team.name).toBe('Alpha');
-    expect(membershipFor(undefined, null)).toBeNull();
-  });
-
-  it('shows the athlete, the team and the shirt number', () => {
-    expect(scheduleSubtitle(profile, null)).toBe('Ana Silva · Alpha · #7');
-    expect(scheduleSubtitle(profile, 'liga')).toBe('Ana Silva · Leões');
-    expect(scheduleSubtitle(athleteProfile({ memberships: [] }), null)).toBe('Ana Silva');
   });
 });

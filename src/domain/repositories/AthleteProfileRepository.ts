@@ -52,6 +52,7 @@ export type ScheduleTeam = {
   id: string;
   name: string;
   logo_url?: string | null;
+  tri_code?: string | null;
 };
 
 export type ScheduleGame = {

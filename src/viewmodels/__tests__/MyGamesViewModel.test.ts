@@ -53,7 +53,6 @@ describe('useMyGamesViewModel', () => {
     expect(result.current.upcoming.map((game) => game.id)).toEqual(['liga-game']);
     expect(result.current.previous.map((recent) => recent.game.id)).toEqual(['copa-result', 'liga-result']);
     expect(result.current.hasGames).toBe(true);
-    expect(result.current.subtitle).toBe('Ana Silva · Alpha · #7');
     expect(result.current.tournaments).toEqual([
       { id: 'copa', name: 'Copa Central' },
       { id: 'liga', name: 'Liga Norte' },
@@ -85,7 +84,6 @@ describe('useMyGamesViewModel', () => {
     execute().mockResolvedValue({ profile: null, teamGames: [], recentGames: [] });
     const { result } = renderHook(() => useMyGamesViewModel('ana'));
     await waitFor(() => expect(result.current.needsAthleteProfile).toBe(true));
-    expect(result.current.subtitle).toBe('');
     expect(result.current.hasGames).toBe(false);
   });
 

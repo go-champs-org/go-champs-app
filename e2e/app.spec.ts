@@ -512,17 +512,19 @@ const openMyGames = async (page: Page) => {
 
 test('[authGames] mostra próximo jogo, mais jogos e resultados do atleta', async ({ page }) => {
   await openMyGames(page);
-  await expect(page.getByText('Ana Silva · Alpha · #7')).toBeVisible();
   const next = page.getByTestId('next-game').filter({ visible: true });
-  await expect(next.getByText('vs Beta')).toBeVisible();
+  // Teams read by logo and tri code; Gama has no code, so its name stands in.
+  await expect(next.getByText('ALP', { exact: true })).toBeVisible();
+  await expect(next.getByText('BET', { exact: true })).toBeVisible();
   await expect(next.getByText('19:30')).toBeVisible();
   await expect(next.getByText('Casa · Ginásio Central')).toBeVisible();
-  await expect(page.getByText('vs Gama')).toBeVisible();
+  await expect(page.getByText('Gama', { exact: true })).toBeVisible();
   await expect(page.getByText('Dom · 18:00 · Fora · Ginásio Central')).toBeVisible();
   await expect(page.getByText('Jogos anteriores')).toBeVisible();
   await expect(page.getByText('84–76')).toBeVisible();
   await expect(page.getByText('VITÓRIA')).toBeVisible();
-  await expect(page.getByText('DERROTA')).toBeVisible();
+  await expect(page.getByTestId('result-loss').filter({ visible: true })).toHaveText('DERROTA');
+  await expect(page.getByTestId('result-win').filter({ visible: true })).toHaveText('VITÓRIA');
   await expect(page.getByText('28 PTS  ·  8 REB  ·  6 AST  ·  32 MIN')).toBeVisible();
 });
 
@@ -536,15 +538,14 @@ test('[myGamesFilters] filtra os jogos carregados sem chamar a API de novo', asy
   const loaded = listRequests;
   await page.getByRole('tab', { name: 'Próximos' }).click();
   await expect(page.getByText('Jogos anteriores')).toBeHidden();
-  await expect(page.getByText('vs Gama')).toBeVisible();
+  await expect(page.getByText('Gama', { exact: true })).toBeVisible();
   await page.getByRole('tab', { name: 'Todos os jogos' }).click();
   await page.getByRole('button', { name: 'Campeonato: Todos os campeonatos' }).click();
   await page.getByRole('radio', { name: 'Copa Classificação' }).click();
-  await expect(page.getByTestId('next-game').filter({ visible: true }).getByText('vs Gama')).toBeVisible();
-  await expect(page.getByText('vs Beta', { exact: true })).toBeHidden();
+  await expect(page.getByTestId('next-game').filter({ visible: true }).getByText('Gama', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('next-game').filter({ visible: true }).getByText('BET', { exact: true })).toBeHidden();
   await expect(page.getByText('71–78')).toBeVisible();
   await expect(page.getByText('84–76')).toBeHidden();
-  await expect(page.getByText('Ana Silva · Alpha')).toBeVisible();
   expect(listRequests).toBe(loaded);
 });
 

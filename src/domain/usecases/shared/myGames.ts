@@ -1,6 +1,4 @@
 import {
-  AthleteMembership,
-  AthleteProfile,
   AthleteRecentGame,
   AthleteTeamGame,
   ScheduleTeam,
@@ -101,16 +99,29 @@ const parse = (iso: string | null | undefined): Date | null => {
 export const teamLabel = (team: ScheduleTeam | null, placeholder?: string | null): string =>
   team?.name || placeholder || 'A definir';
 
+export type TeamMark = { name: string; code: string; logoUrl: string | null };
+
+// A team as the cards show it: its logo (or initials) and its tri code, the
+// name standing in when the team has no code.
+export const teamMark = (team: ScheduleTeam | null, placeholder?: string | null): TeamMark => {
+  const name = teamLabel(team, placeholder);
+  return { name, code: team?.tri_code || name, logoUrl: team?.logo_url ?? null };
+};
+
 type Sides = Pick<AthleteTeamGame, 'home_team' | 'away_team' | 'home_placeholder' | 'away_placeholder'>;
 
 // The athlete's side and the other one. A game where neither team is the
 // athlete's (should not happen) reads from the home side.
 export const athleteSides = (game: Sides, athleteTeamId: string) => {
   const isHome = game.away_team?.id !== athleteTeamId;
+  const home = teamMark(game.home_team, game.home_placeholder);
+  const away = teamMark(game.away_team, game.away_placeholder);
   return {
     isHome,
-    team: isHome ? teamLabel(game.home_team, game.home_placeholder) : teamLabel(game.away_team, game.away_placeholder),
-    opponent: isHome ? teamLabel(game.away_team, game.away_placeholder) : teamLabel(game.home_team, game.home_placeholder),
+    team: isHome ? home.name : away.name,
+    opponent: isHome ? away.name : home.name,
+    teamMark: isHome ? home : away,
+    opponentMark: isHome ? away : home,
   };
 };
 
@@ -181,6 +192,15 @@ export const resultLabel = (recent: AthleteRecentGame): string | null => {
   return home !== null && away !== null && home === away ? 'EMPATE' : null;
 };
 
+export type ResultTone = 'win' | 'loss' | 'tie';
+
+// Colors the result badge: a win, a loss, a tie, or nothing to show.
+export const resultTone = (recent: AthleteRecentGame): ResultTone | null => {
+  if (recent.result === 'win') return 'win';
+  if (recent.result === 'loss') return 'loss';
+  return resultLabel(recent) ? 'tie' : null;
+};
+
 // The athlete's side first: 'Hawks vs Midtown' and '84–76'.
 export const resultMatchup = (recent: AthleteRecentGame) => {
   const { game, athlete_team_id: athleteTeamId } = recent;
@@ -189,6 +209,8 @@ export const resultMatchup = (recent: AthleteRecentGame) => {
   const other = sides.isHome ? game.away_score : game.home_score;
   return {
     title: `${sides.team} vs ${sides.opponent}`,
+    team: sides.teamMark,
+    opponent: sides.opponentMark,
     score: own === null || other === null ? '–' : `${own}–${other}`,
   };
 };
@@ -205,21 +227,3 @@ export const statLine = (stats: AthleteRecentGame['stats']): string =>
   STAT_LINE.filter(({ key }) => stats[key] !== undefined && stats[key] !== null && stats[key] !== '')
     .map(({ key, label }) => `${formatStatValue(key, stats[key])} ${label}`)
     .join('  ·  ');
-
-// The membership the header reads: the selected tournament's, else the most
-// recent one.
-export const membershipFor = (
-  memberships: AthleteMembership[] | undefined,
-  tournamentId: string | null
-): AthleteMembership | null =>
-  (tournamentId ? memberships?.find((membership) => membership.tournament.id === tournamentId) : undefined) ??
-  memberships?.[0] ??
-  null;
-
-// 'Ana Silva · Alpha · #7'
-export const scheduleSubtitle = (profile: AthleteProfile, tournamentId: string | null): string => {
-  const membership = membershipFor(profile.memberships, tournamentId);
-  return [profile.name, membership?.team.name, membership?.shirt_number ? `#${membership.shirt_number}` : null]
-    .filter(Boolean)
-    .join(' · ');
-};

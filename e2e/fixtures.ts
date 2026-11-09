@@ -38,9 +38,11 @@ const writtenIdentity = (body: IdentityWrite | null, base: typeof accountIdentit
 
 const copaCompleta = { id: 't-0', name: 'Copa Completa', slug: 'copa-completa' };
 const copaClassificacao = { id: 't-1', name: 'Copa Classificação', slug: 'copa-classificacao' };
-const alphaTeam = { id: 'team-a', name: 'Alpha', logo_url: logo };
-const betaTeam = { id: 'team-b', name: 'Beta', logo_url: logo };
-const gammaTeam = { id: 'team-c', name: 'Gama', logo_url: logo };
+type FixtureTeam = { id: string; name: string; logo_url: string; tri_code: string | null };
+const alphaTeam: FixtureTeam = { id: 'team-a', name: 'Alpha', logo_url: logo, tri_code: 'ALP' };
+const betaTeam: FixtureTeam = { id: 'team-b', name: 'Beta', logo_url: logo, tri_code: 'BET' };
+// Gama has no tri code, so the cards show its name.
+const gammaTeam: FixtureTeam = { id: 'team-c', name: 'Gama', logo_url: logo, tri_code: null };
 
 // The athlete's own team games (far ahead, so they stay upcoming) and results.
 const teamGame = (id: string, datetime: string, tournament: typeof copaCompleta, home = alphaTeam, away = betaTeam) => ({

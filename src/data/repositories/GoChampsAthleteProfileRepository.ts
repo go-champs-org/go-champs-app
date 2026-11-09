@@ -32,19 +32,33 @@ export class GoChampsAthleteProfileRepository implements AthleteProfileRepositor
     }
   }
 
-  async create(input: AthleteProfileInput): Promise<AthleteProfile> {
-    const response = await this.apiClient.post<ApiAthleteResponse>('/athlete-profiles', {
-      athlete_profile: input,
-    });
-    return response.data;
+  create(input: AthleteProfileInput): Promise<AthleteProfile> {
+    return this.write(() =>
+      this.apiClient.post<ApiAthleteResponse>('/athlete-profiles', { athlete_profile: input })
+    );
   }
 
-  async updateByUsername(username: string, input: AthleteProfileInput): Promise<AthleteProfile> {
-    const response = await this.apiClient.patch<ApiAthleteResponse>(
-      `/athlete-profiles/username/${encodeURIComponent(username)}`,
-      { athlete_profile: input }
+  updateByUsername(username: string, input: AthleteProfileInput): Promise<AthleteProfile> {
+    return this.write(() =>
+      this.apiClient.patch<ApiAthleteResponse>(`/athlete-profiles/username/${encodeURIComponent(username)}`, {
+        athlete_profile: input,
+      })
     );
-    return response.data;
+  }
+
+  private async write(request: () => Promise<ApiAthleteResponse>): Promise<AthleteProfile> {
+    try {
+      const response = await request();
+      return response.data;
+    } catch (error) {
+      if (error instanceof AppError && error.status === 422) {
+        throw new AppError('Confira os campos destacados.', 422, error.fields);
+      }
+      throw new AppError(
+        'Não foi possível salvar o perfil de atleta.',
+        error instanceof AppError ? error.status : undefined
+      );
+    }
   }
 
   async getMySchedules(): Promise<ScheduleGame[]> {

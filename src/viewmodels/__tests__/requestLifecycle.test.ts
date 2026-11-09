@@ -10,6 +10,7 @@ jest.mock('../../di/container', () => ({ container: {
   getAthleteSchedules: { execute: jest.fn() },
   getAccountProfile: { execute: jest.fn() },
   getAthleteProfileByUsername: { execute: jest.fn() },
+  getAccountIdentity: { execute: jest.fn() },
 } }));
 
 const cases = [
@@ -25,6 +26,7 @@ describe.each(cases)('$name request lifecycle', ({ useModel, service, value }) =
   beforeEach(() => {
     jest.resetAllMocks();
     jest.mocked(container.getAthleteProfileByUsername.execute).mockResolvedValue(null);
+    jest.mocked(container.getAccountIdentity.execute).mockResolvedValue(null);
   });
 
   it.each(['resolve', 'reject'] as const)('ignores a stale request that will %s after a refresh', async (settle) => {

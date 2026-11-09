@@ -50,6 +50,12 @@ export const journeys = {
   organizationEmpty: 'Organizacao sem campeonatos',
   organizationError: 'Falha ao abrir organizacao e nova tentativa',
   liveGameDetail: 'Acompanhar jogo ao vivo com periodo e estatisticas do scoreboard',
-  profileEdit: 'Editar perfil de atleta autenticado',
+  profileEdit: 'Editar perfil de atleta com um unico botao Editar',
+  profileCancel: 'Cancelar a edicao do perfil e restaurar os valores',
+  profileSaveError: 'Erro ao salvar perfil mantem a edicao',
+  athletePhoto: 'Enviar foto do perfil de atleta pela URL assinada',
+  athleteCreate: 'Criar perfil de atleta pelo estado vazio',
+  identityEdit: 'Editar dados de identidade enviando so o que mudou',
+  identityCreate: 'Adicionar dados de identidade pelo estado vazio',
   pwaShell: 'Disponibilizar manifest e service worker instalavel',
 } as const;

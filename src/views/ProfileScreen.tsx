@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -6,42 +6,38 @@ import {
   Platform,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '../components/layout/Screen';
 import { AppHeader } from '../components/layout/AppHeader';
-import { makeStyles, useTheme } from '../theme/theme';
 import { ContentShell } from '../components/layout/ContentShell';
+import {
+  EmptyProfileCard,
+  ProfileCard,
+  ProfileField,
+  ProfileRow,
+  ProfileSection,
+  RowDivider,
+  SectionActions,
+} from '../components/profile/ProfileSection';
+import { makeStyles, useTheme } from '../theme/theme';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useProfileViewModel } from '../viewmodels/ProfileViewModel';
+import { maskBirthDate, maskCpf, maskedDocument } from '../domain/usecases/shared/accountIdentityForm';
+import { localFileFromPicked } from '../domain/usecases/shared/athleteProfileForm';
+
+type ProfileModel = ReturnType<typeof useProfileViewModel>;
 
 const ProfileScreen = () => {
   const theme = useTheme();
   const styles = useStyles();
   const navigation = useNavigation<any>();
   const { user, bootstrapping, signOut } = useAuthSession();
-  const {
-    loading,
-    saving,
-    error,
-    account,
-    athlete,
-    athleteMissing,
-    createAthlete,
-    updateAthlete,
-  } = useProfileViewModel(user?.username);
-  const [athleteName, setAthleteName] = useState('');
-  const [editing, setEditing] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editInstagram, setEditInstagram] = useState('');
-  const [editFacebook, setEditFacebook] = useState('');
-  const [editTwitter, setEditTwitter] = useState('');
-  const [editPhotoUrl, setEditPhotoUrl] = useState('');
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const model = useProfileViewModel(user?.username);
 
   if (bootstrapping) {
     return (
@@ -58,13 +54,13 @@ const ProfileScreen = () => {
     return (
       <Screen>
         <AppHeader />
-        <ContentShell style={styles.container}>
-          <View style={styles.card}>
+        <ContentShell style={styles.signedOut}>
+          <View style={styles.signedOutCard}>
             <View style={styles.icon}>
               <Ionicons name="person-outline" size={26} color={theme.colors.success} />
             </View>
             <Text style={styles.kicker}>PERFIL</Text>
-            <Text style={styles.title}>Entre na sua conta</Text>
+            <Text style={styles.signedOutTitle}>Entre na sua conta</Text>
             <Text style={styles.body}>
               Acompanhe sua agenda, organizações e perfil de atleta em uma experiência personalizada.
             </Text>
@@ -82,42 +78,8 @@ const ProfileScreen = () => {
     );
   }
 
-  const startEditing = () => {
-    if (!athlete) return;
-    setEditName(athlete.name || '');
-    setEditInstagram(athlete.instagram || '');
-    setEditFacebook(athlete.facebook || '');
-    setEditTwitter(athlete.twitter || '');
-    setEditPhotoUrl(athlete.photo_url || '');
-    setSaveMessage(null);
-    setEditing(true);
-  };
-
-  const cancelEditing = () => {
-    if (athlete) {
-      setEditName(athlete.name || '');
-      setEditInstagram(athlete.instagram || '');
-      setEditFacebook(athlete.facebook || '');
-      setEditTwitter(athlete.twitter || '');
-      setEditPhotoUrl(athlete.photo_url || '');
-    }
-    setEditing(false);
-    setSaveMessage(null);
-  };
-
-  const saveAthlete = async () => {
-    const ok = await updateAthlete({
-      name: editName,
-      instagram: editInstagram.trim() || null,
-      facebook: editFacebook.trim() || null,
-      twitter: editTwitter.trim() || null,
-      photo_url: editPhotoUrl.trim() || null,
-    });
-    if (ok) {
-      setEditing(false);
-      setSaveMessage('Perfil de atleta atualizado.');
-    }
-  };
+  const openWebAuth = (purpose: 'accountCredentials' | 'accountRecovery') =>
+    navigation.navigate('WebAuthFlowScreen', { purpose });
 
   return (
     <Screen>
@@ -128,176 +90,67 @@ const ProfileScreen = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <ContentShell style={styles.container}>
-            <View style={styles.card}>
-              <View style={styles.icon}>
-                <Ionicons name="checkmark-circle-outline" size={26} color={theme.colors.success} />
+          <View style={styles.hero}>
+            <ContentShell style={styles.heroContent}>
+              <Text style={styles.heroKicker}>MINHA CONTA</Text>
+              <Text accessibilityRole="header" style={styles.heroTitle}>
+                Sua conta
+              </Text>
+              <Text style={styles.heroSubtitle}>Seus dados. Sua identidade. Seu jogo.</Text>
+            </ContentShell>
+          </View>
+
+          <ContentShell style={styles.content}>
+            {model.notice ? (
+              <View accessibilityLiveRegion="polite" style={styles.notice}>
+                <Ionicons name="checkmark-circle" size={18} color={theme.colors.success} />
+                <Text style={styles.noticeText}>{model.notice}</Text>
               </View>
-              <Text style={styles.kicker}>CONTA</Text>
-              <Text style={styles.title}>Olá, {account?.username || user.username}</Text>
-              <Text style={styles.body}>{account?.email || user.email}</Text>
+            ) : null}
 
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel="Alterar e-mail ou senha"
-                onPress={() => navigation.navigate('WebAuthFlowScreen', { purpose: 'accountCredentials' })}
-                style={styles.linkButton}
-              >
-                <Ionicons name="key-outline" size={16} color={theme.colors.success} />
-                <Text style={styles.linkButtonText}>Alterar e-mail ou senha</Text>
-              </TouchableOpacity>
+            <ProfileSection title="Dados da conta">
+              <ProfileCard>
+                <ProfileRow label="Usuário" value={model.account?.username || user.username} />
+                <RowDivider />
+                <ProfileRow
+                  label="E-mail"
+                  value={model.account?.email || user.email}
+                  action={{
+                    label: 'Alterar',
+                    accessibilityLabel: 'Alterar e-mail',
+                    onPress: () => openWebAuth('accountCredentials'),
+                  }}
+                />
+                <RowDivider />
+                <ProfileRow
+                  label="Senha"
+                  value="Redefinir por e-mail"
+                  action={{ label: 'Redefinir senha', onPress: () => openWebAuth('accountRecovery') }}
+                />
+              </ProfileCard>
+            </ProfileSection>
 
-              {loading ? <ActivityIndicator style={styles.loader} color={theme.colors.accent} /> : null}
-              {error ? <Text style={styles.error}>{error}</Text> : null}
-              {saveMessage ? <Text style={styles.success}>{saveMessage}</Text> : null}
-
-              {account?.organizations?.length ? (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Organizações</Text>
-                  {account.organizations.map((organization) => (
-                    <Text key={organization.id} style={styles.rowText}>
-                      {organization.name}
-                    </Text>
-                  ))}
-                </View>
-              ) : null}
-
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Perfil de atleta</Text>
-                  {athlete && !editing ? (
-                    <TouchableOpacity
-                      accessibilityRole="button"
-                      accessibilityLabel="Editar perfil de atleta"
-                      onPress={startEditing}
-                    >
-                      <Text style={styles.editLink}>Editar</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-
-                {athlete && !editing ? (
-                  <View style={styles.athleteView}>
-                    <View style={styles.athleteRow}>
-                      {athlete.photo_url ? (
-                        <Image source={{ uri: athlete.photo_url }} style={styles.avatar} />
-                      ) : (
-                        <View style={[styles.avatar, styles.avatarFallback]}>
-                          <Ionicons name="person" size={18} color={theme.colors.textSecondary} />
-                        </View>
-                      )}
-                      <View style={styles.athleteCopy}>
-                        <Text style={styles.rowText}>{athlete.name}</Text>
-                        <Text style={styles.meta}>@{athlete.username}</Text>
-                      </View>
-                    </View>
-                    {athlete.instagram ? <Text style={styles.meta}>Instagram: {athlete.instagram}</Text> : null}
-                    {athlete.facebook ? <Text style={styles.meta}>Facebook: {athlete.facebook}</Text> : null}
-                    {athlete.twitter ? <Text style={styles.meta}>Twitter/X: {athlete.twitter}</Text> : null}
-                    {athlete.tournaments?.length ? (
-                      <View style={styles.subSection}>
-                        <Text style={styles.subSectionTitle}>Torneios</Text>
-                        {athlete.tournaments.map((tournament) => (
-                          <Text key={tournament.id} style={styles.meta}>
-                            {tournament.name}
-                          </Text>
-                        ))}
-                      </View>
-                    ) : null}
-                    {athlete.career_stats?.length ? (
-                      <View style={styles.subSection}>
-                        <Text style={styles.subSectionTitle}>Estatísticas de carreira</Text>
-                        {athlete.career_stats.map((stat, index) => (
-                          <Text key={stat.id || `${stat.title}-${index}`} style={styles.meta}>
-                            {stat.title}: {stat.value ?? '-'}
-                          </Text>
-                        ))}
-                      </View>
-                    ) : null}
-                    <TouchableOpacity
-                      accessibilityRole="button"
-                      onPress={() => navigation.navigate('MyGamesTab')}
-                      style={styles.linkButton}
-                    >
-                      <Ionicons name="calendar-outline" size={16} color={theme.colors.success} />
-                      <Text style={styles.linkButtonText}>Ver minha agenda de jogos</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
-
-                {athlete && editing ? (
-                  <View style={styles.createBox}>
-                    <Field label="Nome" value={editName} onChangeText={setEditName} placeholder="Nome do atleta" />
-                    <Field
-                      label="Instagram"
-                      value={editInstagram}
-                      onChangeText={setEditInstagram}
-                      placeholder="@usuario"
-                      autoCapitalize="none"
-                    />
-                    <Field
-                      label="Facebook"
-                      value={editFacebook}
-                      onChangeText={setEditFacebook}
-                      placeholder="facebook.com/..."
-                      autoCapitalize="none"
-                    />
-                    <Field
-                      label="Twitter / X"
-                      value={editTwitter}
-                      onChangeText={setEditTwitter}
-                      placeholder="@usuario"
-                      autoCapitalize="none"
-                    />
-                    <Field
-                      label="URL da foto"
-                      value={editPhotoUrl}
-                      onChangeText={setEditPhotoUrl}
-                      placeholder="https://..."
-                      autoCapitalize="none"
-                    />
-                    <TouchableOpacity
-                      accessibilityRole="button"
-                      disabled={saving}
-                      onPress={() => void saveAthlete()}
-                      style={[styles.secondaryButton, saving && styles.disabled]}
-                    >
-                      <Text style={styles.secondaryButtonText}>{saving ? 'Salvando...' : 'Salvar alterações'}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity accessibilityRole="button" onPress={cancelEditing} style={styles.cancelButton}>
-                      <Text style={styles.cancelButtonText}>Cancelar</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
-
-                {athleteMissing ? (
-                  <View style={styles.createBox}>
-                    <Text style={styles.meta}>
-                      Você ainda não tem perfil de atleta. Crie um para liberar a agenda em Meus jogos.
-                    </Text>
-                    <TextInput
-                      value={athleteName}
-                      onChangeText={setAthleteName}
-                      placeholder="Nome do atleta"
-                      placeholderTextColor={theme.colors.mutedText}
-                      style={styles.input}
-                      autoCapitalize="words"
-                    />
-                    <TouchableOpacity
-                      accessibilityRole="button"
-                      disabled={saving}
-                      onPress={() => createAthlete({ name: athleteName })}
-                      style={[styles.secondaryButton, saving && styles.disabled]}
-                    >
-                      <Text style={styles.secondaryButtonText}>{saving ? 'Salvando...' : 'Criar perfil de atleta'}</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
+            {model.loading ? (
+              <ActivityIndicator style={styles.loader} color={theme.colors.accent} />
+            ) : model.error ? (
+              <View style={styles.retry}>
+                <Text style={styles.retryText}>{model.error}</Text>
+                <TouchableOpacity accessibilityRole="button" onPress={model.refresh} style={styles.retryButton}>
+                  <Text style={styles.retryButtonText}>Tentar novamente</Text>
+                </TouchableOpacity>
               </View>
+            ) : (
+              <>
+                <IdentitySection identity={model.identity} />
+                <AthleteSection athlete={model.athlete} />
+              </>
+            )}
 
-              <TouchableOpacity accessibilityRole="button" onPress={() => void signOut()} style={styles.button}>
-                <Ionicons name="log-out-outline" size={18} color={theme.colors.onAccent} />
-                <Text style={styles.buttonText}>Sair da conta</Text>
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Você controla o que compartilha.</Text>
+              <TouchableOpacity accessibilityRole="button" onPress={() => void signOut()} style={styles.signOut}>
+                <Ionicons name="log-out-outline" size={18} color={theme.colors.danger} />
+                <Text style={styles.signOutText}>Sair da conta</Text>
               </TouchableOpacity>
             </View>
           </ContentShell>
@@ -307,35 +160,254 @@ const ProfileScreen = () => {
   );
 };
 
-const Field = ({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  autoCapitalize = 'sentences',
-}: {
-  label: string;
-  value: string;
-  onChangeText: (value: string) => void;
-  placeholder: string;
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-}) => {
+const IdentitySection = ({ identity }: { identity: ProfileModel['identity'] }) => {
+  const { data, editing, values, fieldErrors } = identity;
+  const footnote = 'Seus dados de identidade não aparecem no seu perfil.';
+
+  if (editing) {
+    return (
+      <ProfileSection title="Dados de identidade" isPrivate footnote={footnote}>
+        <ProfileCard>
+          <ProfileField
+            label="Nome completo"
+            value={values.fullLegalName}
+            onChangeText={(value) => identity.setField('fullLegalName', value)}
+            placeholder="Como no documento"
+            autoCapitalize="words"
+            editable={!identity.saving}
+            error={fieldErrors.fullLegalName}
+          />
+          <ProfileField
+            label="CPF"
+            value={maskCpf(values.taxId)}
+            onChangeText={(value) => identity.setField('taxId', value.replace(/\D/g, ''))}
+            placeholder="000.000.000-00"
+            hint={data?.tax_id_last4 ? `Termina em ${data.tax_id_last4}. Deixe em branco para manter.` : undefined}
+            keyboardType="number-pad"
+            maxLength={14}
+            editable={!identity.saving}
+            error={fieldErrors.taxId}
+          />
+          <ProfileField
+            label="RG"
+            value={values.governmentId}
+            onChangeText={(value) => identity.setField('governmentId', value)}
+            placeholder="Número do RG"
+            hint={
+              data?.government_id_last4
+                ? `Termina em ${data.government_id_last4}. Deixe em branco para manter.`
+                : undefined
+            }
+            autoCapitalize="characters"
+            editable={!identity.saving}
+            error={fieldErrors.governmentId}
+          />
+          <ProfileField
+            label="Data de nascimento"
+            value={values.dateOfBirth}
+            onChangeText={(value) => identity.setField('dateOfBirth', maskBirthDate(value))}
+            placeholder="DD/MM/AAAA"
+            keyboardType="number-pad"
+            maxLength={10}
+            editable={!identity.saving}
+            error={fieldErrors.dateOfBirth}
+          />
+          <SectionActions
+            saving={identity.saving}
+            error={identity.error}
+            onCancel={identity.cancelEdit}
+            onSave={() => void identity.save()}
+          />
+        </ProfileCard>
+      </ProfileSection>
+    );
+  }
+
+  if (!identity.hasData || !data) {
+    return (
+      <ProfileSection title="Dados de identidade" isPrivate footnote={footnote}>
+        <EmptyProfileCard
+          title="Nenhum dado de identidade ainda"
+          description="Adicione seu nome completo, CPF, RG e data de nascimento."
+          actionLabel="Adicionar dados de identidade"
+          onAction={identity.startEdit}
+        />
+      </ProfileSection>
+    );
+  }
+
+  return (
+    <ProfileSection
+      title="Dados de identidade"
+      isPrivate
+      onEdit={identity.startEdit}
+      editLabel="Editar dados de identidade"
+      footnote={footnote}
+    >
+      <ProfileCard>
+        <ProfileRow label="Nome completo" value={data.full_legal_name} />
+        <RowDivider />
+        <ProfileRow label="CPF" value={maskedDocument(data.tax_id_last4)} />
+        <RowDivider />
+        <ProfileRow label="RG" value={maskedDocument(data.government_id_last4)} />
+        <RowDivider />
+        <ProfileRow label="Data de nascimento" value={formatLongDate(data.date_of_birth)} />
+      </ProfileCard>
+    </ProfileSection>
+  );
+};
+
+const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+/** "1997-05-21" -> "21 mai 1997", as the mockup shows it. */
+const formatLongDate = (iso: string | null) => {
+  const match = iso?.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return match ? `${Number(match[3])} ${MONTHS[Number(match[2]) - 1]} ${match[1]}` : null;
+};
+
+const AthleteSection = ({ athlete }: { athlete: ProfileModel['athlete'] }) => {
   const theme = useTheme();
   const styles = useStyles();
-  return (
-    <View style={styles.field}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <TextInput
-        accessibilityLabel={label}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={theme.colors.mutedText}
-        style={styles.input}
-        autoCapitalize={autoCapitalize}
-        autoCorrect={false}
-      />
+  const { data, editing, values, fieldErrors } = athlete;
+  const description = 'Como você aparece para a comunidade Go Champs.';
+
+  const pickPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    const asset = result.canceled ? undefined : result.assets?.[0];
+    if (asset) athlete.selectPhoto(localFileFromPicked(asset));
+  };
+
+  const photo = (
+    <View style={styles.photo}>
+      {athlete.photoUri ? (
+        <Image accessibilityLabel="Foto do perfil" source={{ uri: athlete.photoUri }} style={styles.photoImage} />
+      ) : (
+        <Ionicons name="camera-outline" size={24} color={theme.colors.onOliveSoft} />
+      )}
     </View>
+  );
+
+  if (editing) {
+    return (
+      <ProfileSection title="Perfil de atleta" description={description}>
+        <ProfileCard>
+          <View style={styles.photoRow}>
+            {photo}
+            <View style={styles.photoCopy}>
+              <Text style={styles.photoTitle}>Foto do perfil</Text>
+              {fieldErrors.photo ? <Text style={styles.photoError}>{fieldErrors.photo}</Text> : null}
+            </View>
+            <View style={styles.photoActions}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={athlete.photoUri ? 'Trocar foto' : 'Adicionar foto'}
+                disabled={athlete.saving}
+                onPress={() => void pickPhoto()}
+                style={styles.photoButton}
+              >
+                <Text style={styles.photoButtonText}>{athlete.photoUri ? 'Trocar' : 'Adicionar'}</Text>
+              </TouchableOpacity>
+              {athlete.photoUri ? (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Remover foto"
+                  disabled={athlete.saving}
+                  onPress={athlete.removePhoto}
+                  style={styles.photoButton}
+                >
+                  <Text style={[styles.photoButtonText, styles.removeText]}>Remover</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+          <RowDivider />
+          <ProfileField
+            label="Nome de atleta"
+            value={values.name}
+            onChangeText={(value) => athlete.setField('name', value)}
+            placeholder="Nome que aparece nos campeonatos"
+            autoCapitalize="words"
+            editable={!athlete.saving}
+            error={fieldErrors.name}
+          />
+          <ProfileField
+            label="Facebook"
+            value={values.facebook}
+            onChangeText={(value) => athlete.setField('facebook', value)}
+            placeholder="usuario ou link"
+            editable={!athlete.saving}
+            error={fieldErrors.facebook}
+          />
+          <ProfileField
+            label="Instagram"
+            value={values.instagram}
+            onChangeText={(value) => athlete.setField('instagram', value)}
+            placeholder="@usuario"
+            editable={!athlete.saving}
+            error={fieldErrors.instagram}
+          />
+          <ProfileField
+            label="Twitter"
+            value={values.twitter}
+            onChangeText={(value) => athlete.setField('twitter', value)}
+            placeholder="@usuario"
+            editable={!athlete.saving}
+            error={fieldErrors.twitter}
+          />
+          <SectionActions
+            saving={athlete.saving}
+            error={athlete.error}
+            onCancel={athlete.cancelEdit}
+            onSave={() => void athlete.save()}
+            saveLabel={data ? 'Salvar' : 'Criar perfil'}
+          />
+        </ProfileCard>
+      </ProfileSection>
+    );
+  }
+
+  if (!data) {
+    return (
+      <ProfileSection title="Perfil de atleta" description={description}>
+        <EmptyProfileCard
+          title="Nenhum perfil de atleta ainda"
+          description="Adicione seu nome de atleta e uma foto, depois vincule Facebook, Instagram e Twitter."
+          actionLabel="Criar perfil de atleta"
+          onAction={athlete.startEdit}
+        />
+      </ProfileSection>
+    );
+  }
+
+  return (
+    <ProfileSection
+      title="Perfil de atleta"
+      description={description}
+      onEdit={athlete.startEdit}
+      editLabel="Editar perfil de atleta"
+    >
+      <ProfileCard>
+        <ProfileRow
+          label="Foto do perfil"
+          value={data.photo_url ? 'Foto adicionada' : null}
+          placeholder="Nenhuma foto adicionada"
+          leading={photo}
+        />
+        <RowDivider />
+        <ProfileRow label="Nome de atleta" value={data.name} />
+        <RowDivider />
+        <ProfileRow label="Facebook" value={data.facebook} />
+        <RowDivider />
+        <ProfileRow label="Instagram" value={data.instagram} />
+        <RowDivider />
+        <ProfileRow label="Twitter" value={data.twitter} />
+      </ProfileCard>
+    </ProfileSection>
   );
 };
 
@@ -345,18 +417,165 @@ const useStyles = makeStyles((theme) => ({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: theme.spacing.xxl,
-  },
-  container: {
-    flex: 1,
-    padding: theme.spacing.md,
+    paddingBottom: theme.spacing.xl,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  card: {
+  hero: {
+    backgroundColor: theme.colors.primary,
+    borderBottomWidth: theme.dark ? 1 : 0,
+    borderBottomColor: theme.colors.chromeBorder,
+  },
+  heroContent: {
+    paddingHorizontal: 22,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: 28,
+    gap: 7,
+  },
+  heroKicker: {
+    color: theme.colors.lime,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+  },
+  heroTitle: {
+    color: theme.colors.onPrimary,
+    fontSize: 30,
+    fontWeight: '800',
+    lineHeight: 36,
+  },
+  heroSubtitle: {
+    color: theme.colors.onPrimaryMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  content: {
+    paddingTop: theme.spacing.lg,
+  },
+  notice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginHorizontal: 20,
+    marginBottom: theme.spacing.md,
+    padding: 12,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.tint,
+  },
+  noticeText: {
+    flex: 1,
+    color: theme.colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  loader: {
+    marginVertical: theme.spacing.lg,
+  },
+  retry: {
+    padding: theme.spacing.lg,
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  retryText: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.body,
+    textAlign: 'center',
+  },
+  retryButton: {
+    minHeight: theme.layout.touchTarget,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.oliveSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  retryButtonText: {
+    color: theme.colors.onOliveSoft,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  photoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: theme.spacing.md,
+  },
+  photo: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: theme.colors.tint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  photoImage: {
+    width: 54,
+    height: 54,
+  },
+  photoCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  photoTitle: {
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  photoError: {
+    color: theme.colors.danger,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  photoActions: {
+    alignItems: 'flex-end',
+  },
+  photoButton: {
+    minHeight: 36,
+    paddingHorizontal: theme.spacing.md,
+    justifyContent: 'center',
+  },
+  photoButtonText: {
+    color: theme.colors.olive,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  removeText: {
+    color: theme.colors.danger,
+  },
+  footer: {
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    paddingHorizontal: 20,
+    paddingTop: theme.spacing.xs,
+  },
+  footerText: {
+    color: theme.colors.mutedText,
+    fontSize: 12,
+  },
+  signOut: {
+    minHeight: theme.layout.touchTarget,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: theme.colors.cardBorder,
+  },
+  signOutText: {
+    color: theme.colors.danger,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  signedOut: {
+    flex: 1,
+    padding: theme.spacing.md,
+  },
+  signedOutCard: {
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.lg,
     borderWidth: 1,
@@ -378,7 +597,7 @@ const useStyles = makeStyles((theme) => ({
     fontSize: theme.typography.caption,
     fontWeight: '900',
   },
-  title: {
+  signedOutTitle: {
     color: theme.colors.textPrimary,
     fontSize: theme.typography.title,
     fontWeight: '900',
@@ -389,116 +608,6 @@ const useStyles = makeStyles((theme) => ({
     fontSize: theme.typography.body,
     lineHeight: 22,
     marginTop: theme.spacing.sm,
-  },
-  linkButton: {
-    marginTop: theme.spacing.md,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-  },
-  linkButtonText: {
-    color: theme.colors.success,
-    fontSize: theme.typography.bodySmall,
-    fontWeight: '800',
-  },
-  loader: {
-    marginTop: theme.spacing.md,
-  },
-  error: {
-    color: theme.colors.danger,
-    marginTop: theme.spacing.sm,
-    fontSize: theme.typography.caption,
-    fontWeight: '700',
-  },
-  success: {
-    color: theme.colors.success,
-    marginTop: theme.spacing.sm,
-    fontSize: theme.typography.caption,
-    fontWeight: '700',
-  },
-  section: {
-    marginTop: theme.spacing.lg,
-    gap: theme.spacing.xs,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.xs,
-  },
-  sectionTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.typography.body,
-    fontWeight: '900',
-  },
-  editLink: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.bodySmall,
-    fontWeight: '900',
-  },
-  rowText: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.typography.body,
-    fontWeight: '700',
-  },
-  meta: {
-    color: theme.colors.mutedText,
-    fontSize: theme.typography.caption,
-    lineHeight: 18,
-  },
-  athleteView: {
-    gap: theme.spacing.sm,
-  },
-  athleteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  athleteCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  subSection: {
-    marginTop: theme.spacing.xs,
-    gap: 2,
-  },
-  subSectionTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.typography.caption,
-    fontWeight: '900',
-    marginBottom: 2,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radius.pill,
-  },
-  avatarFallback: {
-    backgroundColor: theme.colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  createBox: {
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.sm,
-  },
-  field: {
-    gap: 4,
-  },
-  fieldLabel: {
-    color: theme.colors.mutedText,
-    fontSize: theme.typography.caption,
-    fontWeight: '800',
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    color: theme.colors.textPrimary,
-    backgroundColor: theme.colors.surface,
   },
   button: {
     height: 52,
@@ -514,33 +623,6 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.onAccent,
     fontSize: theme.typography.body,
     fontWeight: '900',
-  },
-  secondaryButton: {
-    height: 48,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.primary,
-    borderWidth: theme.dark ? 1 : 0,
-    borderColor: theme.colors.chromeBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryButtonText: {
-    color: theme.colors.onPrimary,
-    fontWeight: '900',
-  },
-  cancelButton: {
-    height: 44,
-    borderRadius: theme.radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.accentSoft,
-  },
-  cancelButtonText: {
-    color: theme.colors.success,
-    fontWeight: '900',
-  },
-  disabled: {
-    opacity: 0.6,
   },
 }));
 

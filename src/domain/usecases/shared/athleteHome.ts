@@ -3,7 +3,6 @@ import {
   AthleteRecentGame,
   AthleteSportCareer,
 } from '../../repositories/AthleteProfileRepository';
-import { dateTile } from './myGames';
 import { formatStatValue } from './tournamentStats';
 
 // The Perfil tab (Figma 1143:12176): the signed-in athlete's career summary
@@ -57,33 +56,59 @@ export const careerSummaries = (careers: AthleteSportCareer[] | undefined): Care
     })),
   }));
 
-export type FormBar = { gameId: string; points: number; label: string; date: string; ratio: number; latest: boolean };
+export type MonthBar = {
+  key: string;
+  points: number;
+  label: string;
+  // 'nov'
+  month: string;
+  // 'novembro de 2026', for screen readers
+  monthLong: string;
+  ratio: number;
+  latest: boolean;
+};
 
-export const SCORING_FORM_GAMES = 5;
+export const MONTHLY_SCORING_MONTHS = 5;
+
+const MONTH_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const MONTH_LONG = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+];
 
 const pointsOf = (recent: AthleteRecentGame) => {
   const points = Number(recent.stats.points);
   return Number.isFinite(points) ? points : 0;
 };
 
-// The last five games of one sport, oldest first, each bar sized against the
-// best of them; the latest game is highlighted.
-export const scoringForm = (recentGames: AthleteRecentGame[], sportSlug: string): FormBar[] => {
-  const games = recentGames
+// The points one sport's games scored per month ('2026-11'), read in UTC like
+// every game date. The API sends at most the last 50 games, so the oldest
+// month shown may be partial for a very busy athlete.
+export const monthlyScoring = (recentGames: AthleteRecentGame[], sportSlug: string): MonthBar[] => {
+  const totals = new Map<string, number>();
+  recentGames
     .filter((recent) => (recent.game.tournament?.sport_slug ?? sportSlug) === sportSlug)
-    .slice(0, SCORING_FORM_GAMES)
-    .reverse();
-  const best = Math.max(0, ...games.map(pointsOf));
-  return games.map((recent, index) => {
-    const points = pointsOf(recent);
-    const tile = dateTile(recent.game.datetime);
+    .forEach((recent) => {
+      const date = new Date(recent.game.datetime);
+      if (Number.isNaN(date.getTime())) return;
+      const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+      totals.set(key, (totals.get(key) ?? 0) + pointsOf(recent));
+    });
+
+  // The last five months with games, oldest first; the latest is highlighted.
+  const months = [...totals.keys()].sort().slice(-MONTHLY_SCORING_MONTHS);
+  const best = Math.max(0, ...months.map((key) => totals.get(key) ?? 0));
+  return months.map((key, index) => {
+    const points = totals.get(key) ?? 0;
+    const [year, month] = key.split('-').map(Number);
     return {
-      gameId: recent.game.id,
+      key,
       points,
       label: String(Math.round(points)),
-      date: tile.month ? `${tile.day} ${tile.month.toLowerCase()}` : '',
+      month: MONTH_SHORT[month - 1],
+      monthLong: `${MONTH_LONG[month - 1]} de ${year}`,
       ratio: best > 0 ? points / best : 0,
-      latest: index === games.length - 1,
+      latest: index === months.length - 1,
     };
   });
 };

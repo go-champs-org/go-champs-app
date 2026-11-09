@@ -55,7 +55,7 @@ describe('useAthleteHomeViewModel', () => {
     expect(result.current.profile?.name).toBe('Ana Silva');
     expect(result.current.socialLinks.map((link) => link.network)).toEqual(['instagram', 'facebook']);
     expect(result.current.summaries.map((summary) => summary.title)).toEqual(['Basquete 5x5']);
-    expect(result.current.forms.basketball_5x5.map((bar) => bar.label)).toEqual(['28']);
+    expect(result.current.monthlyPoints.basketball_5x5.map((bar) => bar.label)).toEqual(['28']);
     expect(result.current.tournaments.map((card) => card.name)).toEqual(['Liga a', 'Liga b', 'Liga c']);
     expect(result.current.hasMoreTournaments).toBe(true);
   });

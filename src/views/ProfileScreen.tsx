@@ -8,7 +8,7 @@ import { BootstrapLoader, LoadState, SaveNotice, SignInPrompt } from '../compone
 import {
   AthleteHero,
   CareerSummaryCard,
-  ScoringFormCard,
+  MonthlyScoringCard,
   SectionHeading,
   TournamentCardItem,
 } from '../components/profile/AthleteHomeSections';
@@ -86,7 +86,7 @@ const ProfileScreen = () => {
                       <View key={summary.sportSlug} style={styles.section}>
                         <SectionHeading title={`Resumo · ${summary.title}`} />
                         <CareerSummaryCard summary={summary} />
-                        <ScoringFormCard bars={model.forms[summary.sportSlug] ?? []} />
+                        <MonthlyScoringCard bars={model.monthlyPoints[summary.sportSlug] ?? []} />
                       </View>
                     ))
                   )}

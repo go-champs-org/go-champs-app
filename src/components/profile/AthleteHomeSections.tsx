@@ -6,7 +6,7 @@ import { TeamBadge } from '../competition/TeamBadge';
 import { ContentShell } from '../layout/ContentShell';
 import { makeStyles, useTheme } from '../../theme/theme';
 import { SocialLink, SocialNetwork } from '../../domain/usecases/shared/athleteProfile';
-import { CareerSummary, FormBar, TournamentCard } from '../../domain/usecases/shared/athleteHome';
+import { CareerSummary, MonthBar, TournamentCard } from '../../domain/usecases/shared/athleteHome';
 
 const SOCIAL_ICONS: Record<SocialNetwork, keyof typeof Ionicons.glyphMap> = {
   instagram: 'logo-instagram',
@@ -146,23 +146,23 @@ export const CareerSummaryCard = ({ summary }: { summary: CareerSummary }) => {
 
 const FORM_BAR_HEIGHT = 56;
 
-export const ScoringFormCard = ({ bars }: { bars: FormBar[] }) => {
+export const MonthlyScoringCard = ({ bars }: { bars: MonthBar[] }) => {
   const styles = useStyles();
   if (bars.length === 0) return null;
   return (
-    <View style={styles.card} testID="scoring-form">
+    <View style={styles.card} testID="monthly-scoring">
       <View style={styles.formHeading}>
-        <Text style={styles.formTitle}>Forma de pontuação</Text>
+        <Text style={styles.formTitle}>Pontuação mensal</Text>
         <Text style={styles.formDetail}>
-          {bars.length === 1 ? 'Último jogo · PTS' : `Últimos ${bars.length} jogos · PTS`}
+          {bars.length === 1 ? 'Último mês · PTS' : `Últimos ${bars.length} meses · PTS`}
         </Text>
       </View>
       <View style={styles.bars}>
         {bars.map((bar) => (
           <View
-            key={bar.gameId}
+            key={bar.key}
             accessible
-            accessibilityLabel={`${bar.label} pontos em ${bar.date}`}
+            accessibilityLabel={`${bar.label} pontos em ${bar.monthLong}`}
             style={styles.barColumn}
           >
             <Text style={styles.barValue}>{bar.label}</Text>
@@ -173,7 +173,7 @@ export const ScoringFormCard = ({ bars }: { bars: FormBar[] }) => {
                 { height: Math.max(6, Math.round(bar.ratio * FORM_BAR_HEIGHT)) },
               ]}
             />
-            <Text style={styles.barDate}>{bar.date}</Text>
+            <Text style={styles.barDate}>{bar.month}</Text>
           </View>
         ))}
       </View>
@@ -197,14 +197,15 @@ export const TournamentCardItem = ({ card, onOpen }: { card: TournamentCard; onO
         <TeamBadge logoUrl={card.teamLogoUrl} name={card.teamName} size={24} />
         <Text style={styles.tournamentTeamName}>{card.team}</Text>
       </View>
-      <Text
+      {/* A border, not textDecorationLine: native underlines sit flush on the text. */}
+      <TouchableOpacity
         accessibilityRole="link"
         accessibilityLabel={`Ver campeonato ${card.name}`}
         onPress={onOpen}
         style={styles.tournamentLink}
       >
-        Ver campeonato →
-      </Text>
+        <Text style={styles.tournamentLinkText}>Ver campeonato →</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -441,9 +442,13 @@ const useStyles = makeStyles((theme) => ({
   },
   tournamentLink: {
     alignSelf: 'flex-start',
+    paddingBottom: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.success,
+  },
+  tournamentLinkText: {
     color: theme.colors.success,
     fontSize: 12,
     fontWeight: '500',
-    textDecorationLine: 'underline',
   },
 }));

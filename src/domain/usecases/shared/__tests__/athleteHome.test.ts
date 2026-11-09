@@ -1,5 +1,5 @@
 import { membership, recentGame } from '../../../../test/fixtures/athleteGamesFixtures';
-import { careerSummaries, scoringForm, sportLabel, tournamentCards } from '../athleteHome';
+import { careerSummaries, monthlyScoring, sportLabel, tournamentCards } from '../athleteHome';
 
 const fiveByFive = {
   sport_slug: 'basketball_5x5',
@@ -60,31 +60,57 @@ describe('careerSummaries', () => {
   });
 });
 
-describe('scoringForm', () => {
-  const games = [28, 21, 16, 24, 18, 40].map((points, index) =>
-    recentGame({ id: `g${index}`, datetime: `2026-11-0${7 - index}T19:00:00Z` }, { stats: { points } })
-  );
+describe('monthlyScoring', () => {
+  const game = (id: string, datetime: string, points: number | null, sportSlug = 'basketball_5x5') =>
+    recentGame(
+      { id, datetime, tournament: { id: 't', name: 'Copa', slug: 'copa', sport_slug: sportSlug } },
+      { stats: { points } }
+    );
 
-  it('shows the last five games oldest first, sized against the best', () => {
-    const bars = scoringForm(games, 'basketball_5x5');
-    expect(bars.map((bar) => bar.gameId)).toEqual(['g4', 'g3', 'g2', 'g1', 'g0']);
-    expect(bars.map((bar) => bar.label)).toEqual(['18', '24', '16', '21', '28']);
-    expect(bars.map((bar) => bar.date)).toEqual(['3 nov', '4 nov', '5 nov', '6 nov', '7 nov']);
-    expect(bars[4]).toMatchObject({ ratio: 1, latest: true });
-    expect(bars[0]).toMatchObject({ ratio: 18 / 28, latest: false });
+  it('sums the points of each month, oldest first, sized against the best month', () => {
+    const bars = monthlyScoring(
+      [game('a', '2026-11-07T19:00:00Z', 28), game('b', '2026-11-01T19:00:00Z', 21), game('c', '2026-10-25T19:00:00Z', 14)],
+      'basketball_5x5'
+    );
+    expect(bars).toEqual([
+      { key: '2026-10', points: 14, label: '14', month: 'out', monthLong: 'outubro de 2026', ratio: 14 / 49, latest: false },
+      { key: '2026-11', points: 49, label: '49', month: 'nov', monthLong: 'novembro de 2026', ratio: 1, latest: true },
+    ]);
+  });
+
+  it('reads the month in UTC, like the game dates', () => {
+    expect(monthlyScoring([game('a', '2026-12-01T01:00:00Z', 10)], 'basketball_5x5')[0].key).toBe('2026-12');
+  });
+
+  it('keeps the last five months with games, across years', () => {
+    const games = ['2025-11', '2025-12', '2026-01', '2026-03', '2026-04', '2026-06'].map((month, index) =>
+      game(`g${index}`, `${month}-10T19:00:00Z`, 10 + index)
+    );
+    const bars = monthlyScoring(games, 'basketball_5x5');
+    expect(bars.map((bar) => bar.key)).toEqual(['2025-12', '2026-01', '2026-03', '2026-04', '2026-06']);
+    expect(bars[1]).toMatchObject({ month: 'jan', monthLong: 'janeiro de 2026' });
   });
 
   it("keeps only the sport's games", () => {
-    const threeByThree = recentGame(
-      { id: '3x3', tournament: { id: 't3', name: '3x3', slug: '3x3', sport_slug: 'basketball_3x3' } },
-      { stats: { points: 9 } }
+    const bars = monthlyScoring(
+      [game('3x3', '2026-11-07T19:00:00Z', 9, 'basketball_3x3'), game('5x5', '2026-11-07T19:00:00Z', 30)],
+      'basketball_3x3'
     );
-    expect(scoringForm([threeByThree, ...games.slice(0, 1)], 'basketball_3x3').map((bar) => bar.gameId)).toEqual(['3x3']);
+    expect(bars.map((bar) => bar.points)).toEqual([9]);
   });
 
-  it('reads a game without points as zero', () => {
-    const [bar] = scoringForm([recentGame({ datetime: 'bad', tournament: null }, { stats: { points: null } })], 'basketball_5x5');
-    expect(bar).toMatchObject({ points: 0, label: '0', ratio: 0, date: '', latest: true });
+  it('counts a game without points as zero and skips one without a date', () => {
+    const bars = monthlyScoring(
+      [recentGame({ datetime: '2026-11-07T19:00:00Z', tournament: null }, { stats: { points: null } }), game('x', 'bad', 30)],
+      'basketball_5x5'
+    );
+    expect(bars).toEqual([
+      { key: '2026-11', points: 0, label: '0', month: 'nov', monthLong: 'novembro de 2026', ratio: 0, latest: true },
+    ]);
+  });
+
+  it('has no bars without games', () => {
+    expect(monthlyScoring([], 'basketball_5x5')).toEqual([]);
   });
 });
 

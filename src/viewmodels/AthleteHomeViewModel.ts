@@ -4,9 +4,9 @@ import { AthleteHome } from '../domain/usecases/GetAthleteHomeUseCase';
 import { athleteSocialLinks } from '../domain/usecases/shared/athleteProfile';
 import {
   careerSummaries,
-  FormBar,
+  MonthBar,
+  monthlyScoring,
   MY_TOURNAMENTS_PREVIEW,
-  scoringForm,
   tournamentCards,
 } from '../domain/usecases/shared/athleteHome';
 import { useFlashNotice } from './useFlashNotice';
@@ -62,10 +62,10 @@ export const useAthleteHomeViewModel = (username: string | undefined) => {
 
   const profile = home?.profile ?? null;
   const summaries = useMemo(() => careerSummaries(profile?.career_stats), [profile]);
-  const forms = useMemo(() => {
-    const bySport: Record<string, FormBar[]> = {};
+  const monthlyPoints = useMemo(() => {
+    const bySport: Record<string, MonthBar[]> = {};
     summaries.forEach((summary) => {
-      bySport[summary.sportSlug] = scoringForm(home?.recentGames ?? [], summary.sportSlug);
+      bySport[summary.sportSlug] = monthlyScoring(home?.recentGames ?? [], summary.sportSlug);
     });
     return bySport;
   }, [home, summaries]);
@@ -102,7 +102,7 @@ export const useAthleteHomeViewModel = (username: string | undefined) => {
     profile,
     socialLinks,
     summaries,
-    forms,
+    monthlyPoints,
     tournaments: showAllTournaments ? allTournaments : allTournaments.slice(0, MY_TOURNAMENTS_PREVIEW),
     hasMoreTournaments: allTournaments.length > MY_TOURNAMENTS_PREVIEW,
     showAllTournaments,

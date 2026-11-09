@@ -456,9 +456,10 @@ test('[authProfile] mostra o perfil de atleta com resumo e campeonatos', async (
   const career = page.getByTestId('career-basketball_5x5').filter({ visible: true });
   await expect(career.getByText('257', { exact: true })).toBeVisible();
   await expect(career.getByText('21.4', { exact: true })).toBeVisible();
-  const form = page.getByTestId('scoring-form').filter({ visible: true });
-  await expect(form.getByText('Últimos 2 jogos · PTS')).toBeVisible();
-  await expect(form.getByLabel('28 pontos em 7 nov')).toBeVisible();
+  const monthly = page.getByTestId('monthly-scoring').filter({ visible: true });
+  await expect(monthly.getByText('Pontuação mensal')).toBeVisible();
+  await expect(monthly.getByText('Último mês · PTS')).toBeVisible();
+  await expect(monthly.getByLabel('49 pontos em novembro de 2026')).toBeVisible();
   await expect(page.getByText('Meus campeonatos')).toBeVisible();
   const tournamentCard = page.getByTestId('athlete-tournament-card').filter({ visible: true }).first();
   await expect(tournamentCard.getByText('Alpha · #7')).toBeVisible();

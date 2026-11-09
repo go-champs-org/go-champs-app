@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { container } from '../../di/container';
 import { tournamentFixture } from '../../test/fixtures/tournamentFixtures';
+import { deferred } from '../../test/deferred';
 import { SEARCH_DEBOUNCE_MS, useTournamentsViewModel } from '../TournamentsViewModel';
 
 jest.mock('../../di/container', () => ({
@@ -130,5 +131,70 @@ describe('catalogue viewmodels', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     await result.current.togglePin('tournament-1');
     await waitFor(() => expect(result.current.pinnedIds.has('tournament-1')).toBe(true));
+  });
+});
+
+describe('home refresh', () => {
+  const recent = container.getRecentTournaments.execute as jest.Mock;
+  const second = { ...tournamentFixture, id: 'tournament-2', name: 'Liga Norte' };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (container.getPinnedTournamentIds.execute as jest.Mock).mockResolvedValue([]);
+    recent.mockResolvedValue([tournamentFixture, second]);
+  });
+
+  it('brings the new order in behind the list on screen', async () => {
+    const { result } = renderHook(() => useTournamentsViewModel());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    const reordered = deferred<(typeof tournamentFixture)[]>();
+    recent.mockReturnValueOnce(reordered.promise);
+    (container.getPinnedTournamentIds.execute as jest.Mock).mockResolvedValue(['tournament-1']);
+
+    act(() => result.current.refresh());
+    expect(result.current.refreshing).toBe(true);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.tournaments.map((item) => item.id)).toEqual(['tournament-1', 'tournament-2']);
+
+    await act(async () => reordered.resolve([second, tournamentFixture]));
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    // Pins are read again too: the pinned one stays first.
+    expect(result.current.tournaments.map((item) => item.id)).toEqual(['tournament-1', 'tournament-2']);
+    expect(result.current.pinnedIds.has('tournament-1')).toBe(true);
+    expect(result.current.refreshError).toBeNull();
+    expect(recent).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows the new order of unpinned tournaments', async () => {
+    const { result } = renderHook(() => useTournamentsViewModel());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    recent.mockResolvedValueOnce([second, tournamentFixture]);
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.tournaments.map((item) => item.id)).toEqual(['tournament-2', 'tournament-1']);
+  });
+
+  it('keeps the list when the refresh fails', async () => {
+    const { result } = renderHook(() => useTournamentsViewModel());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    recent.mockRejectedValueOnce(new Error('offline'));
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.tournaments.map((item) => item.id)).toEqual(['tournament-1', 'tournament-2']);
+    expect(result.current.refreshError).toBe('Não foi possível atualizar. Puxe a tela para tentar novamente.');
+  });
+
+  it('ignores a refresh that settles after leaving', async () => {
+    const { result, unmount } = renderHook(() => useTournamentsViewModel());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    const late = deferred<(typeof tournamentFixture)[]>();
+    recent.mockReturnValueOnce(late.promise);
+
+    act(() => result.current.refresh());
+    unmount();
+    await act(async () => late.reject(new Error('late')));
+    expect(result.current.refreshError).toBeNull();
   });
 });

@@ -101,3 +101,39 @@ describe('useAthleteViewModel', () => {
     expect(second.result.current.error).toBeNull();
   });
 });
+
+describe('useAthleteViewModel refresh', () => {
+  beforeEach(() => getAthlete.mockReset());
+
+  it('refreshes behind the athlete, keeping the scope being read', async () => {
+    getAthlete.mockResolvedValue(overview());
+    const { result } = renderHook(() => useAthleteViewModel('t1', 'p1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    act(() => result.current.selectScope('per_game'));
+    const next = deferred<AthleteOverview>();
+    getAthlete.mockReturnValueOnce(next.promise);
+
+    act(() => result.current.refresh());
+    expect(result.current.refreshing).toBe(true);
+    expect(result.current.loading).toBe(false);
+    await act(async () => next.resolve(overview({ gamesText: '10 jogos disputados' })));
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+
+    expect(result.current.overview?.gamesText).toBe('10 jogos disputados');
+    expect(result.current.scope).toBe('per_game');
+    expect(result.current.refreshError).toBeNull();
+  });
+
+  it('keeps the athlete when a refresh fails', async () => {
+    getAthlete.mockResolvedValue(overview());
+    const { result } = renderHook(() => useAthleteViewModel('t1', 'p1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    getAthlete.mockRejectedValueOnce(new Error('offline'));
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.overview?.gamesText).toBe('9 jogos disputados');
+    expect(result.current.error).toBeNull();
+    expect(result.current.refreshError).toBe('Não foi possível atualizar. Puxe a tela para tentar novamente.');
+  });
+});

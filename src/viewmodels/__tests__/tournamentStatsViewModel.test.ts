@@ -161,3 +161,57 @@ describe('useTournamentStatsViewModel', () => {
     expect(withMinimum({}, 'game_played', null)).toEqual({});
   });
 });
+
+describe('useTournamentStatsViewModel refresh', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+    tournamentExecute.mockResolvedValue(overview);
+    statsExecute.mockResolvedValue([row('ana')]);
+  });
+
+  it('asks for the ranking again under the same ranking and filters', async () => {
+    const { result } = renderHook(() => useTournamentStatsViewModel('t1'));
+    await waitFor(() => expect(result.current.rows).toEqual([row('ana')]));
+    act(() => result.current.selectTeam('team-a'));
+    await waitFor(() => expect(lastQuery().teamId).toBe('team-a'));
+    await waitFor(() => expect(result.current.rowsLoading).toBe(false));
+    const next = deferred<ReturnType<typeof row>[]>();
+    statsExecute.mockReturnValueOnce(next.promise);
+
+    act(() => result.current.refresh());
+    expect(result.current.refreshing).toBe(true);
+    expect(result.current.rowsLoading).toBe(false);
+    expect(result.current.rows).toEqual([row('ana')]);
+    await act(async () => next.resolve([row('bia'), row('ana')]));
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+
+    expect(result.current.rows).toEqual([row('bia'), row('ana')]);
+    expect(lastQuery()).toEqual({ sort: 'points', phaseId: null, teamId: 'team-a', minStats: {} });
+    expect(result.current.filters.teamId).toBe('team-a');
+    expect(result.current.refreshError).toBeNull();
+    expect(tournamentExecute).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears a ranking error once a refresh brings it back', async () => {
+    statsExecute.mockRejectedValueOnce(new Error('500'));
+    const { result } = renderHook(() => useTournamentStatsViewModel('t1'));
+    await waitFor(() => expect(result.current.rowsError).not.toBeNull());
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.rowsError).toBeNull();
+    expect(result.current.rows).toEqual([row('ana')]);
+  });
+
+  it('keeps the ranking when a refresh fails', async () => {
+    const { result } = renderHook(() => useTournamentStatsViewModel('t1'));
+    await waitFor(() => expect(result.current.rows).toEqual([row('ana')]));
+    statsExecute.mockRejectedValueOnce(new Error('offline'));
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.rows).toEqual([row('ana')]);
+    expect(result.current.rowsError).toBeNull();
+    expect(result.current.refreshError).toBe('Não foi possível atualizar. Puxe a tela para tentar novamente.');
+  });
+});

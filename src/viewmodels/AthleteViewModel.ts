@@ -4,6 +4,7 @@ import { container } from '../di/container';
 import { AthleteOverview, AthleteStatsLine } from '../domain/usecases/GetAthleteOverviewUseCase';
 import { formatStatValue, StatColumn } from '../domain/usecases/shared/tournamentStats';
 import { StatScope } from '../domain/usecases/shared/statLeaders';
+import { useLoadRequest } from './useLoadRequest';
 
 const ATHLETE_ERROR = 'Não foi possível abrir o atleta. Tente novamente.';
 
@@ -22,21 +23,32 @@ export const useAthleteViewModel = (tournamentId: string, playerId: string, apiB
   const [overview, setOverview] = useState<AthleteOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const { request, refreshing, refreshError, retry, refresh, settleRefresh } = useLoadRequest(
+    `${tournamentId}|${playerId}|${apiBaseUrl ?? ''}`
+  );
   const [scope, setScope] = useState<StatScope>('aggregate');
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      setLoading(true);
-      setError(null);
+      if (!request.refresh) {
+        setLoading(true);
+        setError(null);
+      }
       try {
         const next = await container.getAthleteOverview.execute(tournamentId, playerId, apiBaseUrl);
         if (!mounted) return;
         setOverview(next);
-        setScope(next.scopes[0] ?? 'aggregate');
+        // A refresh keeps the scope being read.
+        if (request.refresh) settleRefresh(false);
+        else setScope(next.scopes[0] ?? 'aggregate');
       } catch (requestError) {
         if (!mounted) return;
+        // A failed refresh keeps the athlete on screen.
+        if (request.refresh) {
+          settleRefresh(true);
+          return;
+        }
         setOverview(null);
         setError(requestError instanceof AppError && requestError.status === 404 ? requestError.message : ATHLETE_ERROR);
       } finally {
@@ -48,14 +60,13 @@ export const useAthleteViewModel = (tournamentId: string, playerId: string, apiB
     return () => {
       mounted = false;
     };
-  }, [tournamentId, playerId, apiBaseUrl, attempt]);
+  }, [tournamentId, playerId, apiBaseUrl, request, settleRefresh]);
 
   const columns = useMemo(() => overview?.columnsByScope[scope] ?? [], [overview, scope]);
   const rows = useMemo(() => (overview ? overview.rows.map((line) => athleteStatsRow(line, columns)) : []), [overview, columns]);
   const total = useMemo(() => (overview?.total ? athleteStatsRow(overview.total, columns) : null), [overview, columns]);
 
   const selectScope = useCallback((next: StatScope) => setScope(next), []);
-  const retry = useCallback(() => setAttempt((value) => value + 1), []);
 
   return {
     overview,
@@ -68,5 +79,8 @@ export const useAthleteViewModel = (tournamentId: string, playerId: string, apiB
     total,
     selectScope,
     retry,
+    refreshing,
+    refreshError,
+    refresh,
   };
 };

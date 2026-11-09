@@ -6,6 +6,7 @@ import { RootStackParamList } from '../navigation/types';
 import { useOrganizationViewModel } from '../viewmodels/OrganizationViewModel';
 import { tournamentsCountLabel } from '../domain/usecases/GetOrganizationOverviewUseCase';
 import { makeStyles, useTheme } from '../theme/theme';
+import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { OrganizationSummaryCard } from '../components/organization/OrganizationSummaryCard';
@@ -19,7 +20,7 @@ const OrganizationScreen: React.FC<Props> = ({ route }) => {
   const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { organizationSlug, apiBaseUrl } = route.params;
-  const { overview, loading, error, retry } = useOrganizationViewModel(organizationSlug, apiBaseUrl);
+  const { overview, loading, error, retry, refreshing, refreshError, refresh } = useOrganizationViewModel(organizationSlug, apiBaseUrl);
 
   if (loading) {
     return <View style={styles.centered}><ActivityIndicator size="large" color={theme.colors.accent} /></View>;
@@ -46,12 +47,16 @@ const OrganizationScreen: React.FC<Props> = ({ route }) => {
           data={overview.tournaments}
           keyExtractor={(tournament) => tournament.id}
           contentContainerStyle={styles.list}
+          refreshControl={themedRefreshControl(theme, refreshing, refresh)}
           ListHeaderComponent={
-            <OrganizationSummaryCard
-              name={overview.organization.name}
-              logoUrl={overview.organization.logoUrl}
-              tournamentsCountLabel={tournamentsCountLabel(overview.tournaments.length)}
-            />
+            <>
+              <RefreshNotice message={refreshError} style={styles.refreshNotice} />
+              <OrganizationSummaryCard
+                name={overview.organization.name}
+                logoUrl={overview.organization.logoUrl}
+                tournamentsCountLabel={tournamentsCountLabel(overview.tournaments.length)}
+              />
+            </>
           }
           ListEmptyComponent={<EmptyState icon="trophy-outline" title="Nenhum campeonato encontrado" />}
           renderItem={({ item }) => (
@@ -71,6 +76,7 @@ const useStyles = makeStyles((theme) => ({
   content: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.background },
   list: { padding: theme.spacing.md, paddingBottom: theme.spacing.xl, gap: theme.spacing.md },
+  refreshNotice: { marginBottom: theme.spacing.md },
   retry: { padding: theme.spacing.lg, alignItems: 'center', gap: theme.spacing.md },
   retryText: { color: theme.colors.textPrimary, fontSize: theme.typography.body, textAlign: 'center' },
   retryButton: {

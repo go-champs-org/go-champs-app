@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useAthleteViewModel } from '../viewmodels/AthleteViewModel';
 import { makeStyles, useTheme } from '../theme/theme';
+import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
 import { ContentShell } from '../components/layout/ContentShell';
 import { AthleteBanner } from '../components/athlete/AthleteBanner';
 import { AthleteNoStatsCard, AthleteStatsCard } from '../components/athlete/AthleteStatsCard';
@@ -44,7 +45,12 @@ const AthleteScreen: React.FC<Props> = ({ route }) => {
   return (
     <View style={styles.screen}>
       <ContentShell style={styles.content}>
-        <ScrollView contentContainerStyle={styles.scrollContent} testID="athlete-screen">
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          testID="athlete-screen"
+          refreshControl={themedRefreshControl(theme, viewModel.refreshing, viewModel.refresh)}
+        >
+          <RefreshNotice message={viewModel.refreshError} />
           <AthleteBanner
             name={overview.athlete.name}
             photoUrl={overview.athlete.photoUrl}

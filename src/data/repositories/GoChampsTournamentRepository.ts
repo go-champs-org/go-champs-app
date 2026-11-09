@@ -38,15 +38,13 @@ export class GoChampsTournamentRepository implements TournamentRepository {
       );
       return mapRecentlyViewedToTournaments(response.data, API_CONFIG.goChampsBaseUrl);
     } catch {
-      try {
-        const response = await this.apiClient.get<ApiResponse<RecentlyViewedItemDto<Tournament>[]>>(
-          '/v1/recently-view',
-          API_CONFIG.stagingBaseUrl
-        );
-        return mapRecentlyViewedToTournaments(response.data, `${API_CONFIG.stagingBaseUrl}/v1`);
-      } catch {
-        return [];
-      }
+      // When the staging API fails too the error is left to the caller, so a
+      // failed refresh can keep the list it already shows.
+      const response = await this.apiClient.get<ApiResponse<RecentlyViewedItemDto<Tournament>[]>>(
+        '/v1/recently-view',
+        API_CONFIG.stagingBaseUrl
+      );
+      return mapRecentlyViewedToTournaments(response.data, `${API_CONFIG.stagingBaseUrl}/v1`);
     }
   }
 

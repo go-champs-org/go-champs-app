@@ -4,6 +4,7 @@ import { container } from '../di/container';
 import { TeamOverview } from '../domain/usecases/GetTeamOverviewUseCase';
 import { BoxScoreSort, nextBoxScoreSort, sortedBoxScoreTeam } from '../domain/usecases/shared/boxScore';
 import { StatScope } from '../domain/usecases/shared/statLeaders';
+import { useLoadRequest } from './useLoadRequest';
 
 const TEAM_ERROR = 'Não foi possível abrir o time. Tente novamente.';
 
@@ -26,7 +27,9 @@ export const useTeamViewModel = (tournamentId: string, teamId: string, apiBaseUr
   const [overview, setOverview] = useState<TeamOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const { request, refreshing, refreshError, retry, refresh, settleRefresh } = useLoadRequest(
+    `${tournamentId}|${teamId}|${apiBaseUrl ?? ''}`
+  );
   const [requestedTab, setRequestedTab] = useState<TeamTabId | null>(null);
   const [scope, setScope] = useState<StatScope>('aggregate');
   const [sort, setSort] = useState<BoxScoreSort | null>(null);
@@ -34,17 +37,30 @@ export const useTeamViewModel = (tournamentId: string, teamId: string, apiBaseUr
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      setLoading(true);
-      setError(null);
+      if (!request.refresh) {
+        setLoading(true);
+        setError(null);
+      }
       try {
         const next = await container.getTeamOverview.execute(tournamentId, teamId, apiBaseUrl);
         if (!mounted) return;
+        // A refresh keeps the tab, scope and ranking being read.
+        if (request.refresh) {
+          setOverview(next);
+          settleRefresh(false);
+          return;
+        }
         const firstScope = next.roster.scopes[0];
         setOverview(next);
         setScope(firstScope);
         setSort(openingSort(next, firstScope));
       } catch (requestError) {
         if (!mounted) return;
+        // A failed refresh keeps the team on screen.
+        if (request.refresh) {
+          settleRefresh(true);
+          return;
+        }
         setOverview(null);
         setError(requestError instanceof AppError && requestError.status === 404 ? requestError.message : TEAM_ERROR);
       } finally {
@@ -56,7 +72,7 @@ export const useTeamViewModel = (tournamentId: string, teamId: string, apiBaseUr
     return () => {
       mounted = false;
     };
-  }, [tournamentId, teamId, apiBaseUrl, attempt]);
+  }, [tournamentId, teamId, apiBaseUrl, request, settleRefresh]);
 
   const tabs = useMemo(() => (overview ? teamTabs(overview) : []), [overview]);
   const activeTab = tabs.find((tab) => tab.id === requestedTab)?.id ?? tabs[0]?.id ?? null;
@@ -80,7 +96,6 @@ export const useTeamViewModel = (tournamentId: string, teamId: string, apiBaseUr
   );
   const sortBy = useCallback((slug: string) => setSort((current) => nextBoxScoreSort(current, slug)), []);
   const selectTab = useCallback((tab: TeamTabId) => setRequestedTab(tab), []);
-  const retry = useCallback(() => setAttempt((value) => value + 1), []);
 
   return {
     overview,
@@ -98,5 +113,8 @@ export const useTeamViewModel = (tournamentId: string, teamId: string, apiBaseUr
     selectScope,
     sortBy,
     retry,
+    refreshing,
+    refreshError,
+    refresh,
   };
 };

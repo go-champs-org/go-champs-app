@@ -8,6 +8,7 @@ import {
   TournamentStatsRow,
   tournamentStatsLayout,
 } from '../domain/usecases/shared/tournamentStats';
+import { useLoadRequest } from './useLoadRequest';
 
 const TOURNAMENT_ERROR = 'Não foi possível abrir o campeonato. Tente novamente.';
 const STATS_ERROR = 'Não foi possível carregar as estatísticas. Tente novamente.';
@@ -42,7 +43,12 @@ export const useTournamentStatsViewModel = (tournamentId: string, requestedStatK
   const [rows, setRows] = useState<TournamentStatsRow[]>([]);
   const [rowsLoading, setRowsLoading] = useState(false);
   const [rowsError, setRowsError] = useState<string | null>(null);
-  const [rowsAttempt, setRowsAttempt] = useState(0);
+  // The ranking is what moves as games end, so a refresh asks for it again
+  // under the same ranking and filters.
+  const rowsRequests = useLoadRequest(
+    `${tournamentId}|${apiBaseUrl ?? ''}|${JSON.stringify(selection)}|${JSON.stringify(filters)}`
+  );
+  const { request: rowsRequest, settleRefresh } = rowsRequests;
 
   useEffect(() => {
     let mounted = true;
@@ -75,17 +81,27 @@ export const useTournamentStatsViewModel = (tournamentId: string, requestedStatK
     if (!tournament || !selection) return;
     let current = true;
     const load = async () => {
-      setRowsLoading(true);
-      setRowsError(null);
+      if (!rowsRequest.refresh) {
+        setRowsLoading(true);
+        setRowsError(null);
+      }
       try {
         const ranking = await container.getTournamentStats.execute(
           tournament,
           { sort: selection.statKey, ...filters },
           apiBaseUrl
         );
-        if (current) setRows(ranking);
+        if (!current) return;
+        setRows(ranking);
+        if (rowsRequest.refresh) {
+          setRowsError(null);
+          settleRefresh(false);
+        }
       } catch {
-        if (current) setRowsError(STATS_ERROR);
+        if (!current) return;
+        // A failed refresh keeps the ranking on screen.
+        if (rowsRequest.refresh) settleRefresh(true);
+        else setRowsError(STATS_ERROR);
       } finally {
         if (current) setRowsLoading(false);
       }
@@ -95,7 +111,7 @@ export const useTournamentStatsViewModel = (tournamentId: string, requestedStatK
     return () => {
       current = false;
     };
-  }, [tournament, selection, filters, apiBaseUrl, rowsAttempt]);
+  }, [tournament, selection, filters, apiBaseUrl, rowsRequest, settleRefresh]);
 
   // A per-game key is its own column, so a scope opens on its own default.
   const selectScope = useCallback(
@@ -113,7 +129,6 @@ export const useTournamentStatsViewModel = (tournamentId: string, requestedStatK
     return minStats === current.minStats ? current : { ...current, minStats };
   }), []);
   const retry = useCallback(() => setAttempt((value) => value + 1), []);
-  const retryRows = useCallback(() => setRowsAttempt((value) => value + 1), []);
 
   const activeFilterCount =
     Number(Boolean(filters.phaseId)) + Number(Boolean(filters.teamId)) + Object.keys(filters.minStats).length;
@@ -137,6 +152,9 @@ export const useTournamentStatsViewModel = (tournamentId: string, requestedStatK
     selectTeam,
     setMinStat,
     retry,
-    retryRows,
+    retryRows: rowsRequests.retry,
+    refreshing: rowsRequests.refreshing,
+    refreshError: rowsRequests.refreshError,
+    refresh: rowsRequests.refresh,
   };
 };

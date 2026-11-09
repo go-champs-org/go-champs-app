@@ -7,6 +7,7 @@ import { RootStackParamList } from '../navigation/types';
 import { SCOPE_LABELS } from '../domain/usecases/shared/statLeaders';
 import { useTournamentStatsViewModel } from '../viewmodels/TournamentStatsViewModel';
 import { makeStyles, useTheme } from '../theme/theme';
+import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { StatsTable, StatsTableHeader, useStatsTableScroll } from '../components/tournament/StatsTable';
@@ -87,8 +88,11 @@ const TournamentStatsScreen: React.FC<Props> = ({ route }) => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           stickyHeaderIndices={showTable ? [STICKY_HEADER_INDEX] : undefined}
+          refreshControl={themedRefreshControl(theme, viewModel.refreshing, viewModel.refresh)}
         >
+          {/* Inside the heading, so the sticky header keeps its index. */}
           <View style={styles.heading}>
+            <RefreshNotice message={viewModel.refreshError} style={styles.refreshNotice} />
             <Text numberOfLines={1} style={styles.tournament}>{tournament.name}</Text>
             <Text style={styles.title}>Estatísticas do campeonato</Text>
           </View>
@@ -182,6 +186,7 @@ const useStyles = makeStyles((theme) => ({
   content: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.background },
   scrollContent: { padding: theme.spacing.md, paddingBottom: theme.spacing.xl },
+  refreshNotice: { marginBottom: theme.spacing.md },
   heading: { gap: 2, marginBottom: 12 },
   tournament: { color: theme.colors.olive, fontSize: 13, fontWeight: '800' },
   title: { color: theme.colors.ink, fontSize: 22, fontWeight: '900' },

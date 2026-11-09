@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AppError } from '../core/errors/AppError';
 import { container } from '../di/container';
 import { BASKETBALL_5X5, pollsLiveBoxScore, rankRows, withLiveStats } from '../domain/usecases/shared/boxScore';
 import { isLiveGame, livePeriodLabel, LiveScore, showsScore } from '../domain/usecases/shared/liveScore';
 import { GameBoxScore, GameOverview } from '../models/GameDetail';
 import { useLiveGame } from './LiveScoreViewModel';
+import { useLoadRequest } from './useLoadRequest';
 
 const messageFromError = (error: unknown, fallback: string) =>
   error instanceof AppError ? error.message : fallback;
@@ -14,20 +15,29 @@ export const useGameDetailViewModel = (gameId: string, apiBaseUrl?: string) => {
   const [error, setError] = useState<string | null>(null);
   const [overview, setOverview] = useState<GameOverview | null>(null);
 
-  const [refreshVersion, setRefreshVersion] = useState(0);
-  const refresh = useCallback(() => setRefreshVersion((version) => version + 1), []);
+  const { request, refreshing, refreshError, retry, refresh, settleRefresh } = useLoadRequest(
+    `${gameId}|${apiBaseUrl ?? ''}`
+  );
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      setLoading(true);
-      setError(null);
+      if (!request.refresh) {
+        setLoading(true);
+        setError(null);
+      }
       try {
         const next = await container.getGameOverview.execute(gameId, apiBaseUrl);
         if (!mounted) return;
         setOverview(next);
+        if (request.refresh) settleRefresh(false);
       } catch (requestError) {
         if (!mounted) return;
+        // A failed refresh keeps the game on screen.
+        if (request.refresh) {
+          settleRefresh(true);
+          return;
+        }
         setOverview(null);
         setError(messageFromError(requestError, 'Não foi possível carregar o detalhe do jogo.'));
       } finally {
@@ -36,7 +46,7 @@ export const useGameDetailViewModel = (gameId: string, apiBaseUrl?: string) => {
     };
     void load();
     return () => { mounted = false; };
-  }, [apiBaseUrl, gameId, refreshVersion]);
+  }, [apiBaseUrl, gameId, request, settleRefresh]);
 
   const game = overview?.game ?? null;
   // One poll feeds the score, the period and the box score, like the public
@@ -69,5 +79,5 @@ export const useGameDetailViewModel = (gameId: string, apiBaseUrl?: string) => {
     ? livePeriodLabel(live?.period ?? null, live?.timeLeft ?? null)
     : null;
 
-  return { loading, error, game, boxScore, isLive, score, periodLabel, refresh };
+  return { loading, error, game, boxScore, isLive, score, periodLabel, retry, refreshing, refreshError, refresh };
 };

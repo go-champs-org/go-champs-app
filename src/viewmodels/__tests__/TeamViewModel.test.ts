@@ -133,3 +133,44 @@ describe('useTeamViewModel', () => {
     expect(second.result.current.error).toBeNull();
   });
 });
+
+describe('useTeamViewModel refresh', () => {
+  beforeEach(() => getTeam.mockReset());
+
+  it('refreshes behind the team, keeping the tab, scope and ranking being read', async () => {
+    getTeam.mockResolvedValue(overview());
+    const { result } = renderHook(() => useTeamViewModel('t1', 'team-a'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    act(() => {
+      result.current.selectTab('games');
+      result.current.selectScope('per_game');
+    });
+    act(() => result.current.sortBy('points_per_game'));
+    const sort = result.current.sort;
+    getTeam.mockResolvedValueOnce(overview({ tournamentName: 'Liga 2026' }));
+
+    act(() => result.current.refresh());
+    expect(result.current.refreshing).toBe(true);
+    expect(result.current.loading).toBe(false);
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+
+    expect(result.current.overview?.tournamentName).toBe('Liga 2026');
+    expect(result.current.activeTab).toBe('games');
+    expect(result.current.scope).toBe('per_game');
+    expect(result.current.sort).toEqual(sort);
+    expect(result.current.refreshError).toBeNull();
+  });
+
+  it('keeps the team when a refresh fails', async () => {
+    getTeam.mockResolvedValue(overview());
+    const { result } = renderHook(() => useTeamViewModel('t1', 'team-a'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    getTeam.mockRejectedValueOnce(new Error('offline'));
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.overview?.tournamentName).toBe('Liga');
+    expect(result.current.error).toBeNull();
+    expect(result.current.refreshError).toBe('Não foi possível atualizar. Puxe a tela para tentar novamente.');
+  });
+});

@@ -130,9 +130,9 @@ describe('Tournament repository contracts', () => {
     }
   );
 
-  it('returns an empty catalogue only after both APIs fail', async () => {
+  it('fails the catalogue only after both APIs fail', async () => {
     get.mockRejectedValue(new Error('offline'));
-    await expect(repository.getRecentTournaments()).resolves.toEqual([]);
+    await expect(repository.getRecentTournaments()).rejects.toThrow('offline');
     expect(get.mock.calls).toEqual([
       ['/recently-view', API_CONFIG.goChampsBaseUrl],
       ['/v1/recently-view', API_CONFIG.stagingBaseUrl],

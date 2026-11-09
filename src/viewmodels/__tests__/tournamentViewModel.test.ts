@@ -152,3 +152,139 @@ describe('useTournamentViewModel', () => {
     expect(result.current.leaders).toEqual([]);
   });
 });
+
+describe('useTournamentViewModel refresh', () => {
+  const updatedStandings: PhaseOverview = { ...standings, games: [] };
+  const updatedLeaders = [{ slug: 'rebounds', title: 'Rebotes', scopes: [] }];
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+    tournamentExecute.mockResolvedValue(overview);
+    leadersExecute.mockResolvedValue(leaders);
+    phaseExecute.mockImplementation((phaseId: string) => Promise.resolve(phaseId === 'table' ? standings : bracket));
+  });
+
+  const openOnTable = async () => {
+    const rendered = renderHook(() => useTournamentViewModel('t1', undefined, 'https://api.test/v1'));
+    await waitFor(() => expect(rendered.result.current.phase).toEqual(bracket));
+    act(() => rendered.result.current.selectPhase('table'));
+    await waitFor(() => expect(rendered.result.current.phase).toEqual(standings));
+    act(() => {
+      rendered.result.current.setActiveView('games');
+      rendered.result.current.setSelectedDate('2026-01-01');
+    });
+    return rendered;
+  };
+
+  it('reloads the overview, the phase on screen and the highlights behind the content', async () => {
+    const { result } = await openOnTable();
+    const nextOverview = deferred<TournamentOverview>();
+    tournamentExecute.mockReturnValueOnce(nextOverview.promise);
+    phaseExecute.mockResolvedValue(updatedStandings);
+    leadersExecute.mockResolvedValue(updatedLeaders);
+    phaseExecute.mockClear();
+
+    act(() => result.current.refresh());
+    expect(result.current.refreshing).toBe(true);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.phase).toEqual(standings);
+
+    const renamed = { ...overview, name: 'Copa 2026' };
+    await act(async () => nextOverview.resolve(renamed));
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+
+    expect(result.current.tournament).toEqual(renamed);
+    expect(result.current.selectedPhase?.id).toBe('table');
+    expect(result.current.phase).toEqual(updatedStandings);
+    expect(result.current.leaders).toEqual(updatedLeaders);
+    expect(result.current.activeView).toBe('games');
+    expect(result.current.phaseLoading).toBe(false);
+    expect(result.current.refreshError).toBeNull();
+    // The phase effect leaves the phase the refresh brought alone.
+    expect(phaseExecute).toHaveBeenCalledTimes(1);
+    expect(phaseExecute).toHaveBeenCalledWith('table', 'standings', overview.teams, 'https://api.test/v1');
+  });
+
+  it('keeps everything on screen when the overview fails', async () => {
+    const { result } = await openOnTable();
+    tournamentExecute.mockRejectedValueOnce(new Error('offline'));
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+
+    expect(result.current.refreshError).toBe('Não foi possível atualizar. Puxe a tela para tentar novamente.');
+    expect(result.current.error).toBeNull();
+    expect(result.current.tournament).toEqual(overview);
+    expect(result.current.phase).toEqual(standings);
+    expect(result.current.selectedDate).toBe('2026-01-01');
+  });
+
+  it('keeps the phase and highlights on screen when they fail', async () => {
+    const { result } = await openOnTable();
+    phaseExecute.mockClear();
+    phaseExecute.mockRejectedValue(new Error('offline'));
+    leadersExecute.mockRejectedValue(new Error('offline'));
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+
+    expect(result.current.refreshError).toBe('Não foi possível atualizar. Puxe a tela para tentar novamente.');
+    expect(result.current.phase).toEqual(standings);
+    expect(result.current.phaseError).toBeNull();
+    expect(result.current.leaders).toEqual(leaders);
+    expect(phaseExecute).toHaveBeenCalledTimes(1);
+  });
+
+  it('brings back a phase that had failed', async () => {
+    phaseExecute.mockRejectedValueOnce(new Error('500'));
+    const { result } = renderHook(() => useTournamentViewModel('t1'));
+    await waitFor(() => expect(result.current.phaseError).not.toBeNull());
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.phase).toEqual(bracket);
+    expect(result.current.phaseError).toBeNull();
+    expect(result.current.refreshError).toBeNull();
+  });
+
+  it('refreshes a tournament without phases', async () => {
+    tournamentExecute.mockResolvedValue({ ...overview, phases: [], defaultPhaseId: null });
+    const { result } = renderHook(() => useTournamentViewModel('t1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.refreshError).toBeNull();
+    expect(phaseExecute).not.toHaveBeenCalled();
+  });
+
+  it('ends a phase load the refresh overtook', async () => {
+    const { result } = renderHook(() => useTournamentViewModel('t1'));
+    await waitFor(() => expect(result.current.phase).toEqual(bracket));
+    const slowPhase = deferred<PhaseOverview>();
+    phaseExecute.mockReturnValueOnce(slowPhase.promise);
+
+    act(() => result.current.selectPhase('table'));
+    await waitFor(() => expect(result.current.phaseLoading).toBe(true));
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+
+    expect(result.current.phaseLoading).toBe(false);
+    expect(result.current.phase).toEqual(standings);
+    await act(async () => slowPhase.resolve(bracket));
+    expect(result.current.phase).toEqual(standings);
+  });
+
+  it('ignores a refresh that settles after leaving', async () => {
+    const { result, unmount } = renderHook(() => useTournamentViewModel('t1'));
+    await waitFor(() => expect(result.current.phase).toEqual(bracket));
+    const late = deferred<TournamentOverview>();
+    tournamentExecute.mockReturnValueOnce(late.promise);
+
+    act(() => result.current.refresh());
+    unmount();
+    await act(async () => late.reject(new Error('late')));
+    expect(result.current.refreshError).toBeNull();
+    expect(result.current.refreshing).toBe(true);
+  });
+});

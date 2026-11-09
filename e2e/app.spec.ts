@@ -557,6 +557,10 @@ test('[myGamesGameDetail] abre o jogo pelo card do próximo jogo', async ({ page
   // The game's video plays inline.
   const video = page.getByTestId('game-video').filter({ visible: true }).locator('iframe');
   await expect(video).toHaveAttribute('src', 'https://www.youtube.com/embed/dQw4w9WgXcQ?playsinline=1&rel=0');
+  // The tournament name opens the tournament's home.
+  await page.getByRole('link', { name: 'Abrir campeonato Copa Classificação' }).filter({ visible: true }).click();
+  await expect(page).toHaveURL(/\/tournament\/t-1$/);
+  await expect(page.getByText('Tabela de classificação')).toBeVisible();
 });
 
 test('[myGamesNoProfile] pede o perfil de atleta quando não existe', async ({ page }) => {

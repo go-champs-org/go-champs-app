@@ -105,7 +105,20 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
           refreshControl={themedRefreshControl(theme, refreshing, refresh)}
         >
           <RefreshNotice message={refreshError} style={styles.refreshNotice} />
-          <Text style={styles.tournament}>{tournamentName}</Text>
+          {tournamentId ? (
+            <TouchableOpacity
+              accessibilityRole="link"
+              accessibilityLabel={`Abrir campeonato ${tournamentName}`}
+              onPress={() => navigation.navigate('TournamentScreen', { tournamentId, apiBaseUrl })}
+              style={styles.tournamentLink}
+              hitSlop={{ top: 8, bottom: 8 }}
+            >
+              <Text style={styles.tournament}>{tournamentName}</Text>
+              <Ionicons name="chevron-forward" size={16} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.tournament}>{tournamentName}</Text>
+          )}
 
           <View style={styles.scoreCard}>
             <View style={styles.metaRow}>
@@ -409,7 +422,14 @@ const useStyles = makeStyles((theme) => ({
   },
   scroll: { padding: theme.spacing.md, paddingBottom: theme.spacing.xxl },
   refreshNotice: { marginBottom: theme.spacing.md },
+  tournamentLink: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
   tournament: {
+    flexShrink: 1,
     color: theme.colors.textSecondary,
     fontSize: theme.typography.bodySmall,
     fontWeight: '900',

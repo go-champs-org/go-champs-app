@@ -3,7 +3,7 @@ import { AppError } from '../../core/errors/AppError';
 import { container } from '../../di/container';
 import { AccountIdentity } from '../../domain/repositories/AccountIdentityRepository';
 import { AthleteProfile } from '../../domain/repositories/AthleteProfileRepository';
-import { useProfileViewModel } from '../ProfileViewModel';
+import { NOTICE_DURATION_MS, useProfileViewModel } from '../ProfileViewModel';
 
 jest.mock('../../di/container', () => ({
   container: {
@@ -334,4 +334,35 @@ describe('useProfileViewModel', () => {
       expect(container.saveAthleteProfile.execute).not.toHaveBeenCalled();
     });
   });
+
+  describe('save notice', () => {
+    const saveAthlete = async () => {
+      jest.mocked(container.saveAthleteProfile.execute).mockResolvedValue(athlete);
+      const hook = await loadWith();
+      act(() => hook.result.current.athlete.startEdit());
+      await act(async () => {
+        await hook.result.current.athlete.save();
+      });
+      expect(hook.result.current.notice).toBe('Perfil de atleta atualizado.');
+      return hook;
+    };
+
+    afterEach(() => jest.useRealTimers());
+
+    it('clears when the screen asks (leaving the tab)', async () => {
+      const { result } = await saveAthlete();
+      act(() => result.current.clearNotice());
+      expect(result.current.notice).toBeNull();
+    });
+
+    it('disappears after the notice duration', async () => {
+      jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
+      const { result } = await saveAthlete();
+      act(() => jest.advanceTimersByTime(NOTICE_DURATION_MS - 1));
+      expect(result.current.notice).toBe('Perfil de atleta atualizado.');
+      act(() => jest.advanceTimersByTime(1));
+      expect(result.current.notice).toBeNull();
+    });
+  });
 });
+

@@ -766,6 +766,10 @@ test('[profileEdit] edita o perfil de atleta com um único botão Editar', async
   await expect(page.getByText('Perfil de atleta atualizado.')).toBeVisible();
   await expect(page.getByText('Ana Atualizada')).toBeVisible();
   await expect(page.getByLabel('Nome de atleta')).toBeHidden();
+  await page.getByRole('tab', { name: /Início/ }).click();
+  await page.getByRole('tab', { name: /Perfil/ }).click();
+  await expect(page.getByText('Ana Atualizada')).toBeVisible();
+  await expect(page.getByText('Perfil de atleta atualizado.')).toBeHidden();
 });
 
 test('[profileCancel] cancela a edição e restaura os valores', async ({ page }) => {

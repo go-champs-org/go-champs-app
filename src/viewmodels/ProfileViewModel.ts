@@ -26,6 +26,7 @@ import {
 } from '../domain/usecases/shared/athleteProfileForm';
 
 const CHECK_FIELDS = 'Confira os campos destacados.';
+export const NOTICE_DURATION_MS = 4000;
 
 const messageFromError = (error: unknown, fallback: string) =>
   error instanceof AppError ? error.message : fallback;
@@ -103,6 +104,16 @@ export const useProfileViewModel = (username: string | undefined) => {
       mounted = false;
     };
   }, [username, refreshVersion]);
+
+  // A success message is a moment, not state: it fades on its own, and the
+  // screen clears it on blur (tab screens stay mounted between visits).
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), NOTICE_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
+  const clearNotice = useCallback(() => setNotice(null), []);
 
   const startIdentityEdit = () => {
     setIdentityValues(identityToFormValues(identity));
@@ -228,6 +239,7 @@ export const useProfileViewModel = (username: string | undefined) => {
     refresh,
     account,
     notice,
+    clearNotice,
     identity: {
       data: identity,
       hasData: hasIdentityData(identity),

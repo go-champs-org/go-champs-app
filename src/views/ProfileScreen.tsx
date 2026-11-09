@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Screen } from '../components/layout/Screen';
 import { AppHeader } from '../components/layout/AppHeader';
 import { ContentShell } from '../components/layout/ContentShell';
@@ -38,6 +38,9 @@ const ProfileScreen = () => {
   const navigation = useNavigation<any>();
   const { user, bootstrapping, signOut } = useAuthSession();
   const model = useProfileViewModel(user?.username);
+  const { clearNotice } = model;
+  // The Perfil tab stays mounted: drop the save message when leaving it.
+  useFocusEffect(useCallback(() => clearNotice, [clearNotice]));
 
   if (bootstrapping) {
     return (

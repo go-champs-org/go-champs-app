@@ -4,11 +4,13 @@ import { deferred } from '../../test/deferred';
 import { useAccountViewModel } from '../AccountViewModel';
 import { useGameDetailViewModel } from '../GameDetailViewModel';
 import { useMyGamesViewModel } from '../MyGamesViewModel';
+import { useAthleteHomeViewModel } from '../AthleteHomeViewModel';
 import { useProfileViewModel } from '../ProfileViewModel';
 
 jest.mock('../../di/container', () => ({ container: {
   getGameOverview: { execute: jest.fn() },
-  getAthleteSchedules: { execute: jest.fn() },
+  getAthleteGames: { execute: jest.fn() },
+  getAthleteHome: { execute: jest.fn() },
   getAccountProfile: { execute: jest.fn() },
   getAthleteProfileByUsername: { execute: jest.fn() },
   getAccountIdentity: { execute: jest.fn() },
@@ -17,8 +19,10 @@ jest.mock('../../di/container', () => ({ container: {
 const cases = [
   { name: 'game', useModel: (id: string) => useGameDetailViewModel(id),
     service: container.getGameOverview, value: { game: null, sportSlug: '', liveSiteUpdate: null, boxScore: null } },
-  { name: 'schedule', useModel: (id: string) => useMyGamesViewModel(Boolean(id)),
-    service: container.getAthleteSchedules, value: [] },
+  { name: 'my games', useModel: (id: string) => useMyGamesViewModel(id),
+    service: container.getAthleteGames, value: { profile: null, teamGames: [], recentGames: [] } },
+  { name: 'athlete home', useModel: (id: string) => useAthleteHomeViewModel(id),
+    service: container.getAthleteHome, value: { profile: null, recentGames: [] } },
   { name: 'account', useModel: (id: string) => useAccountViewModel(id),
     service: container.getAccountProfile, value: { username: 'ana', email: 'ana@example.com' } },
   { name: 'profile', useModel: (id: string) => useProfileViewModel(id),

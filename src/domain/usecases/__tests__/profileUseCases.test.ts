@@ -77,7 +77,8 @@ const athleteSetup = () => {
     getByUsername: jest.fn(),
     create: jest.fn().mockResolvedValue(athlete),
     updateByUsername: jest.fn().mockResolvedValue(athlete),
-    getMySchedules: jest.fn(),
+    getTeamSchedule: jest.fn(),
+    getRecentGames: jest.fn(),
   } as jest.Mocked<AthleteProfileRepository>;
   const uploadRepository = { upload: jest.fn().mockResolvedValue('https://cdn/new.jpg') } as jest.Mocked<MediaUploadRepository>;
   return { athleteRepository, uploadRepository, useCase: new SaveAthleteProfileUseCase(athleteRepository, uploadRepository) };

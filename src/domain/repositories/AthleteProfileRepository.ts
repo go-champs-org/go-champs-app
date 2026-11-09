@@ -7,7 +7,8 @@ export type AthleteProfile = {
   instagram: string | null;
   twitter: string | null;
   tournaments?: AthleteTournamentSummary[];
-  career_stats?: AthleteCareerStat[];
+  memberships?: AthleteMembership[];
+  career_stats?: AthleteSportCareer[];
 };
 
 export type AthleteTournamentSummary = {
@@ -16,10 +17,27 @@ export type AthleteTournamentSummary = {
   slug?: string;
 };
 
-export type AthleteCareerStat = {
-  id?: string;
-  title?: string;
-  value?: string | number;
+export type AthleteMembership = {
+  tournament: {
+    id: string;
+    name: string;
+    slug: string;
+    logo_url?: string | null;
+    sport_slug?: string | null;
+    sport_name?: string | null;
+    organization: { id: string; name: string; slug: string } | null;
+  };
+  team: { id: string; name: string; logo_url?: string | null; tri_code?: string | null };
+  shirt_number: string | null;
+};
+
+// The athlete's career in one sport: totals and per-game averages over every
+// tournament they played, keyed by the sport's stat slugs.
+export type AthleteSportCareer = {
+  sport_slug: string;
+  sport_name: string | null;
+  tournaments_count: number;
+  stats: Record<string, number | string | null>;
 };
 
 export type AthleteProfileInput = {
@@ -53,9 +71,32 @@ export type ScheduleGame = {
   tournament: { id: string; name: string; slug: string } | null;
 };
 
+// A game of one of the athlete's teams; `athlete_team_id` is their side.
+export type AthleteTeamGame = ScheduleGame & { athlete_team_id: string };
+
+export type AthleteRecentGame = {
+  game: {
+    id: string;
+    datetime: string;
+    home_team: ScheduleTeam | null;
+    home_placeholder?: string | null;
+    home_score: number | null;
+    away_team: ScheduleTeam | null;
+    away_placeholder?: string | null;
+    away_score: number | null;
+    tournament: { id: string; name: string; slug: string; sport_slug?: string | null } | null;
+  };
+  athlete_team_id: string;
+  result: 'win' | 'loss' | null;
+  stats: Record<string, number | string | null>;
+};
+
 export interface AthleteProfileRepository {
   getByUsername(username: string): Promise<AthleteProfile | null>;
   create(input: AthleteProfileInput): Promise<AthleteProfile>;
   updateByUsername(username: string, input: AthleteProfileInput): Promise<AthleteProfile>;
-  getMySchedules(): Promise<ScheduleGame[]>;
+  // Public: the games of the athlete's own teams, from yesterday to 30 days ahead.
+  getTeamSchedule(username: string): Promise<AthleteTeamGame[]>;
+  // Public: the athlete's latest finished games (at most 50), newest first.
+  getRecentGames(username: string): Promise<AthleteRecentGame[]>;
 }

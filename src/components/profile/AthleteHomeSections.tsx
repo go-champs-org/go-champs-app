@@ -1,0 +1,433 @@
+import React from 'react';
+import { Linking, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { PlayerAvatar } from '../competition/PlayerAvatar';
+import { ContentShell } from '../layout/ContentShell';
+import { makeStyles, useTheme } from '../../theme/theme';
+import { SocialLink, SocialNetwork } from '../../domain/usecases/shared/athleteProfile';
+import { CareerSummary, FormBar, TournamentCard } from '../../domain/usecases/shared/athleteHome';
+
+const SOCIAL_ICONS: Record<SocialNetwork, keyof typeof Ionicons.glyphMap> = {
+  instagram: 'logo-instagram',
+  twitter: 'logo-twitter',
+  facebook: 'logo-facebook',
+};
+
+const SOCIAL_LABELS: Record<SocialNetwork, string> = {
+  instagram: 'Abrir Instagram',
+  twitter: 'Abrir Twitter',
+  facebook: 'Abrir Facebook',
+};
+
+type HeroProps = {
+  name: string;
+  photoUrl: string | null;
+  socialLinks: SocialLink[];
+  editLabel: string;
+  onEdit: () => void;
+  onOpenAccount: () => void;
+};
+
+// The dark band under the header: photo, name, social networks and actions.
+// Sharing the profile is not built yet, so its button shows disabled.
+export const AthleteHero = ({ name, photoUrl, socialLinks, editLabel, onEdit, onOpenAccount }: HeroProps) => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.hero} testID="athlete-home-hero">
+      <ContentShell style={styles.heroContent}>
+        <View style={styles.identity}>
+          <PlayerAvatar photoUrl={photoUrl} name={name} size={76} />
+          <View style={styles.identityText}>
+            <Text accessibilityRole="header" numberOfLines={2} style={styles.name}>
+              {name}
+            </Text>
+            {socialLinks.length > 0 ? (
+              <View style={styles.socials}>
+                {socialLinks.map(({ network, url }) => (
+                  <TouchableOpacity
+                    key={network}
+                    accessibilityRole="link"
+                    accessibilityLabel={SOCIAL_LABELS[network]}
+                    onPress={() => void Linking.openURL(url)}
+                    style={styles.social}
+                  >
+                    <Ionicons name={SOCIAL_ICONS[network]} size={24} color={theme.colors.onDark} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : null}
+          </View>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Configurações da conta"
+            onPress={onOpenAccount}
+            style={styles.settings}
+          >
+            <Ionicons name="settings-outline" size={22} color={theme.colors.onDark} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.actions}>
+          <TouchableOpacity accessibilityRole="button" onPress={onEdit} style={[styles.action, styles.editAction]}>
+            <Text style={styles.editText}>{editLabel}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Compartilhar perfil (em breve)"
+            disabled
+            style={[styles.action, styles.shareAction]}
+          >
+            <Text style={styles.shareText}>Compartilhar perfil</Text>
+          </TouchableOpacity>
+        </View>
+      </ContentShell>
+    </View>
+  );
+};
+
+export const SectionHeading = ({
+  title,
+  detail,
+  action,
+}: {
+  title: string;
+  detail?: string;
+  action?: { label: string; onPress: () => void };
+}) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.heading}>
+      <Text accessibilityRole="header" style={styles.headingTitle}>
+        {title}
+      </Text>
+      {detail ? <Text style={styles.headingDetail}>{detail}</Text> : null}
+      {action ? (
+        <TouchableOpacity accessibilityRole="button" onPress={action.onPress} style={styles.headingAction}>
+          <Text style={styles.headingActionText}>{action.label}</Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+};
+
+const Metric = ({ value, label }: { value: string; label: string }) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.metric}>
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
+    </View>
+  );
+};
+
+export const CareerSummaryCard = ({ summary }: { summary: CareerSummary }) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.card} testID={`career-${summary.sportSlug}`}>
+      <View style={styles.metrics}>
+        <Metric value={summary.tournaments} label="Campeonatos" />
+        <Metric value={summary.games} label="Jogos disputados" />
+      </View>
+      {summary.rows.length > 0 ? (
+        <>
+          <View style={styles.divider} />
+          <View>
+            <View style={styles.statRow}>
+              <Text style={[styles.statHead, styles.statLabelCell]}>Estatística</Text>
+              <Text style={[styles.statHead, styles.statValueCell]}>Total</Text>
+              <Text style={[styles.statHead, styles.statValueCell]}>Por jogo</Text>
+            </View>
+            {summary.rows.map((row) => (
+              <View key={row.key} style={[styles.statRow, styles.statBodyRow]}>
+                <Text style={[styles.statLabel, styles.statLabelCell]}>{row.label}</Text>
+                <Text style={[styles.statTotal, styles.statValueCell]}>{row.total}</Text>
+                <Text style={[styles.statPerGame, styles.statValueCell]}>{row.perGame}</Text>
+              </View>
+            ))}
+          </View>
+        </>
+      ) : null}
+    </View>
+  );
+};
+
+const FORM_BAR_HEIGHT = 56;
+
+export const ScoringFormCard = ({ bars }: { bars: FormBar[] }) => {
+  const styles = useStyles();
+  if (bars.length === 0) return null;
+  return (
+    <View style={styles.card} testID="scoring-form">
+      <View style={styles.formHeading}>
+        <Text style={styles.formTitle}>Forma de pontuação</Text>
+        <Text style={styles.formDetail}>
+          {bars.length === 1 ? 'Último jogo · PTS' : `Últimos ${bars.length} jogos · PTS`}
+        </Text>
+      </View>
+      <View style={styles.bars}>
+        {bars.map((bar) => (
+          <View
+            key={bar.gameId}
+            accessible
+            accessibilityLabel={`${bar.label} pontos em ${bar.date}`}
+            style={styles.barColumn}
+          >
+            <Text style={styles.barValue}>{bar.label}</Text>
+            <View
+              style={[
+                styles.bar,
+                bar.latest && styles.barLatest,
+                { height: Math.max(6, Math.round(bar.ratio * FORM_BAR_HEIGHT)) },
+              ]}
+            />
+            <Text style={styles.barDate}>{bar.date}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+export const TournamentCardItem = ({ card, onOpen }: { card: TournamentCard; onOpen: () => void }) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.card}>
+      {card.organization ? <Text style={styles.tournamentKicker}>{card.organization.toUpperCase()}</Text> : null}
+      <Text style={styles.tournamentName}>{card.name}</Text>
+      <Text style={styles.tournamentMeta}>
+        {card.sport} · {card.team}
+      </Text>
+      <Text
+        accessibilityRole="link"
+        accessibilityLabel={`Ver campeonato ${card.name}`}
+        onPress={onOpen}
+        style={styles.tournamentLink}
+      >
+        Ver campeonato →
+      </Text>
+    </View>
+  );
+};
+
+const useStyles = makeStyles((theme) => ({
+  hero: {
+    backgroundColor: theme.colors.primary,
+    borderBottomWidth: theme.dark ? 1 : 0,
+    borderBottomColor: theme.colors.chromeBorder,
+  },
+  heroContent: {
+    paddingHorizontal: 20,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: 22,
+    gap: 18,
+  },
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  identityText: {
+    flex: 1,
+    gap: 3,
+  },
+  name: {
+    color: theme.colors.onDark,
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  socials: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  social: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settings: {
+    alignSelf: 'flex-start',
+    padding: 10,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  action: {
+    flex: 1,
+    minHeight: theme.layout.touchTarget,
+    paddingHorizontal: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editAction: {
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.accent,
+  },
+  editText: {
+    color: theme.colors.onAccent,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  shareAction: {
+    borderRadius: 20,
+    backgroundColor: theme.colors.chromeField,
+  },
+  shareText: {
+    color: theme.colors.onPrimaryMuted,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  heading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    minHeight: theme.layout.touchTarget,
+  },
+  headingTitle: {
+    flex: 1,
+    color: theme.colors.textPrimary,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  headingDetail: {
+    color: theme.colors.mutedText,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  headingAction: {
+    minHeight: theme.layout.touchTarget,
+    paddingHorizontal: theme.spacing.md,
+    justifyContent: 'center',
+  },
+  headingActionText: {
+    color: theme.colors.olive,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  card: {
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.cardBorder,
+    borderRadius: 14,
+    padding: theme.spacing.md,
+    gap: 10,
+  },
+  metrics: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  metric: {
+    flex: 1,
+    gap: 2,
+  },
+  metricValue: {
+    color: theme.colors.textPrimary,
+    fontSize: 32,
+    fontWeight: '800',
+  },
+  metricLabel: {
+    color: theme.colors.mutedText,
+    fontSize: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.subtleBorder,
+  },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    paddingBottom: theme.spacing.sm,
+  },
+  statBodyRow: {
+    paddingVertical: 7,
+  },
+  statLabelCell: {
+    flex: 1,
+  },
+  statValueCell: {
+    width: 80,
+    textAlign: 'right',
+  },
+  statHead: {
+    color: theme.colors.mutedText,
+    fontSize: 12,
+  },
+  statLabel: {
+    color: theme.colors.textPrimary,
+    fontSize: 13,
+  },
+  statTotal: {
+    color: theme.colors.mutedText,
+    fontSize: 14,
+  },
+  statPerGame: {
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+  },
+  formHeading: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+  },
+  formTitle: {
+    flex: 1,
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  formDetail: {
+    color: theme.colors.mutedText,
+    fontSize: 11,
+  },
+  bars: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 12,
+  },
+  barColumn: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 5,
+  },
+  barValue: {
+    color: theme.colors.textPrimary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  bar: {
+    alignSelf: 'stretch',
+    borderRadius: 4,
+    backgroundColor: theme.colors.accentSoft,
+  },
+  barLatest: {
+    backgroundColor: theme.colors.accent,
+  },
+  barDate: {
+    color: theme.colors.mutedText,
+    fontSize: 11,
+  },
+  tournamentKicker: {
+    color: theme.colors.mutedText,
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  tournamentName: {
+    color: theme.colors.textPrimary,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  tournamentMeta: {
+    color: theme.colors.mutedText,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  tournamentLink: {
+    alignSelf: 'flex-start',
+    color: theme.colors.success,
+    fontSize: 12,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
+}));

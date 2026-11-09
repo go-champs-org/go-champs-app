@@ -3,6 +3,8 @@ export const SITE_LINKS = {
   faq: 'https://go-champs.com/faq',
   about: 'https://go-champs.com/about',
   contact: 'https://go-champs.com/contact',
+  // The athlete feedback form, from the Perfil tab.
+  athleteFeedback: 'https://forms.gle/1fv6sDCBjfEigmYL7',
 } as const;
 
 export const SOCIAL_LINKS = {

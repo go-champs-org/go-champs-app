@@ -469,6 +469,16 @@ test('[authProfile] mostra o perfil de atleta com resumo e campeonatos', async (
   await expect(page.getByRole('button', { name: 'Sair da conta' })).toBeHidden();
 });
 
+test('[profileFeedback] abre o formulário de feedback pelo perfil', async ({ page }) => {
+  await page.context().route('https://forms.gle/**', (route) => route.fulfill({ contentType: 'text/html', body: '<p>Formulário</p>' }));
+  await signInAsAna(page);
+  const feedback = page.getByTestId('athlete-feedback').filter({ visible: true });
+  await expect(feedback.getByText('Ajude a melhorar o Go Champs')).toBeVisible();
+  const popup = page.waitForEvent('popup');
+  await feedback.getByRole('link', { name: 'Enviar feedback (abre formulário)' }).click();
+  expect((await popup).url()).toBe('https://forms.gle/1fv6sDCBjfEigmYL7');
+});
+
 test('[profileTournament] abre o campeonato pelo card de Meus campeonatos', async ({ page }) => {
   await signInAsAna(page);
   await page.getByLabel('Ver campeonato Copa Completa').click();

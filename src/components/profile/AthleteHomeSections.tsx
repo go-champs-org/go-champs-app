@@ -1,10 +1,12 @@
 import React from 'react';
 import { Linking, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import { PlayerAvatar } from '../competition/PlayerAvatar';
 import { TeamBadge } from '../competition/TeamBadge';
 import { ContentShell } from '../layout/ContentShell';
 import { makeStyles, useTheme } from '../../theme/theme';
+import { SITE_LINKS } from '../../core/config/siteLinks';
 import { SocialLink, SocialNetwork } from '../../domain/usecases/shared/athleteProfile';
 import { CareerSummary, MonthBar, TournamentCard } from '../../domain/usecases/shared/athleteHome';
 
@@ -176,6 +178,33 @@ export const MonthlyScoringCard = ({ bars }: { bars: MonthBar[] }) => {
             <Text style={styles.barDate}>{bar.month}</Text>
           </View>
         ))}
+      </View>
+    </View>
+  );
+};
+
+// Figma's "Help us improve" card, with an accent edge, an icon and a button
+// so it stands out among the stats.
+export const FeedbackCard = () => {
+  const theme = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.feedback} testID="athlete-feedback">
+      <View style={styles.feedbackIcon}>
+        <Ionicons name="chatbubbles-outline" size={22} color={theme.colors.onAccent} />
+      </View>
+      <View style={styles.feedbackBody}>
+        <Text style={styles.feedbackTitle}>Ajude a melhorar o Go Champs</Text>
+        <Text style={styles.feedbackText}>Conte o que achou do seu perfil e dos seus jogos. Leva 2 minutos.</Text>
+        <TouchableOpacity
+          accessibilityRole="link"
+          accessibilityLabel="Enviar feedback (abre formulário)"
+          onPress={() => void WebBrowser.openBrowserAsync(SITE_LINKS.athleteFeedback)}
+          style={styles.feedbackButton}
+        >
+          <Text style={styles.feedbackButtonText}>Enviar feedback</Text>
+          <Ionicons name="open-outline" size={16} color={theme.colors.onAccent} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -404,6 +433,54 @@ const useStyles = makeStyles((theme) => ({
   barDate: {
     color: theme.colors.mutedText,
     fontSize: 11,
+  },
+  feedback: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.accent,
+    backgroundColor: theme.colors.accentSoft,
+  },
+  feedbackIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.accent,
+  },
+  feedbackBody: {
+    flex: 1,
+    gap: 6,
+  },
+  feedbackTitle: {
+    color: theme.colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  feedbackText: {
+    color: theme.colors.mutedText,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  feedbackButton: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+    minHeight: 40,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.accent,
+  },
+  feedbackButtonText: {
+    color: theme.colors.onAccent,
+    fontSize: 14,
+    fontWeight: '600',
   },
   tournamentHeader: {
     flexDirection: 'row',

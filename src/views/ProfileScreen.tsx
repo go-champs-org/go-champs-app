@@ -8,6 +8,7 @@ import { BootstrapLoader, LoadState, SaveNotice, SignInPrompt } from '../compone
 import {
   AthleteHero,
   CareerSummaryCard,
+  FeedbackCard,
   MonthlyScoringCard,
   SectionHeading,
   TournamentCardItem,
@@ -90,6 +91,7 @@ const ProfileScreen = () => {
                       </View>
                     ))
                   )}
+                  <FeedbackCard />
                   <View style={styles.section}>
                     <SectionHeading
                       title="Meus campeonatos"

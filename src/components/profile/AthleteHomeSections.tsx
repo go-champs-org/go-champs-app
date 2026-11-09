@@ -195,7 +195,7 @@ export const FeedbackCard = () => {
       </View>
       <View style={styles.feedbackBody}>
         <Text style={styles.feedbackTitle}>Ajude a melhorar o Go Champs</Text>
-        <Text style={styles.feedbackText}>Conte o que achou do seu perfil e dos seus jogos. Leva 2 minutos.</Text>
+        <Text style={styles.feedbackText}>Conte como podemos melhorar essa experiência. Leva 2 minutos.</Text>
         <TouchableOpacity
           accessibilityRole="link"
           accessibilityLabel="Enviar feedback (abre formulário)"

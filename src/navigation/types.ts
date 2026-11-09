@@ -11,6 +11,7 @@ export type RootStackParamList = {
   AthleteScreen: { tournamentId: string; playerId: string; apiBaseUrl?: string };
   OrganizationScreen: { organizationSlug: string; apiBaseUrl?: string };
   OrganizationsScreen: undefined;
+  AccountScreen: undefined;
   AuthScreen: { initialMode?: 'signIn' | 'signUp' | 'recovery' };
   WebAuthFlowScreen: { purpose: WebAuthPurpose };
 };

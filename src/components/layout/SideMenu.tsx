@@ -8,7 +8,7 @@ import { SITE_LINKS, SOCIAL_LINKS } from '../../core/config/siteLinks';
 import { makeStyles, useTheme } from '../../theme/theme';
 import { ThemePreference, setThemePreference, useThemePreference } from '../../theme/themePreference';
 
-export type SideMenuItem = 'home' | 'organizations';
+export type SideMenuItem = 'home' | 'organizations' | 'account';
 
 type Props = {
   visible: boolean;
@@ -16,6 +16,7 @@ type Props = {
   onClose: () => void;
   onOpenHome: () => void;
   onOpenOrganizations: () => void;
+  onOpenAccount: () => void;
 };
 
 const PANEL_MAX_WIDTH = 320;
@@ -104,7 +105,7 @@ const AppearancePicker = () => {
 };
 
 // The app menu, sliding in from the right over the current tab.
-export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrganizations }: Props) => {
+export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrganizations, onOpenAccount }: Props) => {
   const theme = useTheme();
   const styles = useStyles();
   const { width } = useWindowDimensions();
@@ -194,6 +195,12 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
                   active={activeItem === 'organizations'}
                   icon={({ color }) => <MaterialCommunityIcons name="handshake-outline" size={24} color={color} />}
                   onPress={() => run(onOpenOrganizations)}
+                />
+                <MenuRow
+                  label="Minha conta"
+                  active={activeItem === 'account'}
+                  icon={({ color }) => <Ionicons name="person-circle-outline" size={24} color={color} />}
+                  onPress={() => run(onOpenAccount)}
                 />
               </View>
               <View style={styles.section}>

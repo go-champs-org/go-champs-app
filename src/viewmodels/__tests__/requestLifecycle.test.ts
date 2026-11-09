@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { container } from '../../di/container';
 import { deferred } from '../../test/deferred';
+import { useAccountViewModel } from '../AccountViewModel';
 import { useGameDetailViewModel } from '../GameDetailViewModel';
 import { useMyGamesViewModel } from '../MyGamesViewModel';
 import { useProfileViewModel } from '../ProfileViewModel';
@@ -18,14 +19,15 @@ const cases = [
     service: container.getGameOverview, value: { game: null, sportSlug: '', liveSiteUpdate: null, boxScore: null } },
   { name: 'schedule', useModel: (id: string) => useMyGamesViewModel(Boolean(id)),
     service: container.getAthleteSchedules, value: [] },
-  { name: 'profile', useModel: (id: string) => useProfileViewModel(id),
+  { name: 'account', useModel: (id: string) => useAccountViewModel(id),
     service: container.getAccountProfile, value: { username: 'ana', email: 'ana@example.com' } },
+  { name: 'profile', useModel: (id: string) => useProfileViewModel(id),
+    service: container.getAthleteProfileByUsername, value: { id: 'a1', username: 'ana', name: 'Ana' } },
 ];
 
 describe.each(cases)('$name request lifecycle', ({ useModel, service, value }) => {
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mocked(container.getAthleteProfileByUsername.execute).mockResolvedValue(null);
     jest.mocked(container.getAccountIdentity.execute).mockResolvedValue(null);
   });
 

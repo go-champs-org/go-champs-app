@@ -52,6 +52,7 @@ export const AppHeader = ({ searchOpen = false, onSearchPress }: Props) => {
         onClose={() => setMenuOpen(false)}
         onOpenHome={() => navigation.navigate('MainTabs', { screen: 'HomeTab' })}
         onOpenOrganizations={() => navigation.navigate('OrganizationsScreen')}
+        onOpenAccount={() => navigation.navigate('AccountScreen')}
       />
     </SafeAreaView>
   );

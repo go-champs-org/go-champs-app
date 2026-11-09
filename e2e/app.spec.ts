@@ -73,6 +73,7 @@ test('[sideMenu] abre o menu com links e redes sociais', async ({ page }) => {
   await page.getByRole('button', { name: 'Abrir menu' }).click();
   await expect(page.getByRole('button', { name: 'Início' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Organizações' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Minha conta' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Perguntas frequentes' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Instagram da Go Champs' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeHidden();
@@ -426,7 +427,7 @@ test('[auth] entra pelo perfil e atualiza a sessão', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Senha', exact: true }).fill('secret');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page.getByText('Entrar na minha conta')).toBeHidden();
-  await expect(page.getByRole('heading', { name: 'Sua conta' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Perfil de atleta' })).toBeVisible();
 });
 
 const signInAsAna = async (page: Page) => {
@@ -435,20 +436,42 @@ const signInAsAna = async (page: Page) => {
   await page.getByRole('textbox', { name: 'Senha', exact: true }).fill('secret');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page.getByText('Entrar na minha conta')).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Perfil de atleta' })).toBeVisible();
+};
+
+const openSignedInAccount = async (page: Page) => {
+  await signInAsAna(page);
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await page.getByRole('button', { name: 'Minha conta' }).click();
   await expect(page.getByRole('heading', { name: 'Sua conta' })).toBeVisible();
 };
 
-test('[authProfile] mostra conta autenticada e permite sair', async ({ page }) => {
+test('[authProfile] mostra só o perfil de atleta na aba Perfil', async ({ page }) => {
   await signInAsAna(page);
   await page.getByText('Perfil', { exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Sua conta' })).toBeVisible();
+  await expect(page.getByText('Ana Silva', { exact: true })).toBeVisible();
+  await expect(page.getByText('Nenhuma foto adicionada')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sua conta' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Dados de identidade' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Sair da conta' })).toBeHidden();
+});
+
+test('[accountMenu] abre Minha conta pelo menu e permite sair', async ({ page }) => {
+  await openSignedInAccount(page);
   await expect(page.getByText('ana@example.com')).toBeVisible();
   await expect(page.getByText('Ana Maria Silva')).toBeVisible();
   await expect(page.getByText('••• •• 4725')).toBeVisible();
   await expect(page.getByText('21 mai 1997')).toBeVisible();
-  await expect(page.getByText('Ana Silva', { exact: true })).toBeVisible();
-  await expect(page.getByText('Nenhuma foto adicionada')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Perfil de atleta' })).toBeHidden();
   await page.getByRole('button', { name: 'Sair da conta' }).click();
+  await expect(page.getByRole('button', { name: 'Sair da conta' })).toBeHidden();
+  await expect(page.getByText('Entre na sua conta').last()).toBeVisible();
+});
+
+test('[accountSignedOut] pede para entrar ao abrir Minha conta sem sessão', async ({ page }) => {
+  await openHome(page);
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await page.getByRole('button', { name: 'Minha conta' }).click();
   await expect(page.getByText('Entre na sua conta')).toBeVisible();
 });
 
@@ -745,7 +768,7 @@ test('[liveGameDetail] acompanha jogo ao vivo com período e estatísticas do sc
 const openSignedInProfile = async (page: Page) => {
   await signInAsAna(page);
   await page.getByText('Perfil', { exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Sua conta' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Perfil de atleta' })).toBeVisible();
 };
 
 const requestBody = (request: Request) => request.postDataJSON() as Record<string, Record<string, unknown>>;
@@ -836,7 +859,7 @@ test('[athleteCreate] cria o perfil de atleta pelo estado vazio', async ({ page 
 });
 
 test('[identityEdit] edita os dados de identidade e envia só o que mudou', async ({ page }) => {
-  await openSignedInProfile(page);
+  await openSignedInAccount(page);
   await page.getByRole('button', { name: 'Editar dados de identidade' }).click();
   await expect(page.getByLabel('Nome completo')).toHaveValue('Ana Maria Silva');
   await expect(page.getByLabel('Data de nascimento')).toHaveValue('21/05/1997');
@@ -861,7 +884,7 @@ test('[identityCreate] adiciona dados de identidade pelo estado vazio', async ({
   await page.route('**/account-identity', (route) => (route.request().method() === 'GET'
     ? fulfillJson(route, { errors: { detail: 'Not Found' } }, 404)
     : route.fallback()));
-  await openSignedInProfile(page);
+  await openSignedInAccount(page);
   await expect(page.getByText('Nenhum dado de identidade ainda')).toBeVisible();
   await page.getByRole('button', { name: 'Adicionar dados de identidade' }).click();
   await page.getByLabel('Nome completo').fill('Ana Maria Silva');

@@ -138,6 +138,7 @@ export const test = base.extend({
             ],
             officials: [],
             web_url: null,
+            youtube_code: gameId === 'game-next' ? 'dQw4w9WgXcQ' : null,
             phase: {
               id: 'table',
               title: 'Classificação',

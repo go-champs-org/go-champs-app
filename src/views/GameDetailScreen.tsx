@@ -19,6 +19,8 @@ import { EmptyState } from '../components/feedback/EmptyState';
 import { LiveBadge } from '../components/competition/LiveBadge';
 import { PlayerAvatar } from '../components/competition/PlayerAvatar';
 import { TeamBadge } from '../components/competition/TeamBadge';
+import { YouTubePlayer } from '../components/video/YouTubePlayer';
+import { youtubeVideoId, youtubeWatchUrl } from '../domain/usecases/shared/youtube';
 import { useGameDetailViewModel } from '../viewmodels/GameDetailViewModel';
 import {
   BoxScoreSort,
@@ -76,6 +78,8 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
       </View>
     );
   }
+
+  const videoId = youtubeVideoId(game.youtube_code);
 
   const tournamentName = game.phase?.tournament?.name || 'Campeonato';
   const tournamentId = game.phase?.tournament?.id;
@@ -147,16 +151,19 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
             </View>
           ) : null}
 
-          {game.youtube_code ? (
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel="Vídeo do jogo"
-              onPress={() => void Linking.openURL(`https://www.youtube.com/watch?v=${game.youtube_code}`)}
-              style={styles.videoButton}
-            >
-              <Ionicons name="logo-youtube" size={18} color={theme.colors.danger} />
-              <Text style={styles.videoText}>Vídeo do jogo</Text>
-            </TouchableOpacity>
+          {videoId ? (
+            <View style={styles.video}>
+              <YouTubePlayer videoId={videoId} />
+              <TouchableOpacity
+                accessibilityRole="link"
+                accessibilityLabel="Assistir no YouTube"
+                onPress={() => void Linking.openURL(youtubeWatchUrl(videoId))}
+                style={styles.videoButton}
+              >
+                <Ionicons name="logo-youtube" size={18} color={theme.colors.danger} />
+                <Text style={styles.videoText}>Assistir no YouTube</Text>
+              </TouchableOpacity>
+            </View>
           ) : null}
 
           {boxScore ? <BoxScoreSection boxScore={boxScore} onPressAthlete={openAthlete} /> : null}
@@ -494,10 +501,13 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.mutedText,
     fontSize: theme.typography.bodySmall,
   },
-  videoButton: {
+  video: {
     marginTop: theme.spacing.md,
-    alignSelf: 'flex-start',
-    height: 36,
+    gap: theme.spacing.sm,
+  },
+  videoButton: {
+    height: 40,
+    justifyContent: 'center',
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.pill,
     borderWidth: 1,

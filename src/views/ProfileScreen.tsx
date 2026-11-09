@@ -78,9 +78,6 @@ const ProfileScreen = () => {
     );
   }
 
-  const openWebAuth = (purpose: 'accountCredentials' | 'accountRecovery') =>
-    navigation.navigate('WebAuthFlowScreen', { purpose });
-
   return (
     <Screen>
       <AppHeader />
@@ -111,20 +108,15 @@ const ProfileScreen = () => {
               <ProfileCard>
                 <ProfileRow label="Usuário" value={model.account?.username || user.username} />
                 <RowDivider />
-                <ProfileRow
-                  label="E-mail"
-                  value={model.account?.email || user.email}
-                  action={{
-                    label: 'Alterar',
-                    accessibilityLabel: 'Alterar e-mail',
-                    onPress: () => openWebAuth('accountCredentials'),
-                  }}
-                />
+                <ProfileRow label="E-mail" value={model.account?.email || user.email} />
                 <RowDivider />
                 <ProfileRow
                   label="Senha"
                   value="Redefinir por e-mail"
-                  action={{ label: 'Redefinir senha', onPress: () => openWebAuth('accountRecovery') }}
+                  action={{
+                    label: 'Redefinir senha',
+                    onPress: () => navigation.navigate('WebAuthFlowScreen', { purpose: 'accountRecovery' }),
+                  }}
                 />
               </ProfileCard>
             </ProfileSection>

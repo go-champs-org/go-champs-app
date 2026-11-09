@@ -25,12 +25,11 @@ type HeroProps = {
   socialLinks: SocialLink[];
   editLabel: string;
   onEdit: () => void;
-  onOpenAccount: () => void;
 };
 
 // The dark band under the header: photo, name, social networks and actions.
 // Sharing the profile is not built yet, so its button shows disabled.
-export const AthleteHero = ({ name, photoUrl, socialLinks, editLabel, onEdit, onOpenAccount }: HeroProps) => {
+export const AthleteHero = ({ name, photoUrl, socialLinks, editLabel, onEdit }: HeroProps) => {
   const theme = useTheme();
   const styles = useStyles();
   return (
@@ -50,6 +49,7 @@ export const AthleteHero = ({ name, photoUrl, socialLinks, editLabel, onEdit, on
                     accessibilityRole="link"
                     accessibilityLabel={SOCIAL_LABELS[network]}
                     onPress={() => void Linking.openURL(url)}
+                    hitSlop={{ left: 6, right: 6 }}
                     style={styles.social}
                   >
                     <Ionicons name={SOCIAL_ICONS[network]} size={24} color={theme.colors.onDark} />
@@ -58,14 +58,6 @@ export const AthleteHero = ({ name, photoUrl, socialLinks, editLabel, onEdit, on
               </View>
             ) : null}
           </View>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Configurações da conta"
-            onPress={onOpenAccount}
-            style={styles.settings}
-          >
-            <Ionicons name="settings-outline" size={22} color={theme.colors.onDark} />
-          </TouchableOpacity>
         </View>
         <View style={styles.actions}>
           <TouchableOpacity accessibilityRole="button" onPress={onEdit} style={[styles.action, styles.editAction]}>
@@ -235,19 +227,15 @@ const useStyles = makeStyles((theme) => ({
     fontSize: 28,
     fontWeight: '800',
   },
+  // The icons start flush with the name: no box around them, the tap
+  // area grows through hitSlop instead.
   socials: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 12,
   },
   social: {
-    width: 36,
     height: 36,
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  settings: {
-    alignSelf: 'flex-start',
-    padding: 10,
   },
   actions: {
     flexDirection: 'row',
@@ -270,7 +258,7 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: '600',
   },
   shareAction: {
-    borderRadius: 20,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.colors.chromeField,
   },
   shareText: {

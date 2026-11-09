@@ -61,7 +61,6 @@ const ProfileScreen = () => {
             socialLinks={model.socialLinks}
             editLabel={profile ? 'Editar perfil' : 'Criar perfil de atleta'}
             onEdit={openEdit}
-            onOpenAccount={() => navigation.navigate('AccountScreen')}
           />
           <ContentShell style={styles.content}>
             <SaveNotice notice={model.notice} />

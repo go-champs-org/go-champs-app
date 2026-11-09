@@ -465,12 +465,6 @@ test('[authProfile] mostra o perfil de atleta com resumo e campeonatos', async (
   await expect(page.getByRole('button', { name: 'Sair da conta' })).toBeHidden();
 });
 
-test('[profileAccount] abre Minha conta pela engrenagem do perfil', async ({ page }) => {
-  await signInAsAna(page);
-  await page.getByRole('button', { name: 'Configurações da conta' }).filter({ visible: true }).click();
-  await expect(page.getByRole('heading', { name: 'Sua conta' })).toBeVisible();
-});
-
 test('[profileTournament] abre o campeonato pelo card de Meus campeonatos', async ({ page }) => {
   await signInAsAna(page);
   await page.getByLabel('Ver campeonato Copa Completa').click();

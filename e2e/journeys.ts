@@ -32,7 +32,6 @@ export const journeys = {
   gamesTab: 'Abrir Meus jogos como visitante',
   auth: 'Entrar pelo perfil e atualizar a sessao',
   authProfile: 'Ver o perfil de atleta com resumo, forma e campeonatos',
-  profileAccount: 'Abrir Minha conta pela engrenagem do perfil',
   profileTournament: 'Abrir o campeonato pelo card de Meus campeonatos',
   accountMenu: 'Abrir Minha conta pelo menu e sair',
   accountSignedOut: 'Pedir para entrar ao abrir Minha conta sem sessao',

@@ -460,7 +460,10 @@ test('[authProfile] mostra o perfil de atleta com resumo e campeonatos', async (
   await expect(form.getByText('Últimos 2 jogos · PTS')).toBeVisible();
   await expect(form.getByLabel('28 pontos em 7 nov')).toBeVisible();
   await expect(page.getByText('Meus campeonatos')).toBeVisible();
-  await expect(page.getByText('Alpha · #7')).toBeVisible();
+  const tournamentCard = page.getByTestId('athlete-tournament-card').filter({ visible: true }).first();
+  await expect(tournamentCard.getByText('Alpha · #7')).toBeVisible();
+  await expect(tournamentCard.getByLabel('Escudo Alpha')).toBeVisible();
+  await expect(tournamentCard.getByLabel('Escudo Copa Completa')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Sua conta' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Sair da conta' })).toBeHidden();
 });

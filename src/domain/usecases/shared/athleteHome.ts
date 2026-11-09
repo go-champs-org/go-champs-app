@@ -92,8 +92,12 @@ export type TournamentCard = {
   key: string;
   tournamentId: string;
   name: string;
+  logoUrl: string | null;
   organization: string | null;
   sport: string;
+  teamName: string;
+  teamLogoUrl: string | null;
+  // 'Alpha · #7'
   team: string;
 };
 
@@ -105,7 +109,10 @@ export const tournamentCards = (memberships: AthleteMembership[] | undefined): T
     key: `${membership.tournament.id}:${membership.team.id}`,
     tournamentId: membership.tournament.id,
     name: membership.tournament.name,
+    logoUrl: membership.tournament.logo_url ?? null,
     organization: membership.tournament.organization?.name ?? null,
     sport: sportLabel(membership.tournament.sport_slug, membership.tournament.sport_name),
+    teamName: membership.team.name,
+    teamLogoUrl: membership.team.logo_url ?? null,
     team: membership.shirt_number ? `${membership.team.name} · #${membership.shirt_number}` : membership.team.name,
   }));

@@ -2,6 +2,7 @@ import React from 'react';
 import { Linking, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PlayerAvatar } from '../competition/PlayerAvatar';
+import { TeamBadge } from '../competition/TeamBadge';
 import { ContentShell } from '../layout/ContentShell';
 import { makeStyles, useTheme } from '../../theme/theme';
 import { SocialLink, SocialNetwork } from '../../domain/usecases/shared/athleteProfile';
@@ -183,12 +184,19 @@ export const ScoringFormCard = ({ bars }: { bars: FormBar[] }) => {
 export const TournamentCardItem = ({ card, onOpen }: { card: TournamentCard; onOpen: () => void }) => {
   const styles = useStyles();
   return (
-    <View style={styles.card}>
-      {card.organization ? <Text style={styles.tournamentKicker}>{card.organization.toUpperCase()}</Text> : null}
-      <Text style={styles.tournamentName}>{card.name}</Text>
-      <Text style={styles.tournamentMeta}>
-        {card.sport} · {card.team}
-      </Text>
+    <View style={styles.card} testID="athlete-tournament-card">
+      <View style={styles.tournamentHeader}>
+        <TeamBadge logoUrl={card.logoUrl} name={card.name} size={44} />
+        <View style={styles.tournamentTitle}>
+          {card.organization ? <Text style={styles.tournamentKicker}>{card.organization.toUpperCase()}</Text> : null}
+          <Text style={styles.tournamentName}>{card.name}</Text>
+          <Text style={styles.tournamentMeta}>{card.sport}</Text>
+        </View>
+      </View>
+      <View style={styles.tournamentTeam}>
+        <TeamBadge logoUrl={card.teamLogoUrl} name={card.teamName} size={24} />
+        <Text style={styles.tournamentTeamName}>{card.team}</Text>
+      </View>
       <Text
         accessibilityRole="link"
         accessibilityLabel={`Ver campeonato ${card.name}`}
@@ -395,6 +403,26 @@ const useStyles = makeStyles((theme) => ({
   barDate: {
     color: theme.colors.mutedText,
     fontSize: 11,
+  },
+  tournamentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  tournamentTitle: {
+    flex: 1,
+    gap: 2,
+  },
+  tournamentTeam: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  tournamentTeamName: {
+    flex: 1,
+    color: theme.colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '500',
   },
   tournamentKicker: {
     color: theme.colors.mutedText,

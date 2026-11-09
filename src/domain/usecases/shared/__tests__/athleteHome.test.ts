@@ -90,13 +90,20 @@ describe('scoringForm', () => {
 
 describe('tournamentCards', () => {
   it('describes each membership', () => {
-    expect(tournamentCards([membership()])).toEqual([
+    const withLogos = membership({
+      tournament: { ...membership().tournament, logo_url: 'https://cdn/copa.png' },
+      team: { ...membership().team, logo_url: 'https://cdn/alpha.png' },
+    });
+    expect(tournamentCards([withLogos])).toEqual([
       {
         key: 'copa:team-a',
         tournamentId: 'copa',
         name: 'Copa Central',
+        logoUrl: 'https://cdn/copa.png',
         organization: 'Federação Paulista',
         sport: 'Basquete 5x5',
+        teamName: 'Alpha',
+        teamLogoUrl: 'https://cdn/alpha.png',
         team: 'Alpha · #7',
       },
     ]);
@@ -107,6 +114,8 @@ describe('tournamentCards', () => {
       membership({ shirt_number: null, tournament: { ...membership().tournament, organization: null } }),
     ]);
     expect(card.organization).toBeNull();
+    expect(card.logoUrl).toBeNull();
+    expect(card.teamLogoUrl).toBeNull();
     expect(card.team).toBe('Alpha');
     expect(tournamentCards(undefined)).toEqual([]);
   });

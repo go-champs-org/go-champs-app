@@ -63,7 +63,7 @@ export const athleteRecentGames = [
   recent('game-lost', '2026-11-04T19:00:00Z', copaClassificacao, [71, 78], 'loss', 21),
 ];
 export const athleteMemberships = [copaCompleta, copaClassificacao].map((tournament, index) => ({
-  tournament: { ...tournament, logo_url: null, sport_slug: 'basketball_5x5', sport_name: 'Basketball 5x5',
+  tournament: { ...tournament, logo_url: index === 0 ? logo : null, sport_slug: 'basketball_5x5', sport_name: 'Basketball 5x5',
     organization: { id: 'org-1', name: 'Federação Paulista', slug: 'fpb' } },
   team: { id: 'team-a', name: 'Alpha', logo_url: logo, tri_code: 'ALP' },
   shirt_number: index === 0 ? '7' : null,

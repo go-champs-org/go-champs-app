@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useTeamViewModel } from '../viewmodels/TeamViewModel';
 import { makeStyles, useTheme } from '../theme/theme';
+import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { TeamBanner } from '../components/team/TeamBanner';
@@ -81,7 +82,12 @@ const TeamScreen: React.FC<Props> = ({ route }) => {
   return (
     <View style={styles.screen}>
       <ContentShell style={styles.content}>
-        <ScrollView contentContainerStyle={styles.scrollContent} testID="team-screen">
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          testID="team-screen"
+          refreshControl={themedRefreshControl(theme, viewModel.refreshing, viewModel.refresh)}
+        >
+          <RefreshNotice message={viewModel.refreshError} />
           <Text numberOfLines={1} style={styles.tournament}>{overview.tournamentName}</Text>
           <TeamBanner
             name={overview.team.name}

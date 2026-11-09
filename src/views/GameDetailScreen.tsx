@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/types';
 import { makeStyles, useTheme } from '../theme/theme';
+import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { LiveBadge } from '../components/competition/LiveBadge';
@@ -46,7 +47,7 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
   const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { gameId, apiBaseUrl } = route.params;
-  const { loading, error, game, boxScore, isLive, score, periodLabel, refresh } = useGameDetailViewModel(
+  const { loading, error, game, boxScore, isLive, score, periodLabel, retry, refreshing, refreshError, refresh } = useGameDetailViewModel(
     gameId,
     apiBaseUrl
   );
@@ -68,7 +69,7 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
             title="Jogo indisponível"
             description={error || 'Não encontramos os dados desta partida.'}
           />
-          <TouchableOpacity accessibilityRole="button" onPress={() => void refresh()} style={styles.retry}>
+          <TouchableOpacity accessibilityRole="button" onPress={retry} style={styles.retry}>
             <Text style={styles.retryText}>Tentar novamente</Text>
           </TouchableOpacity>
         </ContentShell>
@@ -95,7 +96,11 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
   return (
     <View style={styles.screen}>
       <ContentShell style={styles.content}>
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          refreshControl={themedRefreshControl(theme, refreshing, refresh)}
+        >
+          <RefreshNotice message={refreshError} style={styles.refreshNotice} />
           <Text style={styles.tournament}>{tournamentName}</Text>
 
           <View style={styles.scoreCard}>
@@ -405,6 +410,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.colors.background,
   },
   scroll: { padding: theme.spacing.md, paddingBottom: theme.spacing.xxl },
+  refreshNotice: { marginBottom: theme.spacing.md },
   tournament: {
     color: theme.colors.textSecondary,
     fontSize: theme.typography.bodySmall,

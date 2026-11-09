@@ -70,3 +70,36 @@ describe('useOrganizationViewModel', () => {
     expect(result.current.error).toBeNull();
   });
 });
+
+describe('useOrganizationViewModel refresh', () => {
+  beforeEach(() => getOrganization.mockReset());
+
+  it('refreshes behind the organization on screen', async () => {
+    getOrganization.mockResolvedValue(overview);
+    const { result } = renderHook(() => useOrganizationViewModel('nlbb'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    const updated = { ...overview, tournaments: [...overview.tournaments, { id: 't2', name: 'Liga', logoUrl: null }] };
+    getOrganization.mockResolvedValueOnce(updated);
+
+    act(() => result.current.refresh());
+    expect(result.current.refreshing).toBe(true);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.overview).toEqual(overview);
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.overview).toEqual(updated);
+    expect(result.current.refreshError).toBeNull();
+  });
+
+  it('keeps the organization when a refresh fails', async () => {
+    getOrganization.mockResolvedValue(overview);
+    const { result } = renderHook(() => useOrganizationViewModel('nlbb'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    getOrganization.mockRejectedValueOnce(new Error('offline'));
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.overview).toEqual(overview);
+    expect(result.current.error).toBeNull();
+    expect(result.current.refreshError).toBe('Não foi possível atualizar. Puxe a tela para tentar novamente.');
+  });
+});

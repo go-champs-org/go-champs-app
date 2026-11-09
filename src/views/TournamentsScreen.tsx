@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { AppHeader } from '../components/layout/AppHeader';
 import { SearchBar } from '../components/search/SearchBar';
 import { TournamentCard } from '../components/cards/TournamentCard';
+import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
 
 const SEARCH_HEIGHT = 60;
 
@@ -14,7 +15,19 @@ const SEARCH_HEIGHT = 60;
 const TournamentsScreen = () => {
   const theme = useTheme();
   const styles = useStyles();
-  const { tournaments, pinnedIds, togglePin, loading, searchQuery, setSearchQuery, searching } = useTournamentsViewModel();
+  const {
+    tournaments,
+    pinnedIds,
+    togglePin,
+    loading,
+    searchQuery,
+    setSearchQuery,
+    isSearchMode,
+    searching,
+    refreshing,
+    refreshError,
+    refresh,
+  } = useTournamentsViewModel();
   const navigation = useNavigation<any>();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchProgress] = useState(() => new Animated.Value(0));
@@ -78,6 +91,11 @@ const TournamentsScreen = () => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
+          // Search results answer what is typed; the pull refreshes the recent list.
+          refreshControl={isSearchMode ? undefined : themedRefreshControl(theme, refreshing, refresh)}
+          ListHeaderComponent={
+            isSearchMode ? undefined : <RefreshNotice message={refreshError} style={styles.refreshNotice} />
+          }
           ListEmptyComponent={
             searching ? (
               <ActivityIndicator style={styles.searching} size="small" color={theme.colors.textSecondary} />
@@ -122,6 +140,9 @@ const useStyles = makeStyles((theme) => ({
   },
   searching: {
     marginTop: theme.spacing.lg,
+  },
+  refreshNotice: {
+    marginBottom: theme.spacing.md,
   },
   loaderContainer: {
     flex: 1,

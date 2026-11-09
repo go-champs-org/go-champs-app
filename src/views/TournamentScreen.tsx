@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useTournamentViewModel } from '../viewmodels/TournamentViewModel';
 import { makeStyles, useTheme } from '../theme/theme';
+import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { TournamentSummaryCard } from '../components/tournament/TournamentSummaryCard';
@@ -74,7 +75,12 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
   return (
     <View style={styles.screen}>
       <ContentShell style={styles.content}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          testID="tournament-screen"
+          refreshControl={themedRefreshControl(theme, viewModel.refreshing, viewModel.refresh)}
+        >
+          <RefreshNotice message={viewModel.refreshError} />
           <TournamentSummaryCard
             tournament={tournament}
             leaders={viewModel.leaders}

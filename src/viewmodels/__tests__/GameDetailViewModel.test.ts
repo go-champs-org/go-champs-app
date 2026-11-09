@@ -155,14 +155,42 @@ describe('useGameDetailViewModel', () => {
     expect(second.result.current.error).toBeNull();
   });
 
-  it('refreshes on demand', async () => {
-    getOverview.mockResolvedValue(overview());
+  it('loads again on retry', async () => {
+    getOverview.mockRejectedValueOnce(new Error('offline')).mockResolvedValue(overview());
     const { result } = renderHook(() => useGameDetailViewModel('game-1', 'https://api.example/v1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.game).toBeNull();
+    act(() => result.current.retry());
     await waitFor(() => expect(result.current.game).not.toBeNull());
-    await act(async () => {
-      await result.current.refresh();
-    });
     expect(getOverview).toHaveBeenCalledTimes(2);
     expect(getOverview).toHaveBeenCalledWith('game-1', 'https://api.example/v1');
+  });
+
+  it('refreshes behind the game on screen', async () => {
+    getOverview.mockResolvedValue(overview());
+    const { result } = renderHook(() => useGameDetailViewModel('game-1'));
+    await waitFor(() => expect(result.current.game).not.toBeNull());
+    getOverview.mockResolvedValueOnce(overview({ home_score: 30 }));
+
+    act(() => result.current.refresh());
+    expect(result.current.refreshing).toBe(true);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.game?.home_score).toBe(10);
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.game?.home_score).toBe(30);
+    expect(result.current.refreshError).toBeNull();
+  });
+
+  it('keeps the game when a refresh fails', async () => {
+    getOverview.mockResolvedValue(overview());
+    const { result } = renderHook(() => useGameDetailViewModel('game-1'));
+    await waitFor(() => expect(result.current.game).not.toBeNull());
+    getOverview.mockRejectedValueOnce(new Error('offline'));
+
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.game?.home_score).toBe(10);
+    expect(result.current.error).toBeNull();
+    expect(result.current.refreshError).toBe('Não foi possível atualizar. Puxe a tela para tentar novamente.');
   });
 });

@@ -5,7 +5,6 @@ const WEB_ORIGIN = 'https://go-champs.com';
 export const webAuthStartUrl: Record<WebAuthPurpose, string> = {
   signUp: `${WEB_ORIGIN}/SignUp`,
   accountRecovery: `${WEB_ORIGIN}/AccountRecovery`,
-  accountCredentials: `${WEB_ORIGIN}/Account`,
 };
 
 /** Paths that indicate the web flow finished successfully. */

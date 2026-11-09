@@ -4,7 +4,6 @@ describe('webAuthUrls', () => {
   it('exposes start urls', () => {
     expect(webAuthStartUrl.signUp).toContain('/SignUp');
     expect(webAuthStartUrl.accountRecovery).toContain('/AccountRecovery');
-    expect(webAuthStartUrl.accountCredentials).toContain('/Account');
   });
 
   it('detects signup success urls', () => {

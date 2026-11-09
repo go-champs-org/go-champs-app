@@ -38,7 +38,7 @@ Figma de referência: https://www.figma.com/design/ejLZZAUH3CLh1PNsvjs4jp/Home?n
 - **Auth MVP nativo:** login `POST /v1/accounts/signin`; token persistido (`expo-secure-store` / `localStorage` na web) via `SecureAuthTokenStore`; `GoChampsApiClient` injeta `Authorization: Bearer <token>`; perfil de conta via `GET /v1/users/:username`; perfil de atleta via `athlete-profiles`; Meus jogos via `GET /v1/athlete-profiles/me/schedules`; logout local (API sem revoke).
 - **WebAuth isolado** em `src/webauth/`: cadastro, recuperação e alteração de credenciais abrem `WebAuthFlowScreen` (WebView no native; browser externo na web). Substituível por fluxo nativo sem mudar o restante do app.
 - **Detalhe do jogo:** `GameDetailScreen` com placar + súmula (`GET /v1/games/:id` + `GET /v1/player-stats-logs?where[game_id]=`). Navegação a partir de `GamesList` e `MyGamesScreen`.
-- **Perfil:** conta read-only + CTA “Alterar e-mail ou senha” (WebAuth); criação e edição nativa do perfil de atleta (nome, redes, URL da foto).
+- **Perfil (Sua conta):** dados da conta read-only (e-mail não é alterável; “Redefinir senha” abre WebAuth de recuperação); dados de identidade (`/v1/account-identity`) e perfil de atleta editáveis por seção com um único Editar; foto via URL assinada (`/v1/upload/presigned-url`).
 - Plano/spec auth: `docs/superpowers/specs/2026-09-15-auth-mvp-design.md` e `docs/superpowers/plans/2026-09-15-auth-mvp.md`.
 
 ## PWA

@@ -1,4 +1,4 @@
-import { youtubeEmbedUrl, youtubeVideoId, youtubeWatchUrl } from '../youtube';
+import { youtubeEmbedUrl, youtubeVideoId } from '../youtube';
 
 describe('youtubeVideoId', () => {
   it('keeps a plain video id', () => {
@@ -30,8 +30,7 @@ describe('youtubeVideoId', () => {
 });
 
 describe('YouTube URLs', () => {
-  it('builds the inline player and the watch page', () => {
+  it('builds the inline player URL', () => {
     expect(youtubeEmbedUrl('dQw4w9WgXcQ')).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?playsinline=1&rel=0');
-    expect(youtubeWatchUrl('dQw4w9WgXcQ')).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   });
 });

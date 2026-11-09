@@ -554,10 +554,9 @@ test('[myGamesGameDetail] abre o jogo pelo card do próximo jogo', async ({ page
   await page.route(/youtube\.com/, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<html></html>' }));
   await page.getByTestId('next-game').filter({ visible: true }).click();
   await expect(page).toHaveURL(/\/game\/game-next$/);
-  // The game's video plays inline, with the YouTube page a tap away.
+  // The game's video plays inline.
   const video = page.getByTestId('game-video').filter({ visible: true }).locator('iframe');
   await expect(video).toHaveAttribute('src', 'https://www.youtube.com/embed/dQw4w9WgXcQ?playsinline=1&rel=0');
-  await expect(page.getByRole('link', { name: 'Assistir no YouTube' })).toBeVisible();
 });
 
 test('[myGamesNoProfile] pede o perfil de atleta quando não existe', async ({ page }) => {

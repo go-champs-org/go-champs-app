@@ -29,5 +29,3 @@ export const youtubeVideoId = (code: string | null | undefined): string | null =
 
 export const youtubeEmbedUrl = (videoId: string): string =>
   `https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0`;
-
-export const youtubeWatchUrl = (videoId: string): string => `https://www.youtube.com/watch?v=${videoId}`;

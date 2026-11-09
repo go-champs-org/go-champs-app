@@ -20,7 +20,7 @@ import { LiveBadge } from '../components/competition/LiveBadge';
 import { PlayerAvatar } from '../components/competition/PlayerAvatar';
 import { TeamBadge } from '../components/competition/TeamBadge';
 import { YouTubePlayer } from '../components/video/YouTubePlayer';
-import { youtubeVideoId, youtubeWatchUrl } from '../domain/usecases/shared/youtube';
+import { youtubeVideoId } from '../domain/usecases/shared/youtube';
 import { useGameDetailViewModel } from '../viewmodels/GameDetailViewModel';
 import {
   BoxScoreSort,
@@ -154,15 +154,6 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
           {videoId ? (
             <View style={styles.video}>
               <YouTubePlayer videoId={videoId} />
-              <TouchableOpacity
-                accessibilityRole="link"
-                accessibilityLabel="Assistir no YouTube"
-                onPress={() => void Linking.openURL(youtubeWatchUrl(videoId))}
-                style={styles.videoButton}
-              >
-                <Ionicons name="logo-youtube" size={18} color={theme.colors.danger} />
-                <Text style={styles.videoText}>Assistir no YouTube</Text>
-              </TouchableOpacity>
             </View>
           ) : null}
 
@@ -503,21 +494,7 @@ const useStyles = makeStyles((theme) => ({
   },
   video: {
     marginTop: theme.spacing.md,
-    gap: theme.spacing.sm,
   },
-  videoButton: {
-    height: 40,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.pill,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-  },
-  videoText: { color: theme.colors.textPrimary, fontSize: theme.typography.caption, fontWeight: '800' },
   // The tables run edge to edge of the card, split by a line only.
   boxScore: {
     marginTop: theme.spacing.lg,

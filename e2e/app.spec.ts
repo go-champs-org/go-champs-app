@@ -517,9 +517,9 @@ test('[authGames] mostra próximo jogo, mais jogos e resultados do atleta', asyn
   await expect(next.getByText('ALP', { exact: true })).toBeVisible();
   await expect(next.getByText('BET', { exact: true })).toBeVisible();
   await expect(next.getByText('19:30')).toBeVisible();
-  await expect(next.getByText('Casa · Ginásio Central')).toBeVisible();
+  await expect(next.getByText('São Paulo · Ginásio Central')).toBeVisible();
   await expect(page.getByText('Gama', { exact: true })).toBeVisible();
-  await expect(page.getByText('Dom · 18:00 · Fora · Ginásio Central')).toBeVisible();
+  await expect(page.getByText('Dom · 18:00 · São Paulo · Ginásio Central')).toBeVisible();
   await expect(page.getByText('Jogos anteriores')).toBeVisible();
   await expect(page.getByText('84–76')).toBeVisible();
   await expect(page.getByText('VITÓRIA')).toBeVisible();

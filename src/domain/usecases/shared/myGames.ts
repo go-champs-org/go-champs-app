@@ -164,18 +164,22 @@ export const countdownLabel = (game: AthleteTeamGame, now: Date): string => {
 
 export const statusLabel = (game: AthleteTeamGame): string => (isLive(game) ? 'Ao vivo' : 'Agendado');
 
-// 'Casa · Ginásio Central', the venue from the athlete's side.
-export const venueLabel = (game: AthleteTeamGame): string => {
-  const side = athleteSides(game, game.athlete_team_id).isHome ? 'Casa' : 'Fora';
-  const venue = game.location || game.city;
-  return venue ? `${side} · ${venue}` : side;
+// 'São Paulo · Ginásio Central': where the game is, city first. A venue named
+// like its city reads once.
+const venueParts = (game: AthleteTeamGame): string[] => {
+  const city = game.city?.trim();
+  const location = game.location?.trim();
+  if (city && location && city.toLowerCase() === location.toLowerCase()) return [city];
+  return [city, location].filter((part): part is string => Boolean(part));
 };
 
-// 'Dom · 18:00 · Fora · Eastside Court'
+export const venueLabel = (game: AthleteTeamGame): string => venueParts(game).join(' · ') || 'Local a definir';
+
+// 'Dom · 18:00 · São Paulo · Eastside Court'
 export const upcomingMeta = (game: AthleteTeamGame): string => {
   const date = parse(game.datetime);
   const day = date ? SHORT_WEEKDAYS[date.getUTCDay()] : null;
-  return [day, date ? kickoffTime(game.datetime) : null, venueLabel(game)].filter(Boolean).join(' · ');
+  return [day, date ? kickoffTime(game.datetime) : null, ...venueParts(game)].filter(Boolean).join(' · ');
 };
 
 // '7 NOV · COPA CENTRAL'

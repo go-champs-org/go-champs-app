@@ -186,11 +186,14 @@ describe('game presentation', () => {
   it('labels the status and the venue', () => {
     expect(statusLabel(next)).toBe('Agendado');
     expect(statusLabel(live)).toBe('Ao vivo');
-    expect(venueLabel(next)).toBe('Casa · Ginásio Central');
-    expect(venueLabel(teamGame({ athlete_team_id: 'team-b', location: null }))).toBe('Fora · São Paulo');
-    expect(venueLabel(teamGame({ location: null, city: null }))).toBe('Casa');
-    expect(upcomingMeta(teamGame({ datetime: '2026-11-15T18:00:00Z' }))).toBe('Dom · 18:00 · Casa · Ginásio Central');
-    expect(upcomingMeta(undated)).toBe('Casa · Ginásio Central');
+    expect(venueLabel(next)).toBe('São Paulo · Ginásio Central');
+    expect(venueLabel(teamGame({ location: null }))).toBe('São Paulo');
+    expect(venueLabel(teamGame({ city: null }))).toBe('Ginásio Central');
+    expect(venueLabel(teamGame({ city: 'Canoas', location: ' canoas ' }))).toBe('Canoas');
+    expect(venueLabel(teamGame({ location: null, city: null }))).toBe('Local a definir');
+    expect(upcomingMeta(teamGame({ datetime: '2026-11-15T18:00:00Z' }))).toBe('Dom · 18:00 · São Paulo · Ginásio Central');
+    expect(upcomingMeta(teamGame({ datetime: '2026-11-15T18:00:00Z', location: null, city: null }))).toBe('Dom · 18:00');
+    expect(upcomingMeta(undated)).toBe('São Paulo · Ginásio Central');
   });
 });
 

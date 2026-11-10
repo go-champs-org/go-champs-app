@@ -30,6 +30,16 @@ describe('ExpoImageSharer', () => {
     });
   });
 
+  it('shares a photo-background sticker as a JPEG', async () => {
+    jest.mocked(Sharing.isAvailableAsync).mockResolvedValue(true);
+    await new ExpoImageSharer().share('file:///tmp/sticker.jpg', 'Compartilhar perfil');
+    expect(Sharing.shareAsync).toHaveBeenCalledWith('file:///tmp/sticker.jpg', {
+      mimeType: 'image/jpeg',
+      UTI: 'public.jpeg',
+      dialogTitle: 'Compartilhar perfil',
+    });
+  });
+
   it('fails clearly when the device cannot share', async () => {
     jest.mocked(Sharing.isAvailableAsync).mockResolvedValue(false);
     await expect(new ExpoImageSharer().share(FILE, 'x')).rejects.toBeInstanceOf(ShareUnavailableError);

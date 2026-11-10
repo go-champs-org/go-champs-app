@@ -11,7 +11,10 @@ import { useFlashNotice } from './useFlashNotice';
 
 export type ShareAction = 'copy' | 'save' | 'share';
 
-/** Renders the selected sticker to a PNG, as a temporary file or as base64. */
+/**
+ * Renders the selected sticker to an image, as a temporary file or as base64:
+ * a transparent PNG, or a JPEG when it has a photo background.
+ */
 export type StickerCapture = {
   toFile: () => Promise<string>;
   toBase64: () => Promise<string>;
@@ -32,14 +35,16 @@ export const SHARE_MESSAGES = {
 };
 
 /**
- * Perfil > Compartilhar perfil: pick one of the four sticker formats, then
- * copy, save or share it as a transparent PNG.
+ * Perfil > Compartilhar perfil: pick one of the four sticker formats and,
+ * optionally, a photo to put behind it, then copy, save or share the image.
  */
 export const useProfileShareViewModel = (card: ProfileShareCard | null) => {
   const [visible, setVisible] = useState(false);
   const [formatId, setFormatId] = useState(DEFAULT_SHARE_FORMAT_ID);
   const [busy, setBusy] = useState<ShareAction | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // The athlete's own photo behind the sticker; without one it stays transparent.
+  const [backgroundUri, setBackgroundUri] = useState<string | null>(null);
   const { notice, showNotice, clearNotice } = useFlashNotice();
   const sharer = container.imageSharer;
 
@@ -54,6 +59,11 @@ export const useProfileShareViewModel = (card: ProfileShareCard | null) => {
 
   const select = useCallback((id: string) => {
     setFormatId(shareFormatById(id).id);
+    setError(null);
+  }, []);
+
+  const selectBackground = useCallback((uri: string | null) => {
+    setBackgroundUri(uri);
     setError(null);
   }, []);
 
@@ -90,6 +100,9 @@ export const useProfileShareViewModel = (card: ProfileShareCard | null) => {
     formats: SHARE_FORMATS,
     format: shareFormatById(formatId),
     select,
+    backgroundUri,
+    /** Pass null to go back to the transparent sticker. */
+    selectBackground,
     /** Copy, save and share need the native app. */
     actionsAvailable: sharer.available,
     busy,

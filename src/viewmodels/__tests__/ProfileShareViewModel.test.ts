@@ -92,6 +92,20 @@ describe('useProfileShareViewModel', () => {
     expect(result.current.format.id).toBe('bottom-dark');
   });
 
+  it('puts a photo behind the sticker and takes it away', async () => {
+    sharer.saveToPhotos.mockResolvedValue('denied');
+    const { result } = opened();
+    expect(result.current.backgroundUri).toBeNull();
+    await run(result, 'save');
+    expect(result.current.error).toBe(SHARE_MESSAGES.denied);
+
+    act(() => result.current.selectBackground('file:///photos/game.jpg'));
+    expect(result.current.backgroundUri).toBe('file:///photos/game.jpg');
+    expect(result.current.error).toBeNull();
+    act(() => result.current.selectBackground(null));
+    expect(result.current.backgroundUri).toBeNull();
+  });
+
   it('shares the captured file through the share sheet without a notice', async () => {
     const { result } = opened();
     const used = await run(result, 'share');

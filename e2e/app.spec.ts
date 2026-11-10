@@ -512,6 +512,31 @@ test('[profileShare] abre Compartilhar perfil e troca o formato do sticker', asy
   await expect(page.getByText('Resumo · Basquete 5x5')).toBeVisible();
 });
 
+test('[profileShareBackground] escolhe e remove a foto de fundo do sticker', async ({ page }) => {
+  await signInAsAna(page);
+  await page.getByRole('button', { name: 'Compartilhar perfil', exact: true }).click();
+  const sheet = page.getByTestId('profile-share-sheet');
+  await expect(sheet.getByText(/O fundo é transparente/)).toBeVisible();
+  await expect(sheet.getByTestId('share-sticker-photo')).toHaveCount(0);
+
+  const chooser = page.waitForEvent('filechooser');
+  await sheet.getByRole('button', { name: 'Escolher foto de fundo' }).click();
+  await (await chooser).setFiles({
+    name: 'jogo.jpg',
+    mimeType: 'image/jpeg',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jfXkAAAAASUVORK5CYII=', 'base64'),
+  });
+  await expect(sheet.getByText('Escolha um formato. A imagem sai com a sua foto de fundo.')).toBeVisible();
+  // Every preview and the saved image carry the photo.
+  await expect(sheet.getByTestId('share-sticker-photo')).toHaveCount(5);
+  await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-photo')).toHaveCount(1);
+  await expect(sheet.getByRole('button', { name: 'Trocar foto de fundo' })).toBeVisible();
+
+  await sheet.getByRole('button', { name: 'Remover foto de fundo' }).click();
+  await expect(sheet.getByTestId('share-sticker-photo')).toHaveCount(0);
+  await expect(sheet.getByRole('button', { name: 'Escolher foto de fundo' })).toBeVisible();
+});
+
 test('[profileTournament] abre o campeonato pelo card de Meus campeonatos', async ({ page }) => {
   await signInAsAna(page);
   await page.getByLabel('Ver campeonato Copa Completa').click();

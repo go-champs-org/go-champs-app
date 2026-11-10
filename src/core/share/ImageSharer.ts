@@ -1,4 +1,4 @@
-/** What the device can do with a rendered PNG: share it, save it, copy it. */
+/** What the device can do with a rendered image: share it, save it, copy it. */
 export type SaveImageResult = 'saved' | 'denied';
 
 export interface ImageSharer {
@@ -8,7 +8,7 @@ export interface ImageSharer {
   share(fileUri: string, dialogTitle: string): Promise<void>;
   /** Adds the image to Photos, asking for add-only access first. */
   saveToPhotos(fileUri: string): Promise<SaveImageResult>;
-  copy(base64Png: string): Promise<void>;
+  copy(base64Image: string): Promise<void>;
 }
 
 export class ShareUnavailableError extends Error {

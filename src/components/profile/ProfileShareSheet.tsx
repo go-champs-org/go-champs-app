@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 import { ProfileShareCard, ShareFormat } from '../../domain/usecases/shared/profileShare';
@@ -42,9 +43,10 @@ type Props = {
 
 // One format in the grid: the sticker scaled down over a checkerboard, which
 // stands for the transparent background.
-const FormatTile = ({ card, format, selected, width, onPress }: {
+const FormatTile = ({ card, format, backgroundUri, selected, width, onPress }: {
   card: ProfileShareCard;
   format: ShareFormat;
+  backgroundUri: string | null;
   selected: boolean;
   width: number;
   onPress: () => void;
@@ -76,7 +78,7 @@ const FormatTile = ({ card, format, selected, width, onPress }: {
               ],
             }}
           >
-            <ProfileSticker card={card} format={format} />
+            <ProfileSticker card={card} format={format} backgroundUri={backgroundUri} />
           </View>
         </ImageBackground>
         {selected ? (
@@ -101,9 +103,22 @@ export const ProfileShareSheet = ({ model, card }: Props) => {
   const sheetWidth = Math.min(windowWidth, SHEET_MAX_WIDTH);
   const tileWidth = Math.floor((sheetWidth - SHEET_GUTTER * 2 - TILE_GAP) / 2);
 
+  // Transparent stickers stay PNG; over a photo the image is opaque, and a
+  // JPEG is a fraction of the size.
+  const imageFormat = model.backgroundUri
+    ? ({ format: 'jpg', quality: 0.9 } as const)
+    : ({ format: 'png', quality: 1 } as const);
   const capture: StickerCapture = {
-    toFile: () => captureRef(stickerRef, { ...STICKER_EXPORT, format: 'png', result: 'tmpfile' }),
-    toBase64: () => captureRef(stickerRef, { ...STICKER_EXPORT, format: 'png', result: 'base64' }),
+    toFile: () => captureRef(stickerRef, { ...STICKER_EXPORT, ...imageFormat, result: 'tmpfile' }),
+    toBase64: () => captureRef(stickerRef, { ...STICKER_EXPORT, ...imageFormat, result: 'base64' }),
+  };
+
+  // The whole photo, cropped to the story by the sticker (iOS can only crop
+  // the picker to a square).
+  const pickBackground = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9 });
+    const asset = result.canceled ? undefined : result.assets?.[0];
+    if (asset) model.selectBackground(asset.uri);
   };
 
   return (
@@ -125,7 +140,7 @@ export const ProfileShareSheet = ({ model, card }: Props) => {
             style={styles.captureHost}
           >
             <View ref={stickerRef} collapsable={false} testID="share-capture">
-              <ProfileSticker card={card} format={model.format} />
+              <ProfileSticker card={card} format={model.format} backgroundUri={model.backgroundUri} />
             </View>
           </View>
 
@@ -149,14 +164,43 @@ export const ProfileShareSheet = ({ model, card }: Props) => {
 
               <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
                 <Text style={styles.intro}>
-                  Escolha um formato. O fundo é transparente para você usar a imagem sobre suas fotos e stories.
+                  {model.backgroundUri
+                    ? 'Escolha um formato. A imagem sai com a sua foto de fundo.'
+                    : 'Escolha um formato. O fundo é transparente para você usar sobre suas fotos e stories, ou escolha uma foto de fundo.'}
                 </Text>
+                <View style={styles.photoRow}>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={model.backgroundUri ? 'Trocar foto de fundo' : 'Escolher foto de fundo'}
+                    disabled={model.busy !== null}
+                    onPress={() => void pickBackground()}
+                    style={[styles.photoButton, styles.photoButtonMain]}
+                  >
+                    <Ionicons name="image-outline" size={18} color={theme.colors.onAccent} />
+                    <Text style={styles.photoButtonMainText}>
+                      {model.backgroundUri ? 'Trocar foto de fundo' : 'Escolher foto de fundo'}
+                    </Text>
+                  </TouchableOpacity>
+                  {model.backgroundUri ? (
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel="Remover foto de fundo"
+                      disabled={model.busy !== null}
+                      onPress={() => model.selectBackground(null)}
+                      style={[styles.photoButton, styles.photoButtonSecondary]}
+                    >
+                      <Ionicons name="trash-outline" size={18} color={theme.colors.textPrimary} />
+                      <Text style={styles.photoButtonSecondaryText}>Remover</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
                 <View accessibilityRole="radiogroup" accessibilityLabel="Formato" style={styles.grid}>
                   {model.formats.map((format) => (
                     <FormatTile
                       key={format.id}
                       card={card}
                       format={format}
+                      backgroundUri={model.backgroundUri}
                       width={tileWidth}
                       selected={format.id === model.format.id}
                       onPress={() => model.select(format.id)}
@@ -266,6 +310,36 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.mutedText,
     fontSize: 13,
     lineHeight: 18,
+  },
+  photoRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  photoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    minHeight: theme.layout.touchTarget,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.md,
+  },
+  photoButtonMain: {
+    flex: 1,
+    backgroundColor: theme.colors.accent,
+  },
+  photoButtonMainText: {
+    color: theme.colors.onAccent,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  photoButtonSecondary: {
+    backgroundColor: theme.colors.surfaceMuted,
+  },
+  photoButtonSecondaryText: {
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
   },
   grid: {
     flexDirection: 'row',

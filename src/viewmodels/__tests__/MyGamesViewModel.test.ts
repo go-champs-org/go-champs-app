@@ -129,4 +129,14 @@ describe('useMyGamesViewModel', () => {
     expect(result.current.tournamentId).toBeNull();
     expect(result.current.next?.id).toBe('copa-game');
   });
+
+  it('builds the share sticker of a result with the athlete from the profile', async () => {
+    const { result } = await loaded();
+    expect(result.current.shareCard(copaResult)).toMatchObject({
+      gameId: 'copa-result',
+      athleteName: 'Ana Silva',
+      shirtNumber: '#7',
+      tournament: { name: 'Copa Central' },
+    });
+  });
 });

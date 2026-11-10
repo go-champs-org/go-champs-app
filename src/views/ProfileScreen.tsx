@@ -13,12 +13,22 @@ import {
   SectionHeading,
   TournamentCardItem,
 } from '../components/profile/AthleteHomeSections';
+import { ProfileSticker } from '../components/profile/ProfileSticker';
+import { ShareStickerSheet } from '../components/share/ShareStickerSheet';
 import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { makeStyles, useTheme } from '../theme/theme';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useAthleteHomeViewModel } from '../viewmodels/AthleteHomeViewModel';
+import { useShareStickerViewModel } from '../viewmodels/ShareStickerViewModel';
+import {
+  PROFILE_SHARE_FORMATS,
+  ProfileShareCard,
+  ProfileShareFormat,
+} from '../domain/usecases/shared/profileShare';
 import { MainTabParamList } from '../navigation/types';
+
+const SHARE_TITLE = 'Compartilhar perfil';
 
 /** The Perfil tab: the signed-in athlete's profile, career and tournaments. */
 const ProfileScreen = () => {
@@ -28,6 +38,13 @@ const ProfileScreen = () => {
   const route = useRoute<RouteProp<MainTabParamList, 'ProfileTab'>>();
   const { user, bootstrapping } = useAuthSession();
   const model = useAthleteHomeViewModel(user?.username);
+  const share = useShareStickerViewModel<ProfileShareCard, ProfileShareFormat>({
+    formats: PROFILE_SHARE_FORMATS,
+    dialogTitle: SHARE_TITLE,
+  });
+  const shareCard = model.shareCard;
+  // Nothing to share before the first recorded game.
+  const openShare = shareCard ? () => share.open(shareCard) : undefined;
   const { clearNotice, acknowledgeSave } = model;
   // The Perfil tab stays mounted: drop the save message when leaving it.
   useFocusEffect(useCallback(() => clearNotice, [clearNotice]));
@@ -62,6 +79,7 @@ const ProfileScreen = () => {
             socialLinks={model.socialLinks}
             editLabel={profile ? 'Editar perfil' : 'Criar perfil de atleta'}
             onEdit={openEdit}
+            onShare={openShare}
           />
           <ContentShell style={styles.content}>
             <SaveNotice notice={model.notice} />
@@ -121,6 +139,14 @@ const ProfileScreen = () => {
           </ContentShell>
         </ScrollView>
       )}
+      <ShareStickerSheet
+        model={share}
+        title={SHARE_TITLE}
+        testID="profile-share-sheet"
+        renderSticker={(card, format, backgroundUri) => (
+          <ProfileSticker card={card} format={format} backgroundUri={backgroundUri} />
+        )}
+      />
     </Screen>
   );
 };

@@ -28,11 +28,12 @@ type HeroProps = {
   socialLinks: SocialLink[];
   editLabel: string;
   onEdit: () => void;
+  onShare?: () => void;
 };
 
 // The dark band under the header: photo, name, social networks and actions.
-// Sharing the profile is not built yet, so its button shows disabled.
-export const AthleteHero = ({ name, photoUrl, socialLinks, editLabel, onEdit }: HeroProps) => {
+// Sharing waits for a career to show: without `onShare` its button is disabled.
+export const AthleteHero = ({ name, photoUrl, socialLinks, editLabel, onEdit, onShare }: HeroProps) => {
   const theme = useTheme();
   const styles = useStyles();
   return (
@@ -68,11 +69,17 @@ export const AthleteHero = ({ name, photoUrl, socialLinks, editLabel, onEdit }: 
           </TouchableOpacity>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Compartilhar perfil (em breve)"
-            disabled
+            accessibilityLabel={onShare ? 'Compartilhar perfil' : 'Compartilhar perfil (disponível após o primeiro jogo)'}
+            disabled={!onShare}
+            onPress={onShare}
             style={[styles.action, styles.shareAction]}
           >
-            <Text style={styles.shareText}>Compartilhar perfil</Text>
+            <Ionicons
+              name="share-outline"
+              size={16}
+              color={onShare ? theme.colors.onDark : theme.colors.onPrimaryMuted}
+            />
+            <Text style={[styles.shareText, onShare && styles.shareTextEnabled]}>Compartilhar perfil</Text>
           </TouchableOpacity>
         </View>
       </ContentShell>
@@ -296,6 +303,8 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: '600',
   },
   shareAction: {
+    flexDirection: 'row',
+    gap: 6,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.chromeField,
   },
@@ -303,6 +312,9 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.onPrimaryMuted,
     fontSize: 14,
     fontWeight: '600',
+  },
+  shareTextEnabled: {
+    color: theme.colors.onDark,
   },
   heading: {
     flexDirection: 'row',

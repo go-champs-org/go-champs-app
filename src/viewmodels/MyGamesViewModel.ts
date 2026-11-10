@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { container } from '../di/container';
+import { AthleteRecentGame } from '../domain/repositories/AthleteProfileRepository';
 import { AthleteGames } from '../domain/usecases/GetAthleteGamesUseCase';
+import { gameShareCard } from '../domain/usecases/shared/gameShare';
 import {
   DEFAULT_MY_GAMES_FILTER,
   effectiveTournamentId,
@@ -74,6 +76,10 @@ export const useMyGamesViewModel = (username: string | undefined) => {
     []
   );
 
+  const profile = games?.profile ?? null;
+  /** What goes on the "Compartilhar jogo" sticker of one result. */
+  const shareCard = useCallback((recent: AthleteRecentGame) => gameShareCard(recent, profile), [profile]);
+
   return {
     loading,
     error,
@@ -91,5 +97,6 @@ export const useMyGamesViewModel = (username: string | undefined) => {
     selectTournament,
     ...sections,
     hasGames: Boolean(sections.next || sections.previous.length),
+    shareCard,
   };
 };

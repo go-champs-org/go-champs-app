@@ -196,7 +196,12 @@ export const UpcomingGameCard = ({ game, onOpen }: GameProps) => {
   );
 };
 
-export const ResultCard = ({ recent, onOpen }: { recent: AthleteRecentGame; onOpen: () => void }) => {
+export const ResultCard = ({ recent, onOpen, onShare }: {
+  recent: AthleteRecentGame;
+  onOpen: () => void;
+  onShare?: () => void;
+}) => {
+  const theme = useTheme();
   const styles = useStyles();
   const TONE_BADGE: Record<ResultTone, object> = { win: styles.badge, loss: styles.badgeLoss, tie: styles.badgeTie };
   const TONE_TEXT: Record<ResultTone, object> = { win: styles.badgeText, loss: styles.badgeTextLoss, tie: styles.badgeTextTie };
@@ -229,7 +234,22 @@ export const ResultCard = ({ recent, onOpen }: { recent: AthleteRecentGame; onOp
         </View>
         <Text style={styles.resultScore}>{matchup.score}</Text>
       </View>
-      {stats ? <Text style={styles.resultStats}>{stats}</Text> : null}
+      {stats || onShare ? (
+        <View style={styles.resultBottom}>
+          <Text style={styles.resultStats}>{stats}</Text>
+          {onShare ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={`Compartilhar jogo ${matchup.title}`}
+              hitSlop={8}
+              onPress={onShare}
+              style={styles.resultShare}
+            >
+              <Ionicons name="share-outline" size={18} color={theme.colors.textPrimary} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ) : null}
     </TouchableOpacity>
   );
 };
@@ -487,9 +507,23 @@ const useStyles = makeStyles((theme) => ({
     fontSize: 24,
     fontWeight: '800',
   },
+  resultBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
   resultStats: {
+    flex: 1,
     color: theme.colors.mutedText,
     fontSize: 12,
     fontWeight: '500',
+  },
+  resultShare: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surfaceMuted,
   },
 }));

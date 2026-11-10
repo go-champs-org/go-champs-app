@@ -87,6 +87,15 @@ describe('GoChampsAccountRepository', () => {
     );
   });
 
+  it('maps sign-in and profile network failures', async () => {
+    request.mockRejectedValue(new TypeError('Network request failed'));
+    const repository = new GoChampsAccountRepository(apiClient);
+    await expect(repository.signIn({ username: 'lucas', password: 'x' })).rejects.toEqual(
+      new AppError('Não foi possível entrar. Verifique seus dados e tente novamente.')
+    );
+    await expect(repository.getAccountProfile('lucas')).rejects.toEqual(new AppError('Não foi possível carregar seu perfil.'));
+  });
+
   describe('deleteAccount', () => {
     const deleteFailure = async () =>
       (await new GoChampsAccountRepository(apiClient)

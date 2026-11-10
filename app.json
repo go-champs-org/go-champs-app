@@ -12,7 +12,10 @@
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.gochamps.app",
       "appleTeamId": "H859MRQ6UP",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "icon": "./assets/images/icon.png",

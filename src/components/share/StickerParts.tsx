@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ShareFormat, ShareLogo } from '../../domain/usecases/shared/shareFormats';
 
@@ -30,6 +30,16 @@ export const StickerLogo = ({ logo, width }: { logo: ShareLogo; width: number })
     style={{ width, height: Math.round(width * LOGO_RATIO) }}
     resizeMode="contain"
   />
+);
+
+export const STICKER_CREDIT = 'Fornecido por';
+
+/** A small "Fornecido por <logo>" credit: the brand as a detail, not the headline. */
+export const StickerCredit = ({ logo }: { logo: ShareLogo }) => (
+  <View style={styles.credit}>
+    <Text style={[styles.creditText, { color: STICKER_PALETTES[logo].muted }]}>{STICKER_CREDIT}</Text>
+    <StickerLogo logo={logo} width={36} />
+  </View>
 );
 
 // Over a photo, a shade behind the content keeps it readable: dark under
@@ -79,6 +89,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     padding: 28,
     overflow: 'hidden',
+  },
+  credit: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  creditText: {
+    fontSize: 9,
+    fontWeight: '600',
   },
   bottomScrim: {
     position: 'absolute',

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { GameShareCard, GameShareFormat, GameShareMark } from '../../domain/usecases/shared/gameShare';
-import { StickerCanvas, StickerLogo, StickerPalette, STICKER_PALETTES } from '../share/StickerParts';
+import { StickerCanvas, StickerCredit, StickerPalette, STICKER_PALETTES } from '../share/StickerParts';
 
 type Props = { card: GameShareCard; format: GameShareFormat; backgroundUri?: string | null };
 
@@ -31,8 +31,9 @@ const MarkRow = ({ mark, palette, end, detail }: {
 );
 
 /**
- * Compartilhar jogo: the logo, the athlete, their team, the tournament and the
- * game's stats in the bottom left or the bottom right corner of the story.
+ * Compartilhar jogo: the athlete, their team, the tournament and the
+ * game's stats in the bottom left or the bottom right corner of the story,
+ * over a small "Fornecido por" Go Champs credit.
  */
 export const GameSticker = ({ card, format, backgroundUri }: Props) => {
   const palette = STICKER_PALETTES[format.logo];
@@ -41,7 +42,6 @@ export const GameSticker = ({ card, format, backgroundUri }: Props) => {
   return (
     <StickerCanvas format={format} backgroundUri={backgroundUri} scrim="bottom">
       <View style={[styles.corner, end ? styles.cornerEnd : styles.cornerStart]}>
-        <StickerLogo logo={format.logo} width={104} />
         <Text numberOfLines={2} style={[styles.name, { color: palette.ink }, align]}>
           {card.athleteName}
           {card.shirtNumber ? <Text style={{ color: palette.accent }}>{`  ${card.shirtNumber}`}</Text> : null}
@@ -62,6 +62,9 @@ export const GameSticker = ({ card, format, backgroundUri }: Props) => {
             ))}
           </View>
         ) : null}
+        <View style={styles.credit}>
+          <StickerCredit logo={format.logo} />
+        </View>
       </View>
     </StickerCanvas>
   );
@@ -82,8 +85,10 @@ const styles = StyleSheet.create({
   alignEnd: {
     textAlign: 'right',
   },
+  credit: {
+    marginTop: 8,
+  },
   name: {
-    marginTop: 4,
     fontSize: 26,
     lineHeight: 30,
     fontWeight: '800',

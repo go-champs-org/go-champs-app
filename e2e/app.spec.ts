@@ -742,6 +742,8 @@ test('[gameShare] compartilha um jogo anterior e troca o canto do sticker', asyn
     await expect(leftTile.getByText(value, { exact: true })).toBeVisible();
     await expect(leftTile.getByText(label, { exact: true })).toBeVisible();
   }
+  // The Go Champs logo is a small credit under the content.
+  await expect(leftTile.getByText('Fornecido por', { exact: true })).toBeVisible();
   await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-bottom-left-dark')).toBeAttached();
 
   await bottomLight.click();

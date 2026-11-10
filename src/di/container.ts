@@ -1,4 +1,6 @@
 import { MutableTokenProvider } from '../core/auth/MutableTokenProvider';
+import { ExpoImageSharer } from '../core/share/ExpoImageSharer';
+import { ImageSharer } from '../core/share/ImageSharer';
 import { FetchFileTransport } from '../core/http/FetchFileTransport';
 import { FetchHttpClient } from '../core/http/FetchHttpClient';
 import { PinnedTournamentsLocalStore } from '../data/datasources/local/PinnedTournamentsLocalStore';
@@ -75,4 +77,5 @@ export const container = {
   getAthleteGames: new GetAthleteGamesUseCase(athleteProfileRepository),
   getPinnedTournamentIds: new GetPinnedTournamentIdsUseCase(pinnedTournamentsRepository),
   togglePinnedTournament: new TogglePinnedTournamentUseCase(pinnedTournamentsRepository),
+  imageSharer: new ExpoImageSharer() as ImageSharer,
 };

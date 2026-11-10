@@ -9,6 +9,7 @@ import {
   MY_TOURNAMENTS_PREVIEW,
   tournamentCards,
 } from '../domain/usecases/shared/athleteHome';
+import { profileShareCard } from '../domain/usecases/shared/profileShare';
 import { useFlashNotice } from './useFlashNotice';
 import { useLoadRequest } from './useLoadRequest';
 
@@ -69,6 +70,7 @@ export const useAthleteHomeViewModel = (username: string | undefined) => {
     });
     return bySport;
   }, [home, summaries]);
+  const shareCard = useMemo(() => profileShareCard(profile), [profile]);
   const allTournaments = useMemo(() => tournamentCards(profile?.memberships), [profile]);
   const socialLinks = useMemo(
     () =>
@@ -103,6 +105,7 @@ export const useAthleteHomeViewModel = (username: string | undefined) => {
     socialLinks,
     summaries,
     monthlyPoints,
+    shareCard,
     tournaments: showAllTournaments ? allTournaments : allTournaments.slice(0, MY_TOURNAMENTS_PREVIEW),
     hasMoreTournaments: allTournaments.length > MY_TOURNAMENTS_PREVIEW,
     showAllTournaments,

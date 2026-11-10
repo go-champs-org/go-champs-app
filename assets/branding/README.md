@@ -10,3 +10,11 @@ Run `npm run icons:generate` to regenerate:
 - `assets/images/android-play-store.png`: opaque RGB, 512x512, ready for a Google Play listing.
 
 The generator removes the source matte while preserving antialiased edges, centers the original symbol, and resizes through Expo image utilities. Backgrounds and platform masks are applied by the OS; no rounded corners are baked into the PNGs.
+
+# Share Logos
+
+`wordmark-dark.png` is the transparent dark Go Champs wordmark (from go-champs-web `apps/cms/public/logo-with-name-black.png`). Run `npm run share-logos:generate` to rebuild `assets/images/share/`:
+
+- `logo-dark.png`: the wordmark in `#1D1D1B`, cropped and at half size, on a transparent background.
+- `logo-light.png`: the same shape with "GO CHAMPS" in white and the ball in `#D5FF27`.
+- `checker-light.png` / `checker-dark.png`: checkerboard tiles that show transparency behind the share previews.

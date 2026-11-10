@@ -57,6 +57,18 @@
           "cameraPermission": false,
           "microphonePermission": false
         }
+      ],
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Permita o acesso às suas fotos para escolher a foto do seu perfil de atleta.",
+          "savePhotosPermission": "Permita salvar nas suas fotos as imagens do seu perfil de atleta.",
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": [
+            "photo"
+          ]
+        }
       ]
     ],
     "experiments": {

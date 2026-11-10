@@ -34,6 +34,7 @@ export const journeys = {
   authProfile: 'Ver o perfil de atleta com resumo, forma e campeonatos',
   profileFeedback: 'Abrir o formulario de feedback pelo perfil',
   profileTournament: 'Abrir o campeonato pelo card de Meus campeonatos',
+  profileShare: 'Abrir Compartilhar perfil e trocar o formato do sticker',
   accountMenu: 'Abrir Minha conta pelo menu e sair',
   accountSignedOut: 'Pedir para entrar ao abrir Minha conta sem sessao',
   deleteAccount: 'Excluir a conta e voltar deslogado para a Home sem conseguir entrar de novo',

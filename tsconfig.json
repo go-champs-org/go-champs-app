@@ -6,7 +6,10 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      // Its package points TypeScript at the raw sources for the react-native
+      // condition, which do not type-check against this React Native.
+      "react-native-view-shot": ["./node_modules/react-native-view-shot/lib/index.d.ts"]
     }
   },
   "include": [

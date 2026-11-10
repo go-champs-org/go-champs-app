@@ -13,11 +13,13 @@ import {
   SectionHeading,
   TournamentCardItem,
 } from '../components/profile/AthleteHomeSections';
+import { ProfileShareSheet } from '../components/profile/ProfileShareSheet';
 import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { makeStyles, useTheme } from '../theme/theme';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useAthleteHomeViewModel } from '../viewmodels/AthleteHomeViewModel';
+import { useProfileShareViewModel } from '../viewmodels/ProfileShareViewModel';
 import { MainTabParamList } from '../navigation/types';
 
 /** The Perfil tab: the signed-in athlete's profile, career and tournaments. */
@@ -28,6 +30,7 @@ const ProfileScreen = () => {
   const route = useRoute<RouteProp<MainTabParamList, 'ProfileTab'>>();
   const { user, bootstrapping } = useAuthSession();
   const model = useAthleteHomeViewModel(user?.username);
+  const share = useProfileShareViewModel(model.shareCard);
   const { clearNotice, acknowledgeSave } = model;
   // The Perfil tab stays mounted: drop the save message when leaving it.
   useFocusEffect(useCallback(() => clearNotice, [clearNotice]));
@@ -62,6 +65,7 @@ const ProfileScreen = () => {
             socialLinks={model.socialLinks}
             editLabel={profile ? 'Editar perfil' : 'Criar perfil de atleta'}
             onEdit={openEdit}
+            onShare={share.canShare ? share.open : undefined}
           />
           <ContentShell style={styles.content}>
             <SaveNotice notice={model.notice} />
@@ -121,6 +125,7 @@ const ProfileScreen = () => {
           </ContentShell>
         </ScrollView>
       )}
+      <ProfileShareSheet model={share} card={model.shareCard} />
     </Screen>
   );
 };

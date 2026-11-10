@@ -451,7 +451,7 @@ test('[authProfile] mostra o perfil de atleta com resumo e campeonatos', async (
   const hero = page.getByTestId('athlete-home-hero').filter({ visible: true });
   await expect(hero.getByText('Ana Silva', { exact: true })).toBeVisible();
   await expect(hero.getByLabel('Abrir Instagram')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Compartilhar perfil (em breve)' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Compartilhar perfil', exact: true })).toBeEnabled();
   await expect(page.getByText('Resumo · Basquete 5x5')).toBeVisible();
   const career = page.getByTestId('career-basketball_5x5').filter({ visible: true });
   await expect(career.getByText('257', { exact: true })).toBeVisible();
@@ -477,6 +477,39 @@ test('[profileFeedback] abre o formulário de feedback pelo perfil', async ({ pa
   const popup = page.waitForEvent('popup');
   await feedback.getByRole('link', { name: 'Enviar feedback (abre formulário)' }).click();
   expect((await popup).url()).toBe('https://forms.gle/1fv6sDCBjfEigmYL7');
+});
+
+test('[profileShare] abre Compartilhar perfil e troca o formato do sticker', async ({ page }) => {
+  await signInAsAna(page);
+  await page.getByRole('button', { name: 'Compartilhar perfil', exact: true }).click();
+  const sheet = page.getByTestId('profile-share-sheet');
+  await expect(sheet.getByRole('heading', { name: 'Compartilhar perfil' })).toBeVisible();
+  await expect(sheet.getByRole('radio')).toHaveCount(4);
+
+  const bottomDark = sheet.getByRole('radio', { name: 'Estatísticas embaixo, logo escuro' });
+  const centerLight = sheet.getByRole('radio', { name: 'Estatísticas em destaque no centro, logo claro' });
+  await expect(bottomDark).toBeChecked();
+  const bottomTile = sheet.getByTestId('share-format-bottom-dark');
+  await expect(bottomTile.getByText('Ana Silva', { exact: true })).toBeVisible();
+  await expect(bottomTile.getByText('Campeonatos', { exact: true })).toBeVisible();
+  await expect(bottomTile.getByText('257 · 21.4 por jogo', { exact: true })).toBeVisible();
+  // The image that gets saved is the picked format.
+  await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-bottom-dark')).toBeAttached();
+
+  await centerLight.click();
+  await expect(centerLight).toBeChecked();
+  await expect(bottomDark).not.toBeChecked();
+  const centerTile = sheet.getByTestId('share-format-center-light');
+  await expect(centerTile.getByText('Pontos por jogo', { exact: true })).toBeVisible();
+  await expect(centerTile.getByText('21.4', { exact: true })).toBeVisible();
+  await expect(centerTile.getByText('257 no total', { exact: true })).toBeVisible();
+  await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-center-light')).toBeAttached();
+
+  // Copy, save and share need the native app.
+  await expect(sheet.getByText('Para copiar, salvar ou compartilhar a imagem, abra seu perfil no app Go Champs.')).toBeVisible();
+  await sheet.getByRole('button', { name: 'Fechar' }).click();
+  await expect(sheet).toBeHidden();
+  await expect(page.getByText('Resumo · Basquete 5x5')).toBeVisible();
 });
 
 test('[profileTournament] abre o campeonato pelo card de Meus campeonatos', async ({ page }) => {

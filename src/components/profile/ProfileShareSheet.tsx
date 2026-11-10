@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import {
   ActivityIndicator,
-  ImageBackground,
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -65,7 +65,8 @@ const FormatTile = ({ card, format, backgroundUri, selected, width, onPress }: {
       testID={`share-format-${format.id}`}
     >
       <View style={[styles.tileFrame, selected && styles.tileFrameSelected]}>
-        <ImageBackground source={CHECKERS[format.logo]} resizeMode="repeat" style={{ width, height }}>
+        <View style={{ width, height }}>
+          <Image source={CHECKERS[format.logo]} resizeMode="repeat" style={styles.checker} />
           {/* Scaled around its center, then moved so it fills the tile. */}
           <View
             style={{
@@ -80,7 +81,7 @@ const FormatTile = ({ card, format, backgroundUri, selected, width, onPress }: {
           >
             <ProfileSticker card={card} format={format} backgroundUri={backgroundUri} />
           </View>
-        </ImageBackground>
+        </View>
         {selected ? (
           <View style={styles.tileCheck}>
             <Ionicons name="checkmark" size={16} color={theme.colors.onAccent} />
@@ -357,6 +358,13 @@ const useStyles = makeStyles((theme) => ({
   },
   tileFrameSelected: {
     borderColor: theme.colors.accent,
+  },
+  checker: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
   },
   tileCheck: {
     position: 'absolute',

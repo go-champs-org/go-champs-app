@@ -729,24 +729,24 @@ test('[gameShare] compartilha um jogo anterior e troca o canto do sticker', asyn
   await expect(sheet.getByRole('heading', { name: 'Compartilhar jogo' })).toBeVisible();
   await expect(sheet.getByRole('radio')).toHaveCount(4);
 
-  const topDark = sheet.getByRole('radio', { name: 'Conteúdo no canto superior esquerdo, logo escuro' });
+  const leftDark = sheet.getByRole('radio', { name: 'Conteúdo no canto inferior esquerdo, logo escuro' });
   const bottomLight = sheet.getByRole('radio', { name: 'Conteúdo no canto inferior direito, logo claro' });
-  await expect(topDark).toBeChecked();
-  const topTile = sheet.getByTestId('share-format-top-left-dark');
+  await expect(leftDark).toBeChecked();
+  const leftTile = sheet.getByTestId('share-format-bottom-left-dark');
   // The athlete with their number, the team and the tournament of that game.
-  await expect(topTile.getByText('Ana Silva  #7', { exact: true })).toBeVisible();
-  await expect(topTile.getByText('Alpha', { exact: true })).toBeVisible();
-  await expect(topTile.getByText('Copa Completa', { exact: true })).toBeVisible();
-  await expect(topTile.getByText('7 nov 2026', { exact: true })).toBeVisible();
+  await expect(leftTile.getByText('Ana Silva  #7', { exact: true })).toBeVisible();
+  await expect(leftTile.getByText('Alpha', { exact: true })).toBeVisible();
+  await expect(leftTile.getByText('Copa Completa', { exact: true })).toBeVisible();
+  await expect(leftTile.getByText('7 nov 2026', { exact: true })).toBeVisible();
   for (const [value, label] of [['28', 'PTS'], ['8', 'REB'], ['6', 'AST'], ['32', 'MIN']]) {
-    await expect(topTile.getByText(value, { exact: true })).toBeVisible();
-    await expect(topTile.getByText(label, { exact: true })).toBeVisible();
+    await expect(leftTile.getByText(value, { exact: true })).toBeVisible();
+    await expect(leftTile.getByText(label, { exact: true })).toBeVisible();
   }
-  await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-top-left-dark')).toBeAttached();
+  await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-bottom-left-dark')).toBeAttached();
 
   await bottomLight.click();
   await expect(bottomLight).toBeChecked();
-  await expect(topDark).not.toBeChecked();
+  await expect(leftDark).not.toBeChecked();
   await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-bottom-right-light')).toBeAttached();
 
   await expect(sheet.getByText('Para copiar, salvar ou compartilhar a imagem, use o app Go Champs.')).toBeVisible();

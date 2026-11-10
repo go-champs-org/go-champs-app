@@ -2,12 +2,12 @@ import { athleteProfile, membership, recentGame } from '../../../../test/fixture
 import { GAME_SHARE_FORMATS, gameShareCard } from '../gameShare';
 
 describe('GAME_SHARE_FORMATS', () => {
-  it('offers the top left and the bottom right corner, each with both logos', () => {
+  it('offers the bottom left and the bottom right corner, each with both logos', () => {
     expect(GAME_SHARE_FORMATS.map(({ id, label }) => ({ id, label }))).toEqual([
-      { id: 'top-left-dark', label: 'Canto superior · logo escuro' },
-      { id: 'top-left-light', label: 'Canto superior · logo claro' },
-      { id: 'bottom-right-dark', label: 'Canto inferior · logo escuro' },
-      { id: 'bottom-right-light', label: 'Canto inferior · logo claro' },
+      { id: 'bottom-left-dark', label: 'Esquerda · logo escuro' },
+      { id: 'bottom-left-light', label: 'Esquerda · logo claro' },
+      { id: 'bottom-right-dark', label: 'Direita · logo escuro' },
+      { id: 'bottom-right-light', label: 'Direita · logo claro' },
     ]);
     expect(GAME_SHARE_FORMATS[2].description).toBe('Conteúdo no canto inferior direito, logo escuro');
   });

@@ -5,15 +5,15 @@ import { formatStatValue } from './tournamentStats';
 
 // "Compartilhar jogo" (Meus jogos > Jogos anteriores): one result as a story
 // sticker. The athlete, their shirt number and team, the tournament and the
-// game's stats sit in the top left or the bottom right corner, each with the
+// game's stats sit in the bottom left or the bottom right corner, each with the
 // dark or the white and lime Go Champs logo.
 
-export type GameShareLayout = 'top-left' | 'bottom-right';
+export type GameShareLayout = 'bottom-left' | 'bottom-right';
 export type GameShareFormat = ShareFormat<GameShareLayout>;
 
 export const GAME_SHARE_FORMATS: GameShareFormat[] = buildShareFormats<GameShareLayout>({
-  'top-left': { label: 'Canto superior', description: 'Conteúdo no canto superior esquerdo' },
-  'bottom-right': { label: 'Canto inferior', description: 'Conteúdo no canto inferior direito' },
+  'bottom-left': { label: 'Esquerda', description: 'Conteúdo no canto inferior esquerdo' },
+  'bottom-right': { label: 'Direita', description: 'Conteúdo no canto inferior direito' },
 });
 
 export type GameShareStat = { key: string; label: string; value: string };

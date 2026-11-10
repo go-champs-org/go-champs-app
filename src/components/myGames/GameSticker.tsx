@@ -32,14 +32,14 @@ const MarkRow = ({ mark, palette, end, detail }: {
 
 /**
  * Compartilhar jogo: the logo, the athlete, their team, the tournament and the
- * game's stats in the top left or the bottom right corner of the story.
+ * game's stats in the bottom left or the bottom right corner of the story.
  */
 export const GameSticker = ({ card, format, backgroundUri }: Props) => {
   const palette = STICKER_PALETTES[format.logo];
   const end = format.layout === 'bottom-right';
   const align = end && styles.alignEnd;
   return (
-    <StickerCanvas format={format} backgroundUri={backgroundUri} scrim={end ? 'bottom' : 'top'}>
+    <StickerCanvas format={format} backgroundUri={backgroundUri} scrim="bottom">
       <View style={[styles.corner, end ? styles.cornerEnd : styles.cornerStart]}>
         <StickerLogo logo={format.logo} width={104} />
         <Text numberOfLines={2} style={[styles.name, { color: palette.ink }, align]}>
@@ -71,13 +71,12 @@ const styles = StyleSheet.create({
   corner: {
     flex: 1,
     gap: 10,
+    justifyContent: 'flex-end',
   },
   cornerStart: {
-    justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
   cornerEnd: {
-    justifyContent: 'flex-end',
     alignItems: 'flex-end',
   },
   alignEnd: {

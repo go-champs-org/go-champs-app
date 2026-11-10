@@ -33,11 +33,11 @@ export const StickerLogo = ({ logo, width }: { logo: ShareLogo; width: number })
 );
 
 // Over a photo, a shade behind the content keeps it readable: dark under
-// white text, light under dark text. Along the edge the content sits on, or
-// all over for content in the middle.
-export type StickerScrim = 'top' | 'bottom' | 'full';
+// white text, light under dark text. Along the bottom for content at the
+// bottom, or all over for content in the middle.
+export type StickerScrim = 'bottom' | 'full';
 
-const EDGE_SCRIMS: Record<ShareLogo, [string, string]> = {
+const BOTTOM_SCRIMS: Record<ShareLogo, [string, string]> = {
   dark: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.72)'],
   light: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.62)'],
 };
@@ -52,10 +52,7 @@ const PhotoBackground = ({ uri, logo, scrim }: { uri: string; logo: ShareLogo; s
     {scrim === 'full' ? (
       <View style={[StyleSheet.absoluteFill, { backgroundColor: FULL_SCRIMS[logo] }]} />
     ) : (
-      <LinearGradient
-        colors={scrim === 'bottom' ? EDGE_SCRIMS[logo] : [EDGE_SCRIMS[logo][1], EDGE_SCRIMS[logo][0]]}
-        style={scrim === 'bottom' ? styles.bottomScrim : styles.topScrim}
-      />
+      <LinearGradient colors={BOTTOM_SCRIMS[logo]} style={styles.bottomScrim} />
     )}
   </View>
 );
@@ -88,13 +85,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: '62%',
-  },
-  topScrim: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
     height: '62%',
   },
 });

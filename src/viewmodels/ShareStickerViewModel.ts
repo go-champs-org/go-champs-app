@@ -1,12 +1,7 @@
 import { useCallback, useState } from 'react';
 import { container } from '../di/container';
 import { ShareUnavailableError } from '../core/share/ImageSharer';
-import {
-  DEFAULT_SHARE_FORMAT_ID,
-  ProfileShareCard,
-  SHARE_FORMATS,
-  shareFormatById,
-} from '../domain/usecases/shared/profileShare';
+import { ShareFormat, shareFormatById } from '../domain/usecases/shared/shareFormats';
 import { useFlashNotice } from './useFlashNotice';
 
 export type ShareAction = 'copy' | 'save' | 'share';
@@ -20,8 +15,6 @@ export type StickerCapture = {
   toBase64: () => Promise<string>;
 };
 
-export const SHARE_DIALOG_TITLE = 'Compartilhar perfil';
-
 export const SHARE_MESSAGES = {
   copied: 'Imagem copiada. Cole no seu story ou numa conversa.',
   saved: 'Imagem salva nas suas fotos.',
@@ -34,13 +27,24 @@ export const SHARE_MESSAGES = {
   } satisfies Record<ShareAction, string>,
 };
 
+export type ShareStickerOptions<Format extends ShareFormat> = {
+  formats: Format[];
+  // The native share sheet's title: 'Compartilhar perfil'
+  dialogTitle: string;
+};
+
 /**
- * Perfil > Compartilhar perfil: pick one of the four sticker formats and,
- * optionally, a photo to put behind it, then copy, save or share the image.
+ * A story sticker to share (Compartilhar perfil, Compartilhar jogo): open it
+ * with what goes on the sticker, pick one of its formats and, optionally, a
+ * photo to put behind it, then copy, save or share the image.
  */
-export const useProfileShareViewModel = (card: ProfileShareCard | null) => {
-  const [visible, setVisible] = useState(false);
-  const [formatId, setFormatId] = useState(DEFAULT_SHARE_FORMAT_ID);
+export const useShareStickerViewModel = <Payload, Format extends ShareFormat>({
+  formats,
+  dialogTitle,
+}: ShareStickerOptions<Format>) => {
+  // What the open sheet shows; null while it is closed.
+  const [payload, setPayload] = useState<Payload | null>(null);
+  const [formatId, setFormatId] = useState(formats[0].id);
   const [busy, setBusy] = useState<ShareAction | null>(null);
   const [error, setError] = useState<string | null>(null);
   // The athlete's own photo behind the sticker; without one it stays transparent.
@@ -48,19 +52,24 @@ export const useProfileShareViewModel = (card: ProfileShareCard | null) => {
   const { notice, showNotice, clearNotice } = useFlashNotice();
   const sharer = container.imageSharer;
 
-  const open = useCallback(() => {
-    if (!card) return;
-    setError(null);
-    clearNotice();
-    setVisible(true);
-  }, [card, clearNotice]);
+  const open = useCallback(
+    (next: Payload) => {
+      setError(null);
+      clearNotice();
+      setPayload(next);
+    },
+    [clearNotice]
+  );
 
-  const close = useCallback(() => setVisible(false), []);
+  const close = useCallback(() => setPayload(null), []);
 
-  const select = useCallback((id: string) => {
-    setFormatId(shareFormatById(id).id);
-    setError(null);
-  }, []);
+  const select = useCallback(
+    (id: string) => {
+      setFormatId(shareFormatById(formats, id).id);
+      setError(null);
+    },
+    [formats]
+  );
 
   const selectBackground = useCallback((uri: string | null) => {
     setBackgroundUri(uri);
@@ -82,7 +91,7 @@ export const useProfileShareViewModel = (card: ProfileShareCard | null) => {
         else setError(SHARE_MESSAGES.denied);
       } else {
         // The share sheet is its own feedback: nothing to say after it closes.
-        await sharer.share(await capture.toFile(), SHARE_DIALOG_TITLE);
+        await sharer.share(await capture.toFile(), dialogTitle);
       }
     } catch (failure) {
       setError(failure instanceof ShareUnavailableError ? SHARE_MESSAGES.unavailable : SHARE_MESSAGES.failed[action]);
@@ -92,13 +101,12 @@ export const useProfileShareViewModel = (card: ProfileShareCard | null) => {
   };
 
   return {
-    /** Nothing to share before the first recorded game. */
-    canShare: card !== null,
-    visible: visible && card !== null,
+    payload,
+    visible: payload !== null,
     open,
     close,
-    formats: SHARE_FORMATS,
-    format: shareFormatById(formatId),
+    formats,
+    format: shareFormatById(formats, formatId),
     select,
     backgroundUri,
     /** Pass null to go back to the transparent sticker. */
@@ -111,3 +119,7 @@ export const useProfileShareViewModel = (card: ProfileShareCard | null) => {
     run,
   };
 };
+
+export type ShareStickerModel<Payload, Format extends ShareFormat = ShareFormat> = ReturnType<
+  typeof useShareStickerViewModel<Payload, Format>
+>;

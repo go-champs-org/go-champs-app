@@ -14,10 +14,16 @@ import {
   ResultCard,
   UpcomingGameCard,
 } from '../components/myGames/MyGamesCards';
+import { GameSticker } from '../components/myGames/GameSticker';
+import { ShareStickerSheet } from '../components/share/ShareStickerSheet';
 import { makeStyles, useTheme } from '../theme/theme';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useMyGamesViewModel } from '../viewmodels/MyGamesViewModel';
+import { useShareStickerViewModel } from '../viewmodels/ShareStickerViewModel';
 import { countdownLabel, monthHeading } from '../domain/usecases/shared/myGames';
+import { GAME_SHARE_FORMATS, GameShareCard, GameShareFormat } from '../domain/usecases/shared/gameShare';
+
+const SHARE_TITLE = 'Compartilhar jogo';
 
 /** Meus jogos: the games of the athlete's teams, next first, then results. */
 const MyGamesScreen = () => {
@@ -26,6 +32,10 @@ const MyGamesScreen = () => {
   const navigation = useNavigation<any>();
   const { user, bootstrapping } = useAuthSession();
   const model = useMyGamesViewModel(user?.username);
+  const share = useShareStickerViewModel<GameShareCard, GameShareFormat>({
+    formats: GAME_SHARE_FORMATS,
+    dialogTitle: SHARE_TITLE,
+  });
   const openGame = (gameId: string) => navigation.navigate('GameDetailScreen', { gameId });
 
   const cta = (label: string, onPress: () => void) => (
@@ -118,7 +128,12 @@ const MyGamesScreen = () => {
                 <View style={styles.section}>
                   <MyGamesSectionHeading title="Jogos anteriores" detail="ÚLTIMOS RESULTADOS" />
                   {model.previous.map((recent) => (
-                    <ResultCard key={recent.game.id} recent={recent} onOpen={() => openGame(recent.game.id)} />
+                    <ResultCard
+                      key={recent.game.id}
+                      recent={recent}
+                      onOpen={() => openGame(recent.game.id)}
+                      onShare={() => share.open(model.shareCard(recent))}
+                    />
                   ))}
                 </View>
               ) : null}
@@ -129,6 +144,14 @@ const MyGamesScreen = () => {
           </ContentShell>
         </ScrollView>
       )}
+      <ShareStickerSheet
+        model={share}
+        title={SHARE_TITLE}
+        testID="game-share-sheet"
+        renderSticker={(card, format, backgroundUri) => (
+          <GameSticker card={card} format={format} backgroundUri={backgroundUri} />
+        )}
+      />
     </Screen>
   );
 };

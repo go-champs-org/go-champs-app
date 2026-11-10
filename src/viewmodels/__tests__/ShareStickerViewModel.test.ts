@@ -1,15 +1,9 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { container } from '../../di/container';
 import { ShareUnavailableError } from '../../core/share/ImageSharer';
-import { ProfileShareCard } from '../../domain/usecases/shared/profileShare';
+import { PROFILE_SHARE_FORMATS, ProfileShareCard, ProfileShareFormat } from '../../domain/usecases/shared/profileShare';
 import { deferred } from '../../test/deferred';
-import {
-  SHARE_DIALOG_TITLE,
-  SHARE_MESSAGES,
-  ShareAction,
-  StickerCapture,
-  useProfileShareViewModel,
-} from '../ProfileShareViewModel';
+import { SHARE_MESSAGES, ShareAction, StickerCapture, useShareStickerViewModel } from '../ShareStickerViewModel';
 
 jest.mock('../../di/container', () => ({
   container: {
@@ -37,11 +31,19 @@ const capture = (): StickerCapture & { toFile: jest.Mock; toBase64: jest.Mock } 
   toBase64: jest.fn().mockResolvedValue('iVBORw0KGgo='),
 });
 
-const opened = (value: ProfileShareCard | null = card) => {
-  const hook = renderHook(({ current }: { current: ProfileShareCard | null }) => useProfileShareViewModel(current), {
-    initialProps: { current: value },
-  });
-  act(() => hook.result.current.open());
+const DIALOG_TITLE = 'Compartilhar perfil';
+
+const closed = () =>
+  renderHook(() =>
+    useShareStickerViewModel<ProfileShareCard, ProfileShareFormat>({
+      formats: PROFILE_SHARE_FORMATS,
+      dialogTitle: DIALOG_TITLE,
+    })
+  );
+
+const opened = () => {
+  const hook = closed();
+  act(() => hook.result.current.open(card));
   return hook;
 };
 
@@ -52,7 +54,7 @@ const run = async (result: ReturnType<typeof opened>['result'], action: ShareAct
   return using;
 };
 
-describe('useProfileShareViewModel', () => {
+describe('useShareStickerViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     sharer.share.mockResolvedValue(undefined);
@@ -61,27 +63,22 @@ describe('useProfileShareViewModel', () => {
   });
   afterEach(() => jest.useRealTimers());
 
-  it('opens on the first format and closes', () => {
+  it('opens with what goes on the sticker, on the first format, and closes', () => {
     const { result } = opened();
-    expect(result.current.canShare).toBe(true);
     expect(result.current.visible).toBe(true);
+    expect(result.current.payload).toBe(card);
     expect(result.current.formats).toHaveLength(4);
     expect(result.current.format.id).toBe('bottom-dark');
     expect(result.current.actionsAvailable).toBe(true);
     act(() => result.current.close());
     expect(result.current.visible).toBe(false);
+    expect(result.current.payload).toBeNull();
   });
 
-  it('does not open without a card', () => {
-    const { result } = opened(null);
-    expect(result.current.canShare).toBe(false);
+  it('starts closed', () => {
+    const { result } = closed();
     expect(result.current.visible).toBe(false);
-  });
-
-  it('hides the sheet when the card goes away', () => {
-    const { result, rerender } = opened();
-    rerender({ current: null });
-    expect(result.current.visible).toBe(false);
+    expect(result.current.payload).toBeNull();
   });
 
   it('switches formats and ignores unknown ids', () => {
@@ -110,7 +107,7 @@ describe('useProfileShareViewModel', () => {
     const { result } = opened();
     const used = await run(result, 'share');
     expect(used.toFile).toHaveBeenCalled();
-    expect(sharer.share).toHaveBeenCalledWith('file:///tmp/sticker.png', SHARE_DIALOG_TITLE);
+    expect(sharer.share).toHaveBeenCalledWith('file:///tmp/sticker.png', DIALOG_TITLE);
     expect(result.current.notice).toBeNull();
     expect(result.current.error).toBeNull();
     expect(result.current.busy).toBeNull();

@@ -1,63 +1,14 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ProfileShareCard, ShareFormat, ShareLogo } from '../../domain/usecases/shared/profileShare';
+import { StyleSheet, Text, View } from 'react-native';
+import { ProfileShareCard, ProfileShareFormat } from '../../domain/usecases/shared/profileShare';
+import { ShareLogo } from '../../domain/usecases/shared/shareFormats';
+import { StickerCanvas, StickerLogo, StickerPalette, STICKER_PALETTES } from '../share/StickerParts';
 
-// A story sticker: the canvas is transparent so the athlete lays it over
-// their own photo, or it carries a photo they picked (then it is a flat image).
-// It is drawn at 360x640 and saved at 1080x1920.
-export const STICKER_WIDTH = 360;
-export const STICKER_HEIGHT = 640;
-export const STICKER_EXPORT = { width: 1080, height: 1920 };
-
-const LOGOS = {
-  dark: require('../../../assets/images/share/logo-dark.png'),
-  light: require('../../../assets/images/share/logo-light.png'),
-};
-const LOGO_RATIO = 587 / 917;
-
-// Brand colors, not theme ones: a sticker looks the same in light and dark mode.
-type Palette = { ink: string; muted: string; accent: string };
-export const STICKER_PALETTES: Record<ShareLogo, Palette> = {
-  dark: { ink: '#1d1d1b', muted: 'rgba(29, 29, 27, 0.72)', accent: '#1d1d1b' },
-  light: { ink: '#ffffff', muted: 'rgba(255, 255, 255, 0.82)', accent: '#d5ff27' },
-};
+type Palette = StickerPalette;
 
 const LEADER = '·'.repeat(120);
 
-type Props = { card: ProfileShareCard; format: ShareFormat; backgroundUri?: string | null };
-
-// Over a photo, a shade behind the stats keeps them readable: dark under white
-// text, light under dark text. Along the bottom for the list, all over for the
-// centered stack.
-const SCRIMS: Record<ShareLogo, [string, string]> = {
-  dark: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.72)'],
-  light: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.62)'],
-};
-const CENTER_SCRIMS: Record<ShareLogo, string> = {
-  dark: 'rgba(255, 255, 255, 0.5)',
-  light: 'rgba(0, 0, 0, 0.45)',
-};
-
-const PhotoBackground = ({ uri, format }: { uri: string; format: ShareFormat }) => (
-  <View style={StyleSheet.absoluteFill} testID="share-sticker-photo">
-    <Image source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors />
-    {format.layout === 'bottom' ? (
-      <LinearGradient colors={SCRIMS[format.logo]} style={styles.bottomScrim} />
-    ) : (
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: CENTER_SCRIMS[format.logo] }]} />
-    )}
-  </View>
-);
-
-const Logo = ({ logo, width }: { logo: ShareLogo; width: number }) => (
-  <Image
-    source={LOGOS[logo]}
-    accessibilityIgnoresInvertColors
-    style={{ width, height: Math.round(width * LOGO_RATIO) }}
-    resizeMode="contain"
-  />
-);
+type Props = { card: ProfileShareCard; format: ProfileShareFormat; backgroundUri?: string | null };
 
 const ListRow = ({ label, value, detail, palette }: { label: string; value: string; detail?: string; palette: Palette }) => (
   <View style={styles.row}>
@@ -76,7 +27,7 @@ const ListRow = ({ label, value, detail, palette }: { label: string; value: stri
 // Stats at the bottom: a compact label … value list under the logo and name.
 const BottomSticker = ({ card, palette, logo }: { card: ProfileShareCard; palette: Palette; logo: ShareLogo }) => (
   <View style={styles.bottom}>
-    <Logo logo={logo} width={112} />
+    <StickerLogo logo={logo} width={112} />
     <Text numberOfLines={2} style={[styles.bottomName, { color: palette.ink }]}>
       {card.name}
     </Text>
@@ -114,7 +65,7 @@ const BigStat = ({ label, value, caption, palette, accent }: {
 // Stats in the middle: big numbers stacked under the logo, like a scoreboard.
 const CenterSticker = ({ card, palette, logo }: { card: ProfileShareCard; palette: Palette; logo: ShareLogo }) => (
   <View style={styles.center}>
-    <Logo logo={logo} width={120} />
+    <StickerLogo logo={logo} width={120} />
     <Text numberOfLines={2} style={[styles.centerName, { color: palette.ink }]}>
       {card.name}
     </Text>
@@ -139,32 +90,17 @@ const CenterSticker = ({ card, palette, logo }: { card: ProfileShareCard; palett
 export const ProfileSticker = ({ card, format, backgroundUri }: Props) => {
   const palette = STICKER_PALETTES[format.logo];
   return (
-    <View style={styles.canvas} testID={`share-sticker-${format.id}`}>
-      {backgroundUri ? <PhotoBackground uri={backgroundUri} format={format} /> : null}
+    <StickerCanvas format={format} backgroundUri={backgroundUri} scrim={format.layout === 'bottom' ? 'bottom' : 'full'}>
       {format.layout === 'bottom' ? (
         <BottomSticker card={card} palette={palette} logo={format.logo} />
       ) : (
         <CenterSticker card={card} palette={palette} logo={format.logo} />
       )}
-    </View>
+    </StickerCanvas>
   );
 };
 
 const styles = StyleSheet.create({
-  canvas: {
-    width: STICKER_WIDTH,
-    height: STICKER_HEIGHT,
-    backgroundColor: 'transparent',
-    padding: 28,
-    overflow: 'hidden',
-  },
-  bottomScrim: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '62%',
-  },
   bottom: {
     flex: 1,
     justifyContent: 'flex-end',

@@ -506,7 +506,7 @@ test('[profileShare] abre Compartilhar perfil e troca o formato do sticker', asy
   await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-center-light')).toBeAttached();
 
   // Copy, save and share need the native app.
-  await expect(sheet.getByText('Para copiar, salvar ou compartilhar a imagem, abra seu perfil no app Go Champs.')).toBeVisible();
+  await expect(sheet.getByText('Para copiar, salvar ou compartilhar a imagem, use o app Go Champs.')).toBeVisible();
   await sheet.getByRole('button', { name: 'Fechar' }).click();
   await expect(sheet).toBeHidden();
   await expect(page.getByText('Resumo · Basquete 5x5')).toBeVisible();
@@ -720,6 +720,39 @@ test('[myGamesGameDetail] abre o jogo pelo card do próximo jogo', async ({ page
   await page.getByRole('link', { name: 'Abrir campeonato Copa Classificação' }).filter({ visible: true }).click();
   await expect(page).toHaveURL(/\/tournament\/t-1$/);
   await expect(page.getByText('Tabela de classificação')).toBeVisible();
+});
+
+test('[gameShare] compartilha um jogo anterior e troca o canto do sticker', async ({ page }) => {
+  await openMyGames(page);
+  await page.getByRole('button', { name: 'Compartilhar jogo Alpha vs Beta' }).filter({ visible: true }).first().click();
+  const sheet = page.getByTestId('game-share-sheet');
+  await expect(sheet.getByRole('heading', { name: 'Compartilhar jogo' })).toBeVisible();
+  await expect(sheet.getByRole('radio')).toHaveCount(4);
+
+  const topDark = sheet.getByRole('radio', { name: 'Conteúdo no canto superior esquerdo, logo escuro' });
+  const bottomLight = sheet.getByRole('radio', { name: 'Conteúdo no canto inferior direito, logo claro' });
+  await expect(topDark).toBeChecked();
+  const topTile = sheet.getByTestId('share-format-top-left-dark');
+  // The athlete with their number, the team and the tournament of that game.
+  await expect(topTile.getByText('Ana Silva  #7', { exact: true })).toBeVisible();
+  await expect(topTile.getByText('Alpha', { exact: true })).toBeVisible();
+  await expect(topTile.getByText('Copa Completa', { exact: true })).toBeVisible();
+  await expect(topTile.getByText('7 nov 2026', { exact: true })).toBeVisible();
+  for (const [value, label] of [['28', 'PTS'], ['8', 'REB'], ['6', 'AST'], ['32', 'MIN']]) {
+    await expect(topTile.getByText(value, { exact: true })).toBeVisible();
+    await expect(topTile.getByText(label, { exact: true })).toBeVisible();
+  }
+  await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-top-left-dark')).toBeAttached();
+
+  await bottomLight.click();
+  await expect(bottomLight).toBeChecked();
+  await expect(topDark).not.toBeChecked();
+  await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-bottom-right-light')).toBeAttached();
+
+  await expect(sheet.getByText('Para copiar, salvar ou compartilhar a imagem, use o app Go Champs.')).toBeVisible();
+  await sheet.getByRole('button', { name: 'Fechar' }).click();
+  await expect(sheet).toBeHidden();
+  await expect(page.getByText('Jogos anteriores')).toBeVisible();
 });
 
 test('[myGamesNoProfile] pede o perfil de atleta quando não existe', async ({ page }) => {

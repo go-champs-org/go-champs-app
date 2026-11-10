@@ -1,10 +1,5 @@
 import { athleteProfile } from '../../../../test/fixtures/athleteGamesFixtures';
-import {
-  DEFAULT_SHARE_FORMAT_ID,
-  profileShareCard,
-  SHARE_FORMATS,
-  shareFormatById,
-} from '../profileShare';
+import { PROFILE_SHARE_FORMATS, profileShareCard } from '../profileShare';
 
 const fiveByFive = {
   sport_slug: 'basketball_5x5',
@@ -30,9 +25,9 @@ const threeByThree = {
   stats: { game_played: 4, points: 30, points_per_game: 7.5 },
 };
 
-describe('SHARE_FORMATS', () => {
+describe('PROFILE_SHARE_FORMATS', () => {
   it('offers the bottom list and the centered stack, each with both logos', () => {
-    expect(SHARE_FORMATS.map(({ id, layout, logo }) => ({ id, layout, logo }))).toEqual([
+    expect(PROFILE_SHARE_FORMATS.map(({ id, layout, logo }) => ({ id, layout, logo }))).toEqual([
       { id: 'bottom-dark', layout: 'bottom', logo: 'dark' },
       { id: 'bottom-light', layout: 'bottom', logo: 'light' },
       { id: 'center-dark', layout: 'center', logo: 'dark' },
@@ -41,20 +36,14 @@ describe('SHARE_FORMATS', () => {
   });
 
   it('labels each format for the grid and for screen readers', () => {
-    expect(SHARE_FORMATS.map((format) => format.label)).toEqual([
+    expect(PROFILE_SHARE_FORMATS.map((format) => format.label)).toEqual([
       'Lista · logo escuro',
       'Lista · logo claro',
       'Destaque · logo escuro',
       'Destaque · logo claro',
     ]);
-    expect(SHARE_FORMATS[3].description).toBe('Estatísticas em destaque no centro, logo claro');
-    expect(SHARE_FORMATS[0].description).toBe('Estatísticas embaixo, logo escuro');
-  });
-
-  it('starts on the first format and falls back to it for an unknown id', () => {
-    expect(DEFAULT_SHARE_FORMAT_ID).toBe('bottom-dark');
-    expect(shareFormatById('center-light').id).toBe('center-light');
-    expect(shareFormatById('nope').id).toBe('bottom-dark');
+    expect(PROFILE_SHARE_FORMATS[3].description).toBe('Estatísticas em destaque no centro, logo claro');
+    expect(PROFILE_SHARE_FORMATS[0].description).toBe('Estatísticas embaixo, logo escuro');
   });
 });
 

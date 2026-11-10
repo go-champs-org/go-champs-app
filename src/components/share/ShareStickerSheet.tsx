@@ -15,10 +15,10 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
-import { ProfileShareCard, ShareFormat } from '../../domain/usecases/shared/profileShare';
-import type { ShareAction, StickerCapture, useProfileShareViewModel } from '../../viewmodels/ProfileShareViewModel';
+import { ShareFormat } from '../../domain/usecases/shared/shareFormats';
+import type { ShareAction, ShareStickerModel, StickerCapture } from '../../viewmodels/ShareStickerViewModel';
 import { makeStyles, tokens, useTheme } from '../../theme/theme';
-import { ProfileSticker, STICKER_EXPORT, STICKER_HEIGHT, STICKER_WIDTH } from './ProfileSticker';
+import { STICKER_EXPORT, STICKER_HEIGHT, STICKER_WIDTH } from './StickerParts';
 
 const CHECKERS = {
   // Dark stickers sit on a light checkerboard, light ones on a dark one.
@@ -36,17 +36,26 @@ const ACTIONS: { action: ShareAction; label: string; icon: keyof typeof Ionicons
   { action: 'share', label: 'Compartilhar', icon: 'share-outline' },
 ];
 
-type Props = {
-  model: ReturnType<typeof useProfileShareViewModel>;
-  card: ProfileShareCard | null;
+/** Draws one format of the sticker at full size (360x640). */
+export type RenderSticker<Payload, Format extends ShareFormat> = (
+  payload: Payload,
+  format: Format,
+  backgroundUri: string | null
+) => React.ReactNode;
+
+type Props<Payload, Format extends ShareFormat> = {
+  model: ShareStickerModel<Payload, Format>;
+  // 'Compartilhar perfil'
+  title: string;
+  testID: string;
+  renderSticker: RenderSticker<Payload, Format>;
 };
 
 // One format in the grid: the sticker scaled down over a checkerboard, which
 // stands for the transparent background.
-const FormatTile = ({ card, format, backgroundUri, selected, width, onPress }: {
-  card: ProfileShareCard;
+const FormatTile = ({ sticker, format, selected, width, onPress }: {
+  sticker: React.ReactNode;
   format: ShareFormat;
-  backgroundUri: string | null;
   selected: boolean;
   width: number;
   onPress: () => void;
@@ -79,7 +88,7 @@ const FormatTile = ({ card, format, backgroundUri, selected, width, onPress }: {
               ],
             }}
           >
-            <ProfileSticker card={card} format={format} backgroundUri={backgroundUri} />
+            {sticker}
           </View>
         </View>
         {selected ? (
@@ -93,8 +102,17 @@ const FormatTile = ({ card, format, backgroundUri, selected, width, onPress }: {
   );
 };
 
-/** Perfil > Compartilhar perfil: the four sticker formats and what to do with the chosen one. */
-export const ProfileShareSheet = ({ model, card }: Props) => {
+/**
+ * A story sticker's formats (Compartilhar perfil, Compartilhar jogo), an
+ * optional photo behind it and what to do with the chosen one.
+ */
+export const ShareStickerSheet = <Payload, Format extends ShareFormat>({
+  model,
+  title,
+  testID,
+  renderSticker,
+}: Props<Payload, Format>) => {
+  const payload = model.payload;
   const theme = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
@@ -129,8 +147,8 @@ export const ProfileShareSheet = ({ model, card }: Props) => {
       presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : undefined}
       onRequestClose={model.close}
     >
-      {card ? (
-        <View style={styles.root} testID="profile-share-sheet">
+      {payload !== null ? (
+        <View style={styles.root} testID={testID}>
           {/* The full-size sticker that gets saved. It sits under the opaque
               cover: the capture draws the view itself, not what is over it. */}
           <View
@@ -141,7 +159,7 @@ export const ProfileShareSheet = ({ model, card }: Props) => {
             style={styles.captureHost}
           >
             <View ref={stickerRef} collapsable={false} testID="share-capture">
-              <ProfileSticker card={card} format={model.format} backgroundUri={model.backgroundUri} />
+              {renderSticker(payload, model.format, model.backgroundUri)}
             </View>
           </View>
 
@@ -158,7 +176,7 @@ export const ProfileShareSheet = ({ model, card }: Props) => {
                   <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
                 </TouchableOpacity>
                 <Text accessibilityRole="header" style={styles.title}>
-                  Compartilhar perfil
+                  {title}
                 </Text>
                 <View style={styles.close} />
               </View>
@@ -199,9 +217,8 @@ export const ProfileShareSheet = ({ model, card }: Props) => {
                   {model.formats.map((format) => (
                     <FormatTile
                       key={format.id}
-                      card={card}
+                      sticker={renderSticker(payload, format, model.backgroundUri)}
                       format={format}
-                      backgroundUri={model.backgroundUri}
                       width={tileWidth}
                       selected={format.id === model.format.id}
                       onPress={() => model.select(format.id)}
@@ -249,7 +266,7 @@ export const ProfileShareSheet = ({ model, card }: Props) => {
                   </View>
                 ) : (
                   <Text style={styles.webHint}>
-                    Para copiar, salvar ou compartilhar a imagem, abra seu perfil no app Go Champs.
+                    Para copiar, salvar ou compartilhar a imagem, use o app Go Champs.
                   </Text>
                 )}
               </View>

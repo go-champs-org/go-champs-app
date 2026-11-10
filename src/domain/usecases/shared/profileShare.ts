@@ -1,52 +1,18 @@
 import { AthleteProfile } from '../../repositories/AthleteProfileRepository';
 import { careerSummaries, CareerSummary } from './athleteHome';
+import { buildShareFormats, ShareFormat } from './shareFormats';
 
 // "Compartilhar perfil": the athlete's career summary as a transparent story
 // sticker, in four formats (stats listed at the bottom or stacked big in the
 // center, each with the dark or the white and lime Go Champs logo).
 
-export type ShareLayout = 'bottom' | 'center';
-export type ShareLogo = 'dark' | 'light';
+export type ProfileShareLayout = 'bottom' | 'center';
+export type ProfileShareFormat = ShareFormat<ProfileShareLayout>;
 
-export type ShareFormat = {
-  id: string;
-  layout: ShareLayout;
-  logo: ShareLogo;
-  // Under the preview: 'Lista · logo escuro'
-  label: string;
-  // For screen readers: 'Estatísticas embaixo, logo escuro'
-  description: string;
-};
-
-const LAYOUT_LABELS: Record<ShareLayout, { label: string; description: string }> = {
+export const PROFILE_SHARE_FORMATS: ProfileShareFormat[] = buildShareFormats<ProfileShareLayout>({
   bottom: { label: 'Lista', description: 'Estatísticas embaixo' },
   center: { label: 'Destaque', description: 'Estatísticas em destaque no centro' },
-};
-
-const LOGO_LABELS: Record<ShareLogo, string> = {
-  dark: 'logo escuro',
-  light: 'logo claro',
-};
-
-const format = (layout: ShareLayout, logo: ShareLogo): ShareFormat => ({
-  id: `${layout}-${logo}`,
-  layout,
-  logo,
-  label: `${LAYOUT_LABELS[layout].label} · ${LOGO_LABELS[logo]}`,
-  description: `${LAYOUT_LABELS[layout].description}, ${LOGO_LABELS[logo]}`,
 });
-
-export const SHARE_FORMATS: ShareFormat[] = [
-  format('bottom', 'dark'),
-  format('bottom', 'light'),
-  format('center', 'dark'),
-  format('center', 'light'),
-];
-
-export const DEFAULT_SHARE_FORMAT_ID = SHARE_FORMATS[0].id;
-
-export const shareFormatById = (id: string): ShareFormat =>
-  SHARE_FORMATS.find((candidate) => candidate.id === id) ?? SHARE_FORMATS[0];
 
 export type ShareStat = {
   key: string;

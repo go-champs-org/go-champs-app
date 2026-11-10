@@ -44,6 +44,7 @@ export const journeys = {
   authGames: 'Ver proximo jogo, mais jogos e resultados do atleta',
   myGamesFilters: 'Filtrar Meus jogos por proximos e campeonato sem nova chamada',
   myGamesGameDetail: 'Abrir o jogo pelo card do proximo jogo',
+  gameShare: 'Compartilhar um jogo anterior e trocar o canto do sticker',
   myGamesNoProfile: 'Pedir perfil de atleta em Meus jogos sem perfil',
   authNavigation: 'Navegar entre entrar cadastro e recuperacao',
   webAuthSignUp: 'Abrir fluxo WebAuth de cadastro',

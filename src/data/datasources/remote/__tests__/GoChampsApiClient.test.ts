@@ -136,5 +136,35 @@ describe('GoChampsApiClient', () => {
     const error = await apiClient.get('/x').catch((caught: AppError) => caught);
     expect((error as AppError).fields).toBeUndefined();
   });
-});
 
+  it('sends a body on delete', async () => {
+    const httpClient = createHttpClient({ ok: true, status: 204, data: null });
+    const client = new GoChampsApiClient(httpClient, { getToken: () => 'abc' });
+
+    await expect(client.delete('/accounts', { password: 'secret' })).resolves.toBeNull();
+
+    expect(httpClient.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        endpoint: 'https://api.go-champs.com/v1/accounts',
+        method: 'DELETE',
+        body: { password: 'secret' },
+      })
+    );
+  });
+
+  it('keeps the API error code and body on the AppError', async () => {
+    const body = { error: 'account_owns_organizations', organizations: [{ id: 'o1', name: 'Org', slug: 'org' }] };
+    const apiClient = new GoChampsApiClient(createHttpClient({ ok: false, status: 409, data: body }));
+
+    const error = (await apiClient.delete('/accounts', {}).catch((caught: AppError) => caught)) as AppError;
+    expect(error.status).toBe(409);
+    expect(error.code).toBe('account_owns_organizations');
+    expect(error.data).toEqual(body);
+  });
+
+  it('leaves the code empty when the error is not a string', async () => {
+    const apiClient = new GoChampsApiClient(createHttpClient({ ok: false, status: 401, data: { error: { nested: true } } }));
+    const error = (await apiClient.get('/x').catch((caught: AppError) => caught)) as AppError;
+    expect(error.code).toBeUndefined();
+  });
+});

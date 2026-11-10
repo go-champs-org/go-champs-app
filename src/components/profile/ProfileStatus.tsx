@@ -5,14 +5,25 @@ import { useNavigation } from '@react-navigation/native';
 import { ContentShell } from '../layout/ContentShell';
 import { makeStyles, useTheme } from '../../theme/theme';
 
+type SignInPromptProps = {
+  /** Why the user has to sign in again (e.g. the session expired mid-action). */
+  message?: string | null;
+};
+
 /** Shown on the account and profile screens when nobody is signed in. */
-export const SignInPrompt = () => {
+export const SignInPrompt = ({ message }: SignInPromptProps = {}) => {
   const theme = useTheme();
   const styles = useStyles();
   const navigation = useNavigation<any>();
   return (
     <ContentShell style={styles.signedOut}>
       <View style={styles.signedOutCard}>
+        {message ? (
+          <View accessibilityRole="alert" style={styles.promptMessage}>
+            <Ionicons name="alert-circle" size={18} color={theme.colors.onDangerSoft} />
+            <Text style={styles.promptMessageText}>{message}</Text>
+          </View>
+        ) : null}
         <View style={styles.icon}>
           <Ionicons name="person-outline" size={26} color={theme.colors.success} />
         </View>
@@ -133,6 +144,22 @@ const useStyles = makeStyles((theme) => ({
   signedOut: {
     flex: 1,
     padding: theme.spacing.md,
+  },
+  promptMessage: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+    padding: 12,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.dangerSoft,
+  },
+  promptMessageText: {
+    flex: 1,
+    color: theme.colors.onDangerSoft,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 19,
   },
   signedOutCard: {
     backgroundColor: theme.colors.card,

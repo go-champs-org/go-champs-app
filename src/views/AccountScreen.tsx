@@ -6,18 +6,24 @@ import { Screen } from '../components/layout/Screen';
 import { ContentShell } from '../components/layout/ContentShell';
 import { ProfileCard, ProfileRow, ProfileSection, RowDivider } from '../components/profile/ProfileSection';
 import { IdentitySection } from '../components/profile/IdentitySection';
+import { DeleteAccountDialog } from '../components/profile/DeleteAccountDialog';
 import { BootstrapLoader, LoadState, SaveNotice, SignInPrompt } from '../components/profile/ProfileStatus';
 import { makeStyles, useTheme } from '../theme/theme';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useAccountViewModel } from '../viewmodels/AccountViewModel';
+import { useDeleteAccountViewModel } from '../viewmodels/DeleteAccountViewModel';
 
-/** Menu > Minha conta: account details, private identity data and sign out. */
+/** Menu > Minha conta: account details, private identity data, sign out and account deletion. */
 const AccountScreen = () => {
   const theme = useTheme();
   const styles = useStyles();
   const navigation = useNavigation<any>();
   const { user, bootstrapping, signOut } = useAuthSession();
   const model = useAccountViewModel(user?.username);
+  const deletion = useDeleteAccountViewModel({
+    signOut,
+    onDeleted: () => navigation.popTo('MainTabs', { screen: 'HomeTab' }),
+  });
 
   if (bootstrapping) {
     return (
@@ -30,7 +36,7 @@ const AccountScreen = () => {
   if (!user) {
     return (
       <Screen>
-        <SignInPrompt />
+        <SignInPrompt message={deletion.sessionExpired ? deletion.error : null} />
       </Screen>
     );
   }
@@ -82,10 +88,20 @@ const AccountScreen = () => {
                 <Ionicons name="log-out-outline" size={18} color={theme.colors.danger} />
                 <Text style={styles.signOutText}>Sair da conta</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                accessibilityLabel="Excluir conta"
+                accessibilityRole="button"
+                onPress={deletion.open}
+                style={styles.deleteAccount}
+              >
+                <Ionicons name="trash-outline" size={16} color={theme.colors.danger} />
+                <Text style={styles.deleteAccountText}>Excluir conta</Text>
+              </TouchableOpacity>
             </View>
           </ContentShell>
         </ScrollView>
       </KeyboardAvoidingView>
+      <DeleteAccountDialog model={deletion} />
     </Screen>
   );
 };
@@ -147,6 +163,19 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.danger,
     fontSize: 14,
     fontWeight: '700',
+  },
+  deleteAccount: {
+    minHeight: theme.layout.touchTarget,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: theme.spacing.md,
+  },
+  deleteAccountText: {
+    color: theme.colors.danger,
+    fontSize: 13,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 }));
 

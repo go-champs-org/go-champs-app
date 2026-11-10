@@ -35,4 +35,19 @@ describe('FetchHttpClient', () => {
       body: JSON.stringify({ username: 'lucas' }),
     });
   });
+
+  it('returns null data for 204 No Content without parsing a body', async () => {
+    const json = jest.fn().mockRejectedValue(new SyntaxError('Unexpected end of JSON input'));
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 204, json });
+
+    await expect(
+      new FetchHttpClient().request({ endpoint: 'https://example.com/accounts', method: 'DELETE', body: { password: 'x' } })
+    ).resolves.toEqual({ ok: true, status: 204, data: null });
+    expect(json).not.toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledWith('https://example.com/accounts', {
+      method: 'DELETE',
+      headers: undefined,
+      body: JSON.stringify({ password: 'x' }),
+    });
+  });
 });

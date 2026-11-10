@@ -8,7 +8,8 @@ export class FetchHttpClient implements HttpClient {
       body: body === undefined ? undefined : JSON.stringify(body),
     });
 
-    const data = (await response.json()) as T;
+    // 204 No Content has no body to parse.
+    const data = (response.status === 204 ? null : await response.json()) as T;
 
     return {
       ok: response.ok,

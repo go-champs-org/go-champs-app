@@ -504,6 +504,107 @@ test('[accountSignedOut] pede para entrar ao abrir Minha conta sem sessão', asy
   await expect(page.getByText('Entre na sua conta')).toBeVisible();
 });
 
+// Stubs DELETE /v1/accounts for one test; every other method falls through to the fixture API.
+const routeDeleteAccount = (page: Page, respond: (password: string | undefined) => { status: number; json?: unknown }) =>
+  page.route('**/v1/accounts', async (route) => {
+    if (route.request().method() !== 'DELETE') return route.fallback();
+    const { status, json } = respond((route.request().postDataJSON() as { password?: string } | null)?.password);
+    if (status === 204) return route.fulfill({ status, headers: { 'access-control-allow-origin': '*' } });
+    return fulfillJson(route, json, status);
+  });
+
+const openDeleteAccount = async (page: Page) => {
+  await page.getByRole('button', { name: 'Excluir conta', exact: true }).click();
+  await expect(page.getByText('Excluir sua conta é permanente.', { exact: false })).toBeVisible();
+};
+
+const confirmDeletion = async (page: Page, password: string) => {
+  await page.getByRole('textbox', { name: 'Senha', exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Excluir conta definitivamente' }).click();
+};
+
+test('[deleteAccount] exclui a conta, volta deslogado para a Home e não entra de novo', async ({ page }) => {
+  // A per-test fake account: once deleted, the same credentials no longer sign in.
+  let deleted = false;
+  const deleteBodies: (string | undefined)[] = [];
+  await routeDeleteAccount(page, (password) => {
+    deleteBodies.push(password);
+    deleted = true;
+    return { status: 204 };
+  });
+  await page.route('**/v1/accounts/signin', (route) =>
+    deleted ? fulfillJson(route, { error: 'invalid_credentials' }, 401) : route.fallback()
+  );
+
+  await openSignedInAccount(page);
+  await openDeleteAccount(page);
+  await expect(page.getByText('Seus registros em torneios continuam, sem vínculo com a sua conta.', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Excluir conta definitivamente' })).toBeDisabled();
+  await confirmDeletion(page, 'secret');
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText('Copa Completa', { exact: true })).toBeVisible();
+  expect(deleteBodies).toEqual(['secret']);
+
+  // Signed out, also after a reload (the stored session is gone).
+  await page.reload();
+  await page.getByRole('tab', { name: /Perfil/ }).click();
+  await expect(page.getByText('Entre na sua conta')).toBeVisible();
+
+  await page.getByRole('button', { name: /Entrar$/ }).click();
+  await page.getByLabel('Usuário/E-mail').fill('ana');
+  await page.getByRole('textbox', { name: 'Senha', exact: true }).fill('secret');
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await expect(page.getByText('Não foi possível entrar. Verifique seus dados e tente novamente.')).toBeVisible();
+  await expect(page.getByText('Entrar na minha conta')).toBeVisible();
+});
+
+test('[deleteAccountKept] senha errada e dono único mantêm a conta e a sessão', async ({ page }) => {
+  await routeDeleteAccount(page, (password) =>
+    password === 'secret'
+      ? {
+          status: 409,
+          json: {
+            error: 'account_owns_organizations',
+            organizations: [
+              { id: 'org-1', name: 'Federação Paulista', slug: 'fpb' },
+              { id: 'org-2', name: 'Liga Norte', slug: 'liga-norte' },
+            ],
+          },
+        }
+      : { status: 401, json: { error: 'invalid_password' } }
+  );
+
+  await openSignedInAccount(page);
+  await openDeleteAccount(page);
+  await confirmDeletion(page, 'errada');
+  await expect(page.getByText('Senha incorreta.')).toBeVisible();
+
+  await confirmDeletion(page, 'secret');
+  await expect(
+    page.getByText(
+      'Você é o único dono destas organizações: Federação Paulista, Liga Norte. Adicione outro dono ou exclua as organizações antes de excluir sua conta.'
+    )
+  ).toBeVisible();
+
+  await page.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(page.getByRole('button', { name: 'Excluir conta definitivamente' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Sua conta' })).toBeVisible();
+  await expect(page.getByText('ana@example.com')).toBeVisible();
+});
+
+test('[deleteAccountExpired] sessão expirada limpa a sessão e pede para entrar de novo', async ({ page }) => {
+  await routeDeleteAccount(page, () => ({ status: 401, json: { error: 'invalid_token' } }));
+
+  await openSignedInAccount(page);
+  await openDeleteAccount(page);
+  await confirmDeletion(page, 'secret');
+
+  await expect(page.getByText('Sessão expirada. Entre novamente para excluir sua conta.')).toBeVisible();
+  await expect(page.getByText('Entre na sua conta').last()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sair da conta' })).toBeHidden();
+});
+
 const openMyGames = async (page: Page) => {
   await signInAsAna(page);
   await page.getByRole('tab', { name: /Meus jogos/ }).click();

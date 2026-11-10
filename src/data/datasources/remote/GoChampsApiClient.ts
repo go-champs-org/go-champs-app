@@ -38,8 +38,8 @@ export class GoChampsApiClient {
     return this.requestJson<T>('PUT', endpoint, body, baseUrl);
   }
 
-  async delete<T>(endpoint: string, baseUrl = API_CONFIG.goChampsBaseUrl): Promise<T> {
-    return this.requestJson<T>('DELETE', endpoint, undefined, baseUrl);
+  async delete<T>(endpoint: string, body?: unknown, baseUrl = API_CONFIG.goChampsBaseUrl): Promise<T> {
+    return this.requestJson<T>('DELETE', endpoint, body, baseUrl);
   }
 
   private async requestJson<T>(
@@ -57,13 +57,15 @@ export class GoChampsApiClient {
     });
 
     if (!response.ok) {
-      const payload = response.data as { errors?: Record<string, unknown> } | null;
-      const errors = payload && typeof payload === 'object' ? payload.errors : undefined;
+      const payload = response.data as { error?: unknown; errors?: Record<string, unknown> } | null;
+      const body = payload && typeof payload === 'object' ? payload : undefined;
+      const errors = body?.errors;
       const detail = typeof errors?.detail === 'string' ? errors.detail : undefined;
       throw new AppError(
         detail || `HTTP error! status: ${response.status}`,
         response.status,
-        fieldErrorsFrom(errors)
+        fieldErrorsFrom(errors),
+        { code: typeof body?.error === 'string' ? body.error : undefined, data: body }
       );
     }
 

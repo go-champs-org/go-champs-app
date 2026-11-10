@@ -16,7 +16,8 @@ import { GetAccountIdentityUseCase } from '../domain/usecases/GetAccountIdentity
 import { GetAccountProfileUseCase } from '../domain/usecases/GetAccountProfileUseCase';
 import { GetAthleteOverviewUseCase } from '../domain/usecases/GetAthleteOverviewUseCase';
 import { GetAthleteProfileByUsernameUseCase } from '../domain/usecases/GetAthleteProfileByUsernameUseCase';
-import { GetAthleteSchedulesUseCase } from '../domain/usecases/GetAthleteSchedulesUseCase';
+import { GetAthleteGamesUseCase } from '../domain/usecases/GetAthleteGamesUseCase';
+import { GetAthleteHomeUseCase } from '../domain/usecases/GetAthleteHomeUseCase';
 import { GetGameOverviewUseCase } from '../domain/usecases/GetGameOverviewUseCase';
 import { GetLiveScoreUseCase } from '../domain/usecases/GetLiveScoreUseCase';
 import { GetOrganizationOverviewUseCase } from '../domain/usecases/GetOrganizationOverviewUseCase';
@@ -68,7 +69,8 @@ export const container = {
   saveAthleteProfile: new SaveAthleteProfileUseCase(athleteProfileRepository, mediaUploadRepository),
   getAccountIdentity: new GetAccountIdentityUseCase(accountIdentityRepository),
   saveAccountIdentity: new SaveAccountIdentityUseCase(accountIdentityRepository),
-  getAthleteSchedules: new GetAthleteSchedulesUseCase(athleteProfileRepository),
+  getAthleteHome: new GetAthleteHomeUseCase(athleteProfileRepository),
+  getAthleteGames: new GetAthleteGamesUseCase(athleteProfileRepository),
   getPinnedTournamentIds: new GetPinnedTournamentIdsUseCase(pinnedTournamentsRepository),
   togglePinnedTournament: new TogglePinnedTournamentUseCase(pinnedTournamentsRepository),
 };

@@ -56,16 +56,34 @@ describe('GoChampsAthleteProfileRepository', () => {
     expect(request).toHaveBeenCalledWith(expect.objectContaining({ method: 'PATCH' }));
   });
 
-  it('loads my schedules', async () => {
-    request.mockResolvedValue({ ok: true, status: 200, data: { data: [{ id: 'g1' }] } });
-    await expect(repository.getMySchedules()).resolves.toEqual([{ id: 'g1' }]);
+  it("loads the athlete's team schedule without a token-specific route", async () => {
+    const game = { id: 'g1', athlete_team_id: 'team-a' };
+    request.mockResolvedValue({ ok: true, status: 200, data: { data: [game] } });
+    await expect(repository.getTeamSchedule('ana silva')).resolves.toEqual([game]);
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'GET',
+        endpoint: 'https://api.go-champs.com/v1/athlete-profiles/username/ana%20silva/schedules',
+      })
+    );
   });
 
-  it('maps missing athlete schedule auth to a friendly error', async () => {
-    request.mockResolvedValue({ ok: false, status: 401, data: { error: 'unauthenticated' } });
-    await expect(repository.getMySchedules()).rejects.toEqual(
-      new AppError('Complete seu perfil de atleta para ver sua agenda.', 401)
+  it("loads the athlete's recent games", async () => {
+    const recent = { game: { id: 'g1' }, athlete_team_id: 'team-a', result: 'win', stats: { points: 20 } };
+    request.mockResolvedValue({ ok: true, status: 200, data: { data: [recent] } });
+    await expect(repository.getRecentGames('ana')).resolves.toEqual([recent]);
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'GET',
+        endpoint: 'https://api.go-champs.com/v1/athlete-profiles/username/ana/recent-games',
+      })
     );
+  });
+
+  it('keeps the status of a failed list request', async () => {
+    request.mockResolvedValue({ ok: false, status: 404, data: { error: 'Athlete profile not found' } });
+    await expect(repository.getTeamSchedule('ana')).rejects.toMatchObject({ status: 404 });
+    await expect(repository.getRecentGames('ana')).rejects.toMatchObject({ status: 404 });
   });
 
   it('rethrows unexpected getByUsername failures', async () => {

@@ -36,6 +36,45 @@ const writtenIdentity = (body: IdentityWrite | null, base: typeof accountIdentit
   };
 };
 
+const copaCompleta = { id: 't-0', name: 'Copa Completa', slug: 'copa-completa' };
+const copaClassificacao = { id: 't-1', name: 'Copa Classificação', slug: 'copa-classificacao' };
+type FixtureTeam = { id: string; name: string; logo_url: string; tri_code: string | null };
+const alphaTeam: FixtureTeam = { id: 'team-a', name: 'Alpha', logo_url: logo, tri_code: 'ALP' };
+const betaTeam: FixtureTeam = { id: 'team-b', name: 'Beta', logo_url: logo, tri_code: 'BET' };
+// Gama has no tri code, so the cards show its name.
+const gammaTeam: FixtureTeam = { id: 'team-c', name: 'Gama', logo_url: logo, tri_code: null };
+
+// The athlete's own team games (far ahead, so they stay upcoming) and results.
+const teamGame = (id: string, datetime: string, tournament: typeof copaCompleta, home = alphaTeam, away = betaTeam) => ({
+  id, datetime, location: 'Ginásio Central', city: 'São Paulo', court: '1', number: null, assigned_officials: [],
+  is_finished: false, live_state: 'not_started', phase_id: 'table',
+  home_team: home, home_placeholder: null, home_score: null, away_team: away, away_placeholder: null, away_score: null,
+  tournament: { ...tournament, logo_url: null, organization: null, sponsors: [] }, athlete_team_id: 'team-a',
+});
+export const athleteTeamGames = [
+  teamGame('game-next', '2099-03-12T19:30:00Z', copaCompleta),
+  teamGame('game-later', '2099-03-15T18:00:00Z', copaClassificacao, gammaTeam, alphaTeam),
+];
+const recent = (id: string, datetime: string, tournament: typeof copaCompleta, scores: [number, number], result: string, points: number) => ({
+  game: { id, datetime, home_team: alphaTeam, home_placeholder: null, home_score: scores[0], away_team: betaTeam, away_placeholder: null,
+    away_score: scores[1], tournament: { ...tournament, sport_slug: 'basketball_5x5', organization: null } },
+  athlete_team_id: 'team-a', result, stats: { points, rebounds: 8, assists: 6, minutes_played: 1920 },
+});
+export const athleteRecentGames = [
+  recent('game-won', '2026-11-07T19:00:00Z', copaCompleta, [84, 76], 'win', 28),
+  recent('game-lost', '2026-11-04T19:00:00Z', copaClassificacao, [71, 78], 'loss', 21),
+];
+export const athleteMemberships = [copaCompleta, copaClassificacao].map((tournament, index) => ({
+  tournament: { ...tournament, logo_url: index === 0 ? logo : null, sport_slug: 'basketball_5x5', sport_name: 'Basketball 5x5',
+    organization: { id: 'org-1', name: 'Federação Paulista', slug: 'fpb' } },
+  team: { id: 'team-a', name: 'Alpha', logo_url: logo, tri_code: 'ALP' },
+  shirt_number: index === 0 ? '7' : null,
+}));
+export const athleteCareer = [{
+  sport_slug: 'basketball_5x5', sport_name: 'Basketball 5x5', tournaments_count: 2,
+  stats: { game_played: 12, points: 257, points_per_game: 21.4, rebounds: 82, rebounds_per_game: 6.8, assists: 50, assists_per_game: 4.2 },
+}];
+
 export const test = base.extend({
   page: async ({ page }, use) => {
     await page.route('https://example.com/**', (route) => route.fulfill({
@@ -99,6 +138,7 @@ export const test = base.extend({
             ],
             officials: [],
             web_url: null,
+            youtube_code: gameId === 'game-next' ? 'dQw4w9WgXcQ' : null,
             phase: {
               id: 'table',
               title: 'Classificação',
@@ -188,6 +228,8 @@ export const test = base.extend({
       else if (path === '/upload/presigned-url') payload = {
         data: { filename: 'foto.jpg', url: storageUploadUrl, public_url: uploadedPhotoUrl },
       };
+      else if (/^\/athlete-profiles\/username\/[^/]+\/schedules$/.test(path)) payload = { data: athleteTeamGames };
+      else if (/^\/athlete-profiles\/username\/[^/]+\/recent-games$/.test(path)) payload = { data: athleteRecentGames };
       else if (path.startsWith('/athlete-profiles/username/')) payload = {
         data: {
           id: 'athlete-1',
@@ -195,10 +237,11 @@ export const test = base.extend({
           name: 'Ana Silva',
           photo_url: null,
           facebook: null,
-          instagram: null,
+          instagram: '@anasilva',
           twitter: null,
           tournaments: [],
-          career_stats: [],
+          memberships: athleteMemberships,
+          career_stats: athleteCareer,
         },
       };
       else if (path === '/athlete-profiles' && route.request().method() === 'POST') {
@@ -215,22 +258,6 @@ export const test = base.extend({
           },
         };
       }
-      else if (path === '/athlete-profiles/me/schedules') payload = {
-        data: [{
-          id: 'game-1',
-          datetime: '2026-09-20T19:00:00.000Z',
-          location: 'Ginásio Central',
-          city: 'São Paulo',
-          court: '1',
-          is_finished: false,
-          live_state: null,
-          home_score: null,
-          away_score: null,
-          home_team: { id: 'team-a', name: 'Alpha', logo_url: logo },
-          away_team: { id: 'team-b', name: 'Beta', logo_url: logo },
-          tournament: { id: 't-0', name: 'Copa Completa', slug: 'copa-completa' },
-        }],
-      };
       else throw new Error(`Unexpected API call: ${url}`);
       await route.fulfill({ json: payload, headers: { 'access-control-allow-origin': '*' } });
     });

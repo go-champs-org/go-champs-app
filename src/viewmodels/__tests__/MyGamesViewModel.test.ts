@@ -1,67 +1,132 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { AppError } from '../../core/errors/AppError';
 import { container } from '../../di/container';
-import { useMyGamesViewModel } from '../MyGamesViewModel';
+import { athleteProfile, liga, recentGame, teamGame } from '../../test/fixtures/athleteGamesFixtures';
+import { deferred } from '../../test/deferred';
+import { REFRESH_ERROR } from '../useLoadRequest';
+import { MY_GAMES_ERROR, useMyGamesViewModel } from '../MyGamesViewModel';
 
 jest.mock('../../di/container', () => ({
   container: {
-    getAthleteSchedules: { execute: jest.fn() },
+    getAthleteGames: { execute: jest.fn() },
   },
 }));
 
-const game = {
-  id: 'g1',
-  datetime: '2026-09-15T20:00:00Z',
-  location: 'Ginásio',
-  city: 'SP',
-  court: '1',
-  is_finished: false,
-  live_state: null,
-  home_score: null,
-  away_score: null,
-  home_team: { id: 't1', name: 'Casa' },
-  away_team: { id: 't2', name: 'Fora' },
-  tournament: { id: 'tr1', name: 'Copa', slug: 'copa' },
+const execute = () => jest.mocked(container.getAthleteGames.execute);
+
+// Far ahead, so they stay upcoming whatever day the test runs.
+const copaGame = teamGame({ id: 'copa-game', datetime: '2099-03-10T19:00:00Z' });
+const ligaGame = teamGame({ id: 'liga-game', datetime: '2099-03-12T19:00:00Z', tournament: liga });
+const copaResult = recentGame({ id: 'copa-result' });
+const ligaResult = recentGame({ id: 'liga-result', tournament: { ...liga, sport_slug: 'basketball_5x5' } });
+
+const games = {
+  profile: athleteProfile(),
+  teamGames: [ligaGame, copaGame],
+  recentGames: [copaResult, ligaResult],
+};
+
+const loaded = async () => {
+  execute().mockResolvedValue(games);
+  const hook = renderHook(() => useMyGamesViewModel('ana'));
+  await waitFor(() => expect(hook.result.current.loading).toBe(false));
+  return hook;
 };
 
 describe('useMyGamesViewModel', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => jest.resetAllMocks());
 
-  it('does not fetch when unauthenticated', async () => {
-    const { result } = renderHook(() => useMyGamesViewModel(false));
-    await waitFor(() => expect(result.current.needsAuth).toBe(true));
-    expect(container.getAthleteSchedules.execute).not.toHaveBeenCalled();
-  });
-
-  it('loads schedules when authenticated', async () => {
-    jest.mocked(container.getAthleteSchedules.execute).mockResolvedValue([game]);
-    const { result } = renderHook(() => useMyGamesViewModel(true));
-    await waitFor(() => expect(result.current.games).toEqual([game]));
-  });
-
-  it('flags missing athlete profile on 401', async () => {
-    jest
-      .mocked(container.getAthleteSchedules.execute)
-      .mockRejectedValue(new AppError('Complete seu perfil de atleta para ver sua agenda.', 401));
-
-    const { result } = renderHook(() => useMyGamesViewModel(true));
-    await waitFor(() => expect(result.current.needsAthleteProfile).toBe(true));
-    expect(result.current.games).toEqual([]);
-  });
-
-  it('surfaces generic schedule errors', async () => {
-    jest.mocked(container.getAthleteSchedules.execute).mockRejectedValue(new AppError('agenda offline', 500));
-    const { result } = renderHook(() => useMyGamesViewModel(true));
-    await waitFor(() => expect(result.current.error).toBe('agenda offline'));
-  });
-
-  it('exposes refresh', async () => {
-    jest.mocked(container.getAthleteSchedules.execute).mockResolvedValue([]);
-    const { result } = renderHook(() => useMyGamesViewModel(true));
+  it('asks to sign in without a username and loads nothing', async () => {
+    const { result } = renderHook(() => useMyGamesViewModel(undefined));
     await waitFor(() => expect(result.current.loading).toBe(false));
-    await act(async () => {
-      await result.current.refresh();
-    });
-    expect(container.getAthleteSchedules.execute).toHaveBeenCalledTimes(2);
+    expect(result.current.needsAuth).toBe(true);
+    expect(result.current.next).toBeNull();
+    expect(execute()).not.toHaveBeenCalled();
+  });
+
+  it("loads the athlete's games into sections", async () => {
+    const { result } = await loaded();
+    expect(execute()).toHaveBeenCalledWith('ana');
+    expect(result.current.needsAuth).toBe(false);
+    expect(result.current.needsAthleteProfile).toBe(false);
+    expect(result.current.next?.id).toBe('copa-game');
+    expect(result.current.upcoming.map((game) => game.id)).toEqual(['liga-game']);
+    expect(result.current.previous.map((recent) => recent.game.id)).toEqual(['copa-result', 'liga-result']);
+    expect(result.current.hasGames).toBe(true);
+    expect(result.current.tournaments).toEqual([
+      { id: 'copa', name: 'Copa Central' },
+      { id: 'liga', name: 'Liga Norte' },
+    ]);
+  });
+
+  it('filters the loaded games locally, without asking the API again', async () => {
+    const { result } = await loaded();
+
+    act(() => result.current.selectView('upcoming'));
+    expect(result.current.view).toBe('upcoming');
+    expect(result.current.previous).toEqual([]);
+    expect(result.current.next?.id).toBe('copa-game');
+
+    act(() => result.current.selectTournament('liga'));
+    expect(result.current.tournamentId).toBe('liga');
+    expect(result.current.next?.id).toBe('liga-game');
+    expect(result.current.upcoming).toEqual([]);
+
+    act(() => result.current.selectView('all'));
+    expect(result.current.previous.map((recent) => recent.game.id)).toEqual(['liga-result']);
+
+    act(() => result.current.selectTournament(null));
+    expect(result.current.previous).toHaveLength(2);
+    expect(execute()).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks for an athlete profile when the username has none', async () => {
+    execute().mockResolvedValue({ profile: null, teamGames: [], recentGames: [] });
+    const { result } = renderHook(() => useMyGamesViewModel('ana'));
+    await waitFor(() => expect(result.current.needsAthleteProfile).toBe(true));
+    expect(result.current.hasGames).toBe(false);
+  });
+
+  it('shows an error when the first load fails, and retries', async () => {
+    execute().mockRejectedValueOnce(new AppError('offline', 500)).mockResolvedValue(games);
+    const { result } = renderHook(() => useMyGamesViewModel('ana'));
+    await waitFor(() => expect(result.current.error).toBe(MY_GAMES_ERROR));
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.next?.id).toBe('copa-game'));
+    expect(result.current.error).toBeNull();
+  });
+
+  it('refreshes in the background and keeps the filters', async () => {
+    const { result } = await loaded();
+    act(() => result.current.selectTournament('liga'));
+    const pending = deferred<typeof games>();
+    execute().mockReturnValueOnce(pending.promise);
+    act(() => result.current.refresh());
+    expect(result.current.refreshing).toBe(true);
+    expect(result.current.loading).toBe(false);
+    await act(async () => pending.resolve({ ...games, teamGames: [ligaGame] }));
+    expect(result.current.refreshing).toBe(false);
+    expect(result.current.tournamentId).toBe('liga');
+    expect(result.current.next?.id).toBe('liga-game');
+  });
+
+  it('keeps the games when a refresh fails', async () => {
+    const { result } = await loaded();
+    execute().mockRejectedValueOnce(new Error('offline'));
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.refreshError).toBe(REFRESH_ERROR);
+    expect(result.current.error).toBeNull();
+    expect(result.current.next?.id).toBe('copa-game');
+  });
+
+  it('falls back to every tournament when the selected one leaves after a refresh', async () => {
+    const { result } = await loaded();
+    act(() => result.current.selectTournament('liga'));
+    execute().mockResolvedValueOnce({ ...games, teamGames: [copaGame], recentGames: [copaResult] });
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.refreshing).toBe(false));
+    expect(result.current.tournamentId).toBeNull();
+    expect(result.current.next?.id).toBe('copa-game');
   });
 });

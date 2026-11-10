@@ -14,8 +14,13 @@ import {
 import { fieldsFromError, messageFromError, withoutField } from './formErrors';
 import { useFlashNotice } from './useFlashNotice';
 
-/** The Perfil tab: the signed-in user's athlete profile. */
-export const useProfileViewModel = (username: string | undefined) => {
+type Options = {
+  // The edit screen opens straight on the form once the profile is loaded.
+  editOnLoad?: boolean;
+};
+
+/** The signed-in user's athlete profile and its edit form. */
+export const useProfileViewModel = (username: string | undefined, { editOnLoad = false }: Options = {}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [athlete, setAthlete] = useState<AthleteProfile | null>(null);
@@ -49,6 +54,11 @@ export const useProfileViewModel = (username: string | undefined) => {
         const athleteProfile = await container.getAthleteProfileByUsername.execute(username);
         if (!mounted) return;
         setAthlete(athleteProfile);
+        if (editOnLoad) {
+          setValues(athleteToFormValues(athleteProfile));
+          setPhoto({ kind: 'keep' });
+          setEditing(true);
+        }
       } catch (requestError) {
         if (!mounted) return;
         setError(messageFromError(requestError, 'Não foi possível carregar seu perfil de atleta.'));
@@ -60,7 +70,7 @@ export const useProfileViewModel = (username: string | undefined) => {
     return () => {
       mounted = false;
     };
-  }, [username, refreshVersion]);
+  }, [username, refreshVersion, editOnLoad]);
 
   const resetForm = () => {
     setValues(athleteToFormValues(athlete));

@@ -10,11 +10,13 @@ type Props = {
   options: SelectOption[];
   value: string | null;
   onChange: (id: string | null) => void;
+  // On a dark band (a screen header), the label reads in the header's text.
+  tone?: 'default' | 'onDark';
 };
 
 // A form select: the field shows the current choice, and tapping it lists
 // every option in a sheet over the screen.
-export const SelectField = ({ label, options, value, onChange }: Props) => {
+export const SelectField = ({ label, options, value, onChange, tone = 'default' }: Props) => {
   const theme = useTheme();
   const styles = useStyles();
   const [open, setOpen] = useState(false);
@@ -22,7 +24,7 @@ export const SelectField = ({ label, options, value, onChange }: Props) => {
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, tone === 'onDark' && styles.labelOnDark]}>{label}</Text>
       <TouchableOpacity
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${current?.label ?? ''}`}
@@ -68,6 +70,7 @@ export const SelectField = ({ label, options, value, onChange }: Props) => {
 const useStyles = makeStyles((theme) => ({
   field: { gap: 6 },
   label: { color: theme.colors.subtleText, fontSize: 12, fontWeight: '700' },
+  labelOnDark: { color: theme.colors.onDark, fontWeight: '500' },
   trigger: {
     minHeight: 44,
     paddingHorizontal: 12,

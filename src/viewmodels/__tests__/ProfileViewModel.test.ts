@@ -37,6 +37,22 @@ describe('useProfileViewModel', () => {
   beforeEach(() => jest.clearAllMocks());
 
   describe('loading', () => {
+    it('opens straight on the form for the edit screen', async () => {
+      jest.mocked(container.getAthleteProfileByUsername.execute).mockResolvedValue(athlete);
+      const { result } = renderHook(() => useProfileViewModel('ana', { editOnLoad: true }));
+      await waitFor(() => expect(result.current.athlete.editing).toBe(true));
+      expect(result.current.athlete.values.name).toBe('Ana');
+      expect(result.current.athlete.values.instagram).toBe('@ana');
+    });
+
+    it('opens an empty form to create the athlete profile', async () => {
+      jest.mocked(container.getAthleteProfileByUsername.execute).mockResolvedValue(null);
+      const { result } = renderHook(() => useProfileViewModel('ana', { editOnLoad: true }));
+      await waitFor(() => expect(result.current.athlete.editing).toBe(true));
+      expect(result.current.athlete.data).toBeNull();
+      expect(result.current.athlete.values.name).toBe('');
+    });
+
     it('does not fetch without username', async () => {
       const { result } = renderHook(() => useProfileViewModel(undefined));
       await waitFor(() => expect(result.current.loading).toBe(false));

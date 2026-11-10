@@ -12,6 +12,7 @@ export type RootStackParamList = {
   OrganizationScreen: { organizationSlug: string; apiBaseUrl?: string };
   OrganizationsScreen: undefined;
   AccountScreen: undefined;
+  AthleteProfileEditScreen: undefined;
   AuthScreen: { initialMode?: 'signIn' | 'signUp' | 'recovery' };
   WebAuthFlowScreen: { purpose: WebAuthPurpose };
 };
@@ -19,5 +20,6 @@ export type RootStackParamList = {
 export type MainTabParamList = {
   HomeTab: undefined;
   MyGamesTab: undefined;
-  ProfileTab: undefined;
+  // Back from the edit screen with what was saved.
+  ProfileTab: { savedNotice?: string } | undefined;
 };

@@ -1,6 +1,5 @@
 import { GetAccountProfileUseCase } from '../GetAccountProfileUseCase';
 import { GetAthleteProfileByUsernameUseCase } from '../GetAthleteProfileByUsernameUseCase';
-import { GetAthleteSchedulesUseCase } from '../GetAthleteSchedulesUseCase';
 import { GetRecentTournamentsUseCase } from '../GetRecentTournamentsUseCase';
 import { AccountRepository } from '../../repositories/AccountRepository';
 import { AthleteProfileRepository } from '../../repositories/AthleteProfileRepository';
@@ -24,7 +23,6 @@ describe('simple use cases', () => {
       getByUsername: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue({ id: '1', username: 'ana', name: 'Ana' }),
       updateByUsername: jest.fn().mockResolvedValue({ id: '1', username: 'ana', name: 'Ana 2' }),
-      getMySchedules: jest.fn().mockResolvedValue([]),
     } as unknown as AthleteProfileRepository;
 
     await expect(new GetAccountProfileUseCase(accountRepository).execute('ana')).resolves.toEqual({
@@ -33,6 +31,5 @@ describe('simple use cases', () => {
       organizations: [],
     });
     await expect(new GetAthleteProfileByUsernameUseCase(athleteRepository).execute('ana')).resolves.toBeNull();
-    await expect(new GetAthleteSchedulesUseCase(athleteRepository).execute()).resolves.toEqual([]);
   });
 });

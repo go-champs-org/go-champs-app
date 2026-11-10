@@ -1,183 +1,154 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '../components/layout/Screen';
 import { AppHeader } from '../components/layout/AppHeader';
-import { makeStyles, useTheme } from '../theme/theme';
-import { EmptyState } from '../components/feedback/EmptyState';
 import { ContentShell } from '../components/layout/ContentShell';
+import { EmptyState } from '../components/feedback/EmptyState';
+import { RefreshNotice, themedRefreshControl } from '../components/feedback/RefreshFeedback';
+import { BootstrapLoader, LoadState } from '../components/profile/ProfileStatus';
+import {
+  MyGamesHeader,
+  MyGamesSectionHeading,
+  NextGameCard,
+  ResultCard,
+  UpcomingGameCard,
+} from '../components/myGames/MyGamesCards';
+import { makeStyles, useTheme } from '../theme/theme';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useMyGamesViewModel } from '../viewmodels/MyGamesViewModel';
-import { ScheduleGame } from '../domain/repositories/AthleteProfileRepository';
-import { formatGameShortDateTime } from '../domain/usecases/shared/gameDateTime';
+import { countdownLabel, monthHeading } from '../domain/usecases/shared/myGames';
 
-const GameCard = ({
-  game,
-  onPress,
-}: {
-  game: ScheduleGame;
-  onPress: () => void;
-}) => {
-  const styles = useStyles();
-  const home = game.home_team?.name || game.home_placeholder || 'A definir';
-  const away = game.away_team?.name || game.away_placeholder || 'A definir';
-  const score =
-    game.is_finished || game.home_score != null || game.away_score != null
-      ? `${game.home_score ?? '-'} x ${game.away_score ?? '-'}`
-      : 'vs';
-
-  return (
-    <TouchableOpacity
-      accessibilityRole="button"
-      accessibilityLabel={`Abrir jogo ${home} versus ${away}`}
-      onPress={onPress}
-      style={styles.card}
-    >
-      <Text style={styles.tournament}>{game.tournament?.name || 'Torneio'}</Text>
-      <Text style={styles.match}>
-        {home} {score} {away}
-      </Text>
-      <Text style={styles.meta}>{formatGameShortDateTime(game.datetime)}</Text>
-      {game.location || game.city ? (
-        <Text style={styles.meta}>
-          {[game.location, game.city, game.court].filter(Boolean).join(' · ')}
-        </Text>
-      ) : null}
-    </TouchableOpacity>
-  );
-};
-
+/** Meus jogos: the games of the athlete's teams, next first, then results. */
 const MyGamesScreen = () => {
   const theme = useTheme();
   const styles = useStyles();
   const navigation = useNavigation<any>();
   const { user, bootstrapping } = useAuthSession();
-  const { loading, error, games, needsAuth, needsAthleteProfile } = useMyGamesViewModel(Boolean(user));
+  const model = useMyGamesViewModel(user?.username);
+  const openGame = (gameId: string) => navigation.navigate('GameDetailScreen', { gameId });
+
+  const cta = (label: string, onPress: () => void) => (
+    <TouchableOpacity accessibilityRole="button" style={styles.cta} onPress={onPress}>
+      <Text style={styles.ctaText}>{label}</Text>
+    </TouchableOpacity>
+  );
+
+  const body = () => {
+    if (model.needsAuth) {
+      return (
+        <View>
+          <EmptyState
+            icon="calendar-clear-outline"
+            title="Sua agenda começa aqui"
+            description="Entre na sua conta para acompanhar jogos, horários e resultados."
+          />
+          {cta('Entrar', () => navigation.navigate('AuthScreen', { initialMode: 'signIn' }))}
+        </View>
+      );
+    }
+    if (model.needsAthleteProfile) {
+      return (
+        <View>
+          <EmptyState
+            icon="person-outline"
+            title="Complete seu perfil de atleta"
+            description="Crie seu perfil de atleta para ver os jogos dos seus times."
+          />
+          {cta('Criar perfil de atleta', () => navigation.navigate('AthleteProfileEditScreen'))}
+        </View>
+      );
+    }
+    return null;
+  };
+
+  const signedOutBody = body();
 
   return (
     <Screen>
       <AppHeader />
-      <ContentShell style={styles.container}>
-        <Text style={styles.eyebrow}>SUA AGENDA</Text>
-        <Text style={styles.title}>Meus jogos</Text>
-
-        {bootstrapping || loading ? (
-          <ActivityIndicator style={styles.loader} color={theme.colors.accent} />
-        ) : null}
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        {needsAuth ? (
-          <View>
-            <EmptyState
-              icon="calendar-clear-outline"
-              title="Sua agenda começa aqui"
-              description="Entre na sua conta para acompanhar jogos, horários e resultados."
+      {bootstrapping ? (
+        <BootstrapLoader />
+      ) : signedOutBody ? (
+        <ContentShell style={styles.content}>{signedOutBody}</ContentShell>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={themedRefreshControl(theme, model.refreshing, () => model.refresh())}
+        >
+          {!model.loading && !model.error ? (
+            <MyGamesHeader
+              view={model.view}
+              tournamentId={model.tournamentId}
+              tournaments={model.tournaments}
+              onSelectView={model.selectView}
+              onSelectTournament={model.selectTournament}
             />
-            <TouchableOpacity
-              accessibilityRole="button"
-              style={styles.cta}
-              onPress={() => navigation.navigate('AuthScreen', { initialMode: 'signIn' })}
-            >
-              <Text style={styles.ctaText}>Entrar</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        {needsAthleteProfile ? (
-          <View>
-            <EmptyState
-              icon="person-outline"
-              title="Complete seu perfil de atleta"
-              description="Crie seu perfil de atleta para liberar a agenda de jogos."
-            />
-            <TouchableOpacity
-              accessibilityRole="button"
-              style={styles.cta}
-              onPress={() => navigation.navigate('ProfileTab')}
-            >
-              <Text style={styles.ctaText}>Ir para o perfil</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        {!needsAuth && !needsAthleteProfile && !loading && games.length === 0 ? (
-          <EmptyState
-            icon="calendar-outline"
-            title="Nenhum jogo na sua agenda ainda"
-            description="Meus jogos não é um favorito manual: a agenda vem da API quando o seu perfil de atleta está vinculado a partidas nos campeonatos. Peça à organização para associar seu username ao elenco."
-          />
-        ) : null}
-
-        {!needsAuth && !needsAthleteProfile && games.length > 0 ? (
-          <FlatList
-            data={games}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.list}
-            renderItem={({ item }) => (
-              <GameCard
-                game={item}
-                onPress={() => navigation.navigate('GameDetailScreen', { gameId: item.id })}
-              />
-            )}
-          />
-        ) : null}
-      </ContentShell>
+          ) : null}
+          <ContentShell style={styles.content}>
+            <RefreshNotice message={model.refreshError} />
+            <LoadState loading={model.loading} error={model.error} onRetry={model.retry}>
+              {!model.next && model.previous.length === 0 ? (
+                <EmptyState
+                  icon="calendar-outline"
+                  title={model.view === 'upcoming' ? 'Nenhum jogo próximo' : 'Nenhum jogo por aqui ainda'}
+                  description={
+                    model.tournaments.length === 0
+                      ? 'Os jogos aparecem quando a organização vincula seu usuário ao elenco de um time.'
+                      : 'Troque o filtro para ver outros jogos.'
+                  }
+                />
+              ) : null}
+              {model.next ? (
+                <View style={styles.section}>
+                  <MyGamesSectionHeading title="Próximo jogo" detail={countdownLabel(model.next, model.now)} />
+                  <NextGameCard game={model.next} onOpen={() => openGame(model.next!.id)} />
+                </View>
+              ) : null}
+              {model.upcoming.length > 0 ? (
+                <View style={styles.section}>
+                  <MyGamesSectionHeading title="Mais jogos" detail={monthHeading(model.upcoming[0].datetime)} />
+                  {model.upcoming.map((game) => (
+                    <UpcomingGameCard key={game.id} game={game} onOpen={() => openGame(game.id)} />
+                  ))}
+                </View>
+              ) : null}
+              {model.previous.length > 0 ? (
+                <View style={styles.section}>
+                  <MyGamesSectionHeading title="Jogos anteriores" detail="ÚLTIMOS RESULTADOS" />
+                  {model.previous.map((recent) => (
+                    <ResultCard key={recent.game.id} recent={recent} onOpen={() => openGame(recent.game.id)} />
+                  ))}
+                </View>
+              ) : null}
+              {model.next || model.previous.length > 0 ? (
+                <Text style={styles.footnote}>Horários no fuso do local do jogo.</Text>
+              ) : null}
+            </LoadState>
+          </ContentShell>
+        </ScrollView>
+      )}
     </Screen>
   );
 };
 
 const useStyles = makeStyles((theme) => ({
-  container: {
-    flex: 1,
-    padding: theme.spacing.md,
-  },
-  eyebrow: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.caption,
-    fontWeight: '900',
-  },
-  title: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.typography.title,
-    fontWeight: '900',
-    marginTop: 2,
-  },
-  loader: {
-    marginTop: theme.spacing.lg,
-  },
-  error: {
-    marginTop: theme.spacing.md,
-    color: theme.colors.danger,
-    fontWeight: '700',
-  },
-  list: {
-    paddingTop: theme.spacing.md,
-    gap: theme.spacing.sm,
+  scrollContent: {
+    flexGrow: 1,
     paddingBottom: theme.spacing.xl,
   },
-  card: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.card,
-    padding: theme.spacing.md,
-    gap: 4,
-    ...theme.shadow.card,
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    gap: 22,
   },
-  tournament: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.caption,
-    fontWeight: '800',
+  section: {
+    gap: 10,
   },
-  match: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.typography.body,
-    fontWeight: '900',
-  },
-  meta: {
+  footnote: {
     color: theme.colors.mutedText,
-    fontSize: theme.typography.caption,
+    fontSize: 12,
   },
   cta: {
     marginHorizontal: theme.spacing.md,

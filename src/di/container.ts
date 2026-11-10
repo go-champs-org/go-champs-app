@@ -12,6 +12,7 @@ import { GoChampsScoreboardRepository } from '../data/repositories/GoChampsScore
 import { GoChampsOrganizationRepository } from '../data/repositories/GoChampsOrganizationRepository';
 import { GoChampsTournamentRepository } from '../data/repositories/GoChampsTournamentRepository';
 import { LocalPinnedTournamentsRepository } from '../data/repositories/LocalPinnedTournamentsRepository';
+import { DeleteAccountUseCase } from '../domain/usecases/DeleteAccountUseCase';
 import { GetAccountIdentityUseCase } from '../domain/usecases/GetAccountIdentityUseCase';
 import { GetAccountProfileUseCase } from '../domain/usecases/GetAccountProfileUseCase';
 import { GetAthleteOverviewUseCase } from '../domain/usecases/GetAthleteOverviewUseCase';
@@ -65,6 +66,7 @@ export const container = {
   getOrganizationOverview: new GetOrganizationOverviewUseCase(organizationRepository),
   signIn: new SignInUseCase(accountRepository),
   getAccountProfile: new GetAccountProfileUseCase(accountRepository),
+  deleteAccount: new DeleteAccountUseCase(accountRepository),
   getAthleteProfileByUsername: new GetAthleteProfileByUsernameUseCase(athleteProfileRepository),
   saveAthleteProfile: new SaveAthleteProfileUseCase(athleteProfileRepository, mediaUploadRepository),
   getAccountIdentity: new GetAccountIdentityUseCase(accountIdentityRepository),

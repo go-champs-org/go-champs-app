@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ProfileShareCard, ProfileShareFormat } from '../../domain/usecases/shared/profileShare';
 import { ShareLogo } from '../../domain/usecases/shared/shareFormats';
-import { StickerCanvas, StickerLogo, StickerPalette, STICKER_PALETTES } from '../share/StickerParts';
+import { StickerCanvas, StickerCredit, StickerLogo, StickerPalette, STICKER_PALETTES } from '../share/StickerParts';
 
 type Palette = StickerPalette;
 
@@ -24,10 +24,10 @@ const ListRow = ({ label, value, detail, palette }: { label: string; value: stri
   </View>
 );
 
-// Stats at the bottom: a compact label … value list under the logo and name.
+// Stats at the bottom: a compact label … value list under the name, with a
+// small "Fornecido por" credit as the last line.
 const BottomSticker = ({ card, palette, logo }: { card: ProfileShareCard; palette: Palette; logo: ShareLogo }) => (
   <View style={styles.bottom}>
-    <StickerLogo logo={logo} width={112} />
     <Text numberOfLines={2} style={[styles.bottomName, { color: palette.ink }]}>
       {card.name}
     </Text>
@@ -44,6 +44,9 @@ const BottomSticker = ({ card, palette, logo }: { card: ProfileShareCard; palett
           palette={palette}
         />
       ))}
+    </View>
+    <View style={styles.credit}>
+      <StickerCredit logo={logo} />
     </View>
   </View>
 );
@@ -106,10 +109,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   bottomName: {
-    marginTop: 14,
     fontSize: 24,
     lineHeight: 28,
     fontWeight: '800',
+  },
+  credit: {
+    marginTop: 14,
   },
   sport: {
     marginTop: 2,

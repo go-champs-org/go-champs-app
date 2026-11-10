@@ -493,6 +493,8 @@ test('[profileShare] abre Compartilhar perfil e troca o formato do sticker', asy
   await expect(bottomTile.getByText('Ana Silva', { exact: true })).toBeVisible();
   await expect(bottomTile.getByText('Campeonatos', { exact: true })).toBeVisible();
   await expect(bottomTile.getByText('257 · 21.4 por jogo', { exact: true })).toBeVisible();
+  // The list formats credit Go Champs with a small logo; the centered ones keep the big one.
+  await expect(bottomTile.getByText('Fornecido por', { exact: true })).toBeVisible();
   // The image that gets saved is the picked format.
   await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-bottom-dark')).toBeAttached();
 
@@ -503,6 +505,7 @@ test('[profileShare] abre Compartilhar perfil e troca o formato do sticker', asy
   await expect(centerTile.getByText('Pontos por jogo', { exact: true })).toBeVisible();
   await expect(centerTile.getByText('21.4', { exact: true })).toBeVisible();
   await expect(centerTile.getByText('257 no total', { exact: true })).toBeVisible();
+  await expect(centerTile.getByText('Fornecido por', { exact: true })).toHaveCount(0);
   await expect(sheet.getByTestId('share-capture').getByTestId('share-sticker-center-light')).toBeAttached();
 
   // Copy, save and share need the native app.

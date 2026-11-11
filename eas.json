@@ -11,11 +11,19 @@
     "production": {
       "distribution": "store",
       "environment": "production",
+      "android": {
+        "buildType": "app-bundle",
+        "credentialsSource": "remote"
+      },
       "autoIncrement": true
     }
   },
   "submit": {
     "production": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "completed"
+      },
       "ios": {
         "ascAppId": "6822873868",
         "appleTeamId": "H859MRQ6UP"

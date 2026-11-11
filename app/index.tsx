@@ -128,6 +128,7 @@ export default function App() {
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: '800', fontSize: 16 },
             headerBackTitle: 'Voltar',
+            headerBackButtonDisplayMode: 'minimal',
           }}
         >
           <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />

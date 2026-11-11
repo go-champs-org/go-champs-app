@@ -1,6 +1,29 @@
 # Go Champs - Handoff de continuidade
 
-Atualizado em: 2026-10-29
+Atualizado em: 2026-11-11
+
+## Automacao Android (2026-11-11)
+
+- Adicionado `android.package = com.gochamps.app`; perfil EAS production explicita AAB e assinatura remota (incremento remoto ja estava habilitado).
+- Novo workflow `.github/workflows/android-production.yml` segue o padrao iOS: aguarda CI de push aprovado na main e constroi exatamente o SHA testado; nao executa para PRs, forks ou CI reprovado. Disparo manual apenas na main. Usuario solicitou envio a testes internos: `--auto-submit` com track `internal` e releaseStatus `completed`, sem publicacao publica.
+- CI tambem valida `check:fingerprint:android`. Secret GitHub `EXPO_TOKEN` existe, sessao Expo local tem acesso; lista EAS Android estava vazia nesta verificacao.
+- Usuario confirmou app novo. Chave Android criada com sucesso no EAS via `credentials:configure-build --platform android --profile production`, sem iniciar build e sem salvar chave privada no repositorio.
+- Validados: configuracao resolvida pelo EAS, fingerprint Android, lint, tipos, 77 suites / 548 testes unitarios e 219 E2E. Jornadas E2E: 72/72 em Android Web, iOS WebKit e desktop. Workflow conferido com parser YAML e assercoes dos filtros de origem/SHA, perfil de assinatura e track de envio.
+- PR em rascunho #21: https://github.com/go-champs-org/go-champs-app/pull/21. Commits separados para ajustes nativos/identidade e automacao; documentacao em commit separado. Nenhum merge ou build de loja disparado neste ciclo.
+- Pendente: usuario cadastrar/autorizar conta de servico Google no EAS para `com.gochamps.app` e concluir cadastro no Play Console. Ativacao exige merge do workflow na main. Nao disparar auto-submit sem essa chave atribuida ao app. Ver `docs/ANDROID_RELEASE.md`.
+
+## Correcao local de inicializacao iOS (2026-11-11)
+
+- Pull com fast-forward/autostash de `384c904` para `02813d6`, preservando as alteracoes documentais locais. Trabalho isolado em `fix/ios-crash-launch-branding`; sem push ou nova build EAS neste ciclo.
+- Crash reproduzido em Release no iPhone 18 Pro, iOS 27.0: DYLD `Symbol missing`, `AnyModule._classTypes`, referenciado por `ExpoMediaLibrary` e ausente no binario `ExpoModulesCore`. Relatorio local: `~/Library/Logs/DiagnosticReports/GoChamps-2026-11-11-090328.ips`.
+- `package.json`: autolinking iOS `buildFromSource` para `expo-modules-core` e `expo-media-library`, evitando ABI divergente dos binarios precompilados. A configuracao e consumida tambem pelo EAS; nao remover sem validar abertura de uma build Release.
+- Nome nativo `Go Champs`; splash clara/escura usa `assets/images/logo-white-name.png`, fundo `#1d1d1b`. Bundle ID e slug preservados.
+- `npm run ios` agora gera/executa o app nativo, nao Expo Go. Pastas nativas geradas ficam ignoradas pelo Git (CNG).
+- Use Node 22 e CocoaPods Homebrew: `export PATH=/Users/aw-admin/.nvm/versions/node/v22.22.2/bin:/opt/homebrew/opt/ruby/bin:/opt/homebrew/bin:$PATH`. O `pod` do Ruby de sistema falha neste Mac.
+- Repro/validacao: `CI=1 npx expo run:ios --configuration Release --device 961BFDA6-39C6-46D5-9FB7-53D6BA4F6987 --no-bundler`. No Xcode 27 o simulador aparece no Device Hub (`com.apple.dt.Devices`).
+- Typecheck, lint e 77 suites / 548 testes passaram. Cobertura do escopo configurado: linhas 99,77%, statements 99,71%, funcoes 100%, branches 97,70%. E2E web nao foi reexecutado neste ciclo.
+- Build Release nativa concluida (zero erros). Tres inicializacoes com processos novos (`94980`, `95012`, `95089`) carregaram a home com dados reais; nenhum novo relatorio de crash. Splash com logo e nome `Go Champs` conferidos no binario e na gravacao `/tmp/go-champs-launch-fixed.mp4` (quadros `/tmp/go-champs-launch-frames.png`). App deixado aberto no simulador, sem depender do Metro; captura de logs encerrada. Logs `/tmp/go-champs-release-fix.log` e `/tmp/go-champs-ios-startup.log`.
+- Configuracao `buildFromSource` documentada em https://docs.expo.dev/guides/prebuilt-expo-modules/. Ainda e necessario testar a proxima build de dispositivo/TestFlight; nenhuma nova versao foi enviada a Apple nesta tarefa.
 
 ## Preparacao para App Store
 
@@ -11,7 +34,7 @@ Atualizado em: 2026-10-29
 - Main protegida por PR, Quality e Expo access. Merge -> CI aprovado -> build EAS do SHA testado -> auto-submit ao TestFlight. Publicacao publica ainda depende de revisao Apple.
 - Override global de brace-expansion removido pelo PR #5; `check:fingerprint` no CI evita a falha da primeira tentativa. `.npmrc` resolve os peers do RN RC exigido pelo SDK atual.
 - Icones novos gerados a partir de `assets/branding/source-logo.png`: iOS/legacy 1024 opaco, Android adaptativo + monocromatico transparentes e Google Play 512. Regenerar com `npm run icons:generate`. Area segura e canais verificados; lint passou.
-- Trabalho atual: branch `feat/branded-app-icons`, publicar PR, aguardar CI, squash merge e acompanhar nova build iOS.
+- PR de icones #6 mergeado na main em `384c9045517f69b7434c706c48a8d237ffe896e8`. CI main 40961134971 e workflow iOS 40961764716 aprovados. Build 1.0.0 (3) `a0ca3155-c421-4d9b-837e-d843b3092a38` concluido e enviado ao App Store Connect com sucesso; submission `53a237c3-03cb-4665-87c7-9b6d2933befd`. Icone extraido do IPA e conferido visualmente; Info.plist confirma 1.0.0 (3). Link: https://expo.dev/accounts/wagnerassis/projects/go-champs-app/builds/a0ca3155-c421-4d9b-837e-d843b3092a38. Aguardar processamento Apple/TestFlight, sem confundir upload com publicacao publica. Ultimas atualizacoes documentais estao locais para evitar disparar outra build.
 - Ultima matriz completa aprovada: 165 unitarios, 87 E2E, 28/28 jornadas nas tres plataformas; cobertura configurada acima de 90%.
 - Nao fazer pushes documentais extras na main durante release: cada push aprovado inicia outro build. Detalhes em `docs/IOS_RELEASE.md`.
 
@@ -23,9 +46,9 @@ Figma de referência: https://www.figma.com/design/ejLZZAUH3CLh1PNsvjs4jp/Home?n
 
 ## Estado atual
 
-- Branch: `main`.
+- Branch local de trabalho: `fix/ios-crash-launch-branding` (base `main`, `02813d6`).
 - Há alterações locais ainda não commitadas neste ciclo; não descarte nem reverta arquivos modificados.
-- **Expo SDK 58 (beta/`next`)**: `expo@^58.0.5`, React Native `0.88.0-rc.3`, React `19.3.0`. Rodando no simulador **iPhone 18 Pro** via Expo Go 58 + Metro (`EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0`).
+- **Expo SDK 58**: `expo@^58.0.5`, React Native `0.88.0-rc.3`, React `19.3.0`. A validacao atual e com binario nativo Release no simulador **iPhone 18 Pro**, nao Expo Go.
 - Navegação: `app/index.tsx` usa `NavigationIndependentTree` + `NavigationContainer` (necessário no SDK 58 com Expo Router + stack próprio).
 - O app foi reorganizado em camadas `core`, `data`, `domain`, `viewmodels` e `views`.
 - Serviços legados duplicados em `src/services` foram removidos após verificar que não possuíam importadores.
@@ -74,5 +97,7 @@ npm run test:e2e
 5. Destaques mensais quando a API tiver ranking agregado publicável.
 
 ## Segurança conhecida
+
+Em 2026-11-11 o GitHub sinalizou 26 alertas abertos na main, incluindo um critico em `shell-quote` (command injection; primeira versao corrigida indicada: 1.11.0). Consultado via Dependabot API; correcao de dependencias nao incluida no PR #21. Revisar antes de publicacao publica.
 
 O `npm audit` reporta alertas high na cadeia Metro/Expo (`image-size`). Correção automática puxa Expo SDK 57. Não adicionar override de `image-size` 2.x.

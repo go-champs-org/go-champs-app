@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "go-champs-app",
+    "name": "Go Champs",
     "slug": "go-champs-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -18,6 +18,7 @@
       }
     },
     "android": {
+      "package": "com.gochamps.app",
       "icon": "./assets/images/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
@@ -41,11 +42,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/images/logo-white-name.png",
+          "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#1d1d1b",
           "dark": {
+            "image": "./assets/images/logo-white-name.png",
             "backgroundColor": "#1d1d1b"
           }
         }

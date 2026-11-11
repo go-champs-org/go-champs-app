@@ -2,11 +2,18 @@
   "name": "go-champs-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "expo": {
+    "autolinking": {
+      "ios": {
+        "buildFromSource": ["expo-modules-core", "expo-media-library"]
+      }
+    }
+  },
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
-    "ios": "expo start --ios",
+    "ios": "expo run:ios",
     "icons:generate": "node scripts/generate-app-icons.cjs",
     "share-logos:generate": "node scripts/generate-share-logos.cjs",
     "web": "expo start --web",
@@ -18,6 +25,7 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run test:coverage",
     "check:fingerprint": "node -e \"require('@expo/fingerprint').createFingerprintAsync(process.cwd(), { platforms: ['ios'] }).then(result => console.log(result.hash)).catch(error => { console.error(error); process.exit(1); })\"",
+    "check:fingerprint:android": "node -e \"require('@expo/fingerprint').createFingerprintAsync(process.cwd(), { platforms: ['android'] }).then(result => console.log(result.hash)).catch(error => { console.error(error); process.exit(1); })\"",
     "lint": "expo lint"
   },
   "jest": {

@@ -7,7 +7,7 @@
 - Sessao local Expo e secret GitHub `EXPO_TOKEN` validados. Certificado/provisioning App Store ativos ate outubro/2027; chave APP_MANAGER associada ao EAS Submit.
 - Build 1.0.0 (2) concluido e enviado ao App Store Connect: https://expo.dev/accounts/wagnerassis/projects/go-champs-app/builds/271444d1-70d5-4611-9482-decc0f9639b9.
 - Workflow desse envio: https://github.com/go-champs-org/go-champs-app/actions/runs/40950067924.
-- Icones iOS/Android atualizados na branch `feat/branded-app-icons`; proxima build sera criada pelo merge dessa alteracao.
+- Icones iOS/Android mergeados pelo PR #6 em `384c904`. CI main 40961134971 e workflow de release 40961764716 aprovados. Build 1.0.0 (3) `a0ca3155-c421-4d9b-837e-d843b3092a38` concluido e enviado ao App Store Connect (submission `53a237c3-03cb-4665-87c7-9b6d2933befd`). Icone conferido dentro do IPA; Info.plist confirma versao/build. A disponibilidade no TestFlight depende do processamento Apple. Atualizacao documental de status mantida localmente para evitar build extra.
 
 ## Fluxo automatico
 

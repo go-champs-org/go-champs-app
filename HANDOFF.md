@@ -2,9 +2,29 @@
 
 Atualizado em: 2026-11-12
 
+## Landscape para avaliacao local
+
+- Usuario pediu liberar landscape para avaliar o layout. `app.json` expo.orientation passou de portrait para default; configuracao web preservada. Nenhum redesenho das telas.
+- Prebuild iOS regenerado preservando a correcao ExpoApplication 58.0.4. Build Release concluida e instalada no iPhone fisico; Info.plist do binario confirma portrait e landscape esquerdo/direito. Chave ficticia de analytics mantida para validacao, sem eventos no projeto real.
+- Logs /tmp/gc-landscape-build.log e /tmp/gc-landscape-launch.log. Mudanca local, ainda sem commit/merge/build TestFlight. Layout em landscape depende da avaliacao visual no aparelho; nao declarar todas as telas adaptadas.
+
+## Crash GC-12: correcao local em validacao
+
+- Branch `fix/ios-analytics-native-registration`, sem commit/push. Crash reproduzido no iPhone fisico conectado via devicectl: RCTFatalException, Cannot find native module ExpoApplication, carregado pelo analytics em producao. Teste anterior no simulador nao exercitou esse caminho porque estava sem chave.
+- expo-application 58.1.2 nao declara apple.modules e o ExpoModulesProvider gerado nao registrava ApplicationModule. Fix local: pin exato 58.0.4, lock atualizado; pod install agora gera import ExpoApplication e ApplicationModule.self. Adicionado teste de regressao sobre o config real instalado, sem mock do modulo.
+- 88 suites / 618 testes, typecheck e lint aprovados. Usuario autorizou cadastro do iPhone na equipe H859MRQ6UP. Build Release com allowProvisioningDeviceRegistration concluiu, foi assinada e instalada no aparelho sem desinstalar o app.
+- Chave ficticia gc12-native-validation-only confirmada no bundle compilado: analytics ativo, sem usar chave do projeto real. Duas aberturas no iPhone fisico mantiveram os processos 36095 e 36096 vivos apos 30 segundos; sem RCTFatalException/ExpoApplication ausente. Timeout dos comandos de console foi apenas encerramento da observacao, nao crash (processos confirmados depois via devicectl).
+- Usuario confirmou: "Carregou e naveguei sem crash" nas telas solicitadas (Home, Perfil, Meus jogos e campeonato). Validacao local da correcao concluida; ingestao real no Amplitude continua pendente da build de producao.
+- Logs /tmp/gc12-device-build.log, /tmp/gc12-device-launch.log e /tmp/gc12-device-launch-2.log. Binario local /tmp/go-champs-device-validation/Build/Products/Release-iphoneos/GoChamps.app. Nenhum processo local de build/acompanhamento permanece ativo; app aberto no iPhone.
+- A instalacao local substituiu o binario TestFlight no aparelho. Correcao ainda sem commit/PR/merge nem nova build distribuida. Proximo passo: entregar o pin de dependencia e teste de regressao pelo CI/release; nao confundir teste local com correcao ja disponivel aos testadores. Pendencias documentais anteriores preservadas.
+
 ## GC-12 Analytics nativo (2026-11-12)
 
-- Branch `feat/gc-12-native-analytics`, base main `b899e7e`. Preservadas as atualizacoes documentais locais do release anterior. Usuario autorizou commits agrupados, PR e merge na main para builds automaticas em TestFlight/testes internos; preparacao em andamento.
+- Entregue em quatro commits na branch `feat/gc-12-native-analytics`: `4a044d3` base, `ee7e092` integracao, `28ac764` E2E/CI e `58e4908` documentacao (incluiu os registros locais do release anterior). PR #23 mergeado por squash, unico metodo permitido pelo repositorio: https://github.com/go-champs-org/go-champs-app/pull/23. Main `f215886245f50493298854051d8de11486c91cd7`; local atualizado com fast-forward.
+- CI do PR 43244318420 aprovado. CI push main 43245597871 aprovado: 617 testes, 222 E2E e 73/73 jornadas em cada navegador. Quality e Expo access verdes, sem bypass.
+- Builds disparadas automaticamente pelo merge, mesmo SHA `f215886`: iOS workflow https://github.com/go-champs-org/go-champs-app/actions/runs/43246952426 e Android https://github.com/go-champs-org/go-champs-app/actions/runs/43246952383.
+- EAS iOS 1.0.0 (17), `24907508-2e49-413a-9f12-676371b99a11`, IN_QUEUE na ultima verificacao: https://expo.dev/accounts/wagnerassis/projects/go-champs-app/builds/24907508-2e49-413a-9f12-676371b99a11. Android 1.0.0 (3), `d3c1c69b-58aa-4cf7-90c2-9e8f580f5e86`, IN_QUEUE: https://expo.dev/accounts/wagnerassis/projects/go-champs-app/builds/d3c1c69b-58aa-4cf7-90c2-9e8f580f5e86. Ambos com auto-submit configurado para TestFlight/internal; conclusao e envio ainda nao confirmados. Nenhum build manual duplicado nem publicacao publica.
+- Registros finais deste disparo ficam locais, sem novo commit/push na main para nao gerar builds duplicadas. Nenhum processo local de acompanhamento permanece ativo.
 - Implementacao em `src/core/analytics`: contrato fechado de eventos, contexto nativo, SDK com enrichment de privacidade, identidade SHA-256 e fila nao bloqueante. Navegacao centralizada, tempo excluindo background, ambos os stickers, jogo ao vivo e save do perfil integrados.
 - Amplitude 1.13.1 + AsyncStorage 2.2.0 (override restrito para evitar copia 1.x). `npm ci` e `npm ls` confirmaram uma unica copia 2.2.0. Lock regenerado sem atualizar versoes preexistentes de outras dependencias.
 - Compartilhar usa react-native-share 12.3.1 para distinguir cancelamento de sucesso. Copia e Photos continuam usando Expo. Ler a limitacao de confirmacao do destino Android em `docs/NATIVE_ANALYTICS.md`.
@@ -14,7 +34,7 @@ Atualizado em: 2026-11-12
 - iOS Release e Android Debug arm64 compilaram com as novas dependencias; export Android Hermes final aprovado apos npm ci. Release iOS final instalado no iPhone 18 Pro, navegacao Inicio/Perfil/Meus jogos validada sem crash. Chaves real e ficticia ausentes do bundle do simulador; analytics desativado. App deixado aberto sem Metro.
 - Amplitude confirmado pelo Chrome: organizacao `go-champs-org`, projeto `App`, descricao `Go Champs App`, ID `905259`, sem eventos na verificacao. MCP retorna Unknown tool, mas acesso pelo Chrome funciona; nao e pendencia de permissao do projeto. Nao gerar eventos falsos.
 - Pendente para fechar a story: revisar privacy label antes do release publico; receber eventos reais do primeiro build; criar painel App - Uso e cohort pelo Chrome, conforme combinado com o usuario.
-- Runbook e contrato: `docs/NATIVE_ANALYTICS.md`. Logs locais `/tmp/go-champs-gc12-check.log`, `/tmp/go-champs-gc12-lint.log`, `/tmp/go-champs-gc12-final-ios.log` e `/tmp/go-champs-gc12-android-export.log`. Implementacao local validada; proximos passos sao revisao/PR e pendencias de producao acima, nao reexecutar release anterior.
+- Runbook e contrato: `docs/NATIVE_ANALYTICS.md`. Logs locais `/tmp/go-champs-gc12-check.log`, `/tmp/go-champs-gc12-lint.log`, `/tmp/go-champs-gc12-final-ios.log` e `/tmp/go-champs-gc12-android-export.log`. Proximos passos: consultar as builds/submissions acima, depois validar eventos reais e criar painel pelo Chrome. Nao disparar novamente os builds nem reexecutar release anterior.
 
 ## Automacao Android (2026-11-11)
 
@@ -64,7 +84,7 @@ Figma de referência: https://www.figma.com/design/ejLZZAUH3CLh1PNsvjs4jp/Home?n
 
 ## Estado atual
 
-- Branch local de trabalho: `feat/gc-12-native-analytics`, criada de `main` apos merge do PR #21 (`b899e7e`). GC-12 em preparacao para commits/PR/merge autorizado; atualizacoes locais de status de release foram preservadas. Nao fazer push documental extra na main para nao disparar builds duplicadas.
+- Branch local de trabalho: `main`, apos merge do PR #23 (`f215886`). Commits GC-12 preservados tambem na branch de origem. Registros locais finais deste disparo estao sem push; nao fazer push documental extra na main para nao disparar builds duplicadas.
 - Há alterações locais ainda não commitadas neste ciclo; não descarte nem reverta arquivos modificados.
 - **Expo SDK 58**: `expo@^58.0.5`, React Native `0.88.0-rc.3`, React `19.3.0`. A validacao atual e com binario nativo Release no simulador **iPhone 18 Pro**, nao Expo Go.
 - Navegação: `app/index.tsx` usa `NavigationIndependentTree` + `NavigationContainer` (necessário no SDK 58 com Expo Router + stack próprio).

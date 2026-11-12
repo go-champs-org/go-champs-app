@@ -71,4 +71,5 @@ export const journeys = {
   identityEdit: 'Editar dados de identidade enviando so o que mudou',
   identityCreate: 'Adicionar dados de identidade pelo estado vazio',
   pwaShell: 'Disponibilizar manifest e service worker instalavel',
+  analyticsDisabledOnWeb: 'Nao enviar analytics na web mesmo com chave no build',
 } as const;

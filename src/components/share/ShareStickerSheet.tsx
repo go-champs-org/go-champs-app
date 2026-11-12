@@ -53,12 +53,13 @@ type Props<Payload, Format extends ShareFormat> = {
 
 // One format in the grid: the sticker scaled down over a checkerboard, which
 // stands for the transparent background.
-const FormatTile = ({ sticker, format, selected, width, onPress }: {
+const FormatTile = ({ sticker, format, selected, width, onPress, disabled }: {
   sticker: React.ReactNode;
   format: ShareFormat;
   selected: boolean;
   width: number;
   onPress: () => void;
+  disabled: boolean;
 }) => {
   const theme = useTheme();
   const styles = useStyles();
@@ -69,6 +70,8 @@ const FormatTile = ({ sticker, format, selected, width, onPress }: {
       accessibilityRole="radio"
       accessibilityLabel={format.description}
       aria-checked={selected}
+      aria-disabled={disabled}
+      disabled={disabled}
       onPress={onPress}
       style={[styles.tile, { width }]}
       testID={`share-format-${format.id}`}
@@ -222,6 +225,7 @@ export const ShareStickerSheet = <Payload, Format extends ShareFormat>({
                       width={tileWidth}
                       selected={format.id === model.format.id}
                       onPress={() => model.select(format.id)}
+                      disabled={model.busy !== null}
                     />
                   ))}
                 </View>

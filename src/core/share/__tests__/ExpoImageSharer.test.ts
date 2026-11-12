@@ -1,6 +1,6 @@
 import * as Clipboard from 'expo-clipboard';
 import { Asset, requestPermissionsAsync } from 'expo-media-library';
-import * as Sharing from 'expo-sharing';
+import Share from 'react-native-share';
 import { ExpoImageSharer } from '../ExpoImageSharer';
 import { ShareUnavailableError } from '../ImageSharer';
 
@@ -9,7 +9,7 @@ jest.mock('expo-media-library', () => ({
   requestPermissionsAsync: jest.fn(),
   Asset: { create: jest.fn() },
 }));
-jest.mock('expo-sharing', () => ({ isAvailableAsync: jest.fn(), shareAsync: jest.fn() }));
+jest.mock('react-native-share', () => ({ __esModule: true, default: { open: jest.fn() } }));
 
 const FILE = 'file:///tmp/sticker.png';
 
@@ -21,29 +21,38 @@ describe('ExpoImageSharer', () => {
   });
 
   it('shares the PNG through the native share sheet', async () => {
-    jest.mocked(Sharing.isAvailableAsync).mockResolvedValue(true);
-    await new ExpoImageSharer().share(FILE, 'Compartilhar perfil');
-    expect(Sharing.shareAsync).toHaveBeenCalledWith(FILE, {
-      mimeType: 'image/png',
-      UTI: 'public.png',
-      dialogTitle: 'Compartilhar perfil',
+    jest.mocked(Share.open).mockResolvedValue({ success: true, message: 'shared' });
+    await expect(new ExpoImageSharer().share(FILE, 'Compartilhar perfil')).resolves.toBe('shared');
+    expect(Share.open).toHaveBeenCalledWith({
+      url: FILE, type: 'image/png', title: 'Compartilhar perfil', failOnCancel: false,
     });
   });
 
   it('shares a photo-background sticker as a JPEG', async () => {
-    jest.mocked(Sharing.isAvailableAsync).mockResolvedValue(true);
+    jest.mocked(Share.open).mockResolvedValue({ success: true, message: 'shared' });
     await new ExpoImageSharer().share('file:///tmp/sticker.jpg', 'Compartilhar perfil');
-    expect(Sharing.shareAsync).toHaveBeenCalledWith('file:///tmp/sticker.jpg', {
-      mimeType: 'image/jpeg',
-      UTI: 'public.jpeg',
-      dialogTitle: 'Compartilhar perfil',
+    expect(Share.open).toHaveBeenCalledWith({
+      url: 'file:///tmp/sticker.jpg', type: 'image/jpeg', title: 'Compartilhar perfil', failOnCancel: false,
     });
   });
 
   it('fails clearly when the device cannot share', async () => {
-    jest.mocked(Sharing.isAvailableAsync).mockResolvedValue(false);
-    await expect(new ExpoImageSharer().share(FILE, 'x')).rejects.toBeInstanceOf(ShareUnavailableError);
-    expect(Sharing.shareAsync).not.toHaveBeenCalled();
+    const sharer = new ExpoImageSharer();
+    Object.defineProperty(sharer, 'available', { value: false });
+    await expect(sharer.share(FILE, 'x')).rejects.toBeInstanceOf(ShareUnavailableError);
+    expect(Share.open).not.toHaveBeenCalled();
+  });
+
+  it('distinguishes cancellation, including a dismissed native action', async () => {
+    jest.mocked(Share.open).mockResolvedValueOnce({ success: false, dismissedAction: true, message: 'cancelled' })
+      .mockResolvedValueOnce({ success: true, dismissedAction: true, message: 'cancelled' });
+    await expect(new ExpoImageSharer().share(FILE, 'x')).resolves.toBe('cancelled');
+    await expect(new ExpoImageSharer().share(FILE, 'x')).resolves.toBe('cancelled');
+  });
+
+  it('propagates real native errors without treating them as success', async () => {
+    jest.mocked(Share.open).mockRejectedValue(new Error('unavailable'));
+    await expect(new ExpoImageSharer().share(FILE, 'x')).rejects.toThrow('unavailable');
   });
 
   it('asks for add-only photo access, then saves the file itself', async () => {

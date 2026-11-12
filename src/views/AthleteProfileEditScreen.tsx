@@ -8,6 +8,7 @@ import { BootstrapLoader, LoadState, SignInPrompt } from '../components/profile/
 import { makeStyles } from '../theme/theme';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { useProfileViewModel } from '../viewmodels/ProfileViewModel';
+import { analytics } from '../core/analytics/analytics';
 
 /** Editar perfil: the athlete profile form, opened from the Perfil tab. */
 const AthleteProfileEditScreen = () => {
@@ -22,8 +23,13 @@ const AthleteProfileEditScreen = () => {
     cancelEdit: () => navigation.goBack(),
     save: async () => {
       const notice = model.athlete.data ? 'Perfil de atleta atualizado.' : 'Perfil de atleta criado.';
+      const isNew = model.athlete.data === null;
+      const changedFields = model.athlete.changedFields;
       const saved = await model.athlete.save();
-      if (saved) navigation.popTo('MainTabs', { screen: 'ProfileTab', params: { savedNotice: notice } });
+      if (saved) {
+        analytics.track('Athlete Profile Saved', { is_new: isNew, changed_fields: changedFields });
+        navigation.popTo('MainTabs', { screen: 'ProfileTab', params: { savedNotice: notice } });
+      }
       return saved;
     },
   };

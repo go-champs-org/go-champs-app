@@ -1,5 +1,13 @@
 # Publicacao iOS
 
+## Release de 2026-11-11
+
+- PR #21 mergeado em `b899e7e`, com correcao do crash de inicializacao, nome Go Champs, splash oficial e botao voltar apenas com seta.
+- CI main 43100892545 aprovado. Workflow iOS 43102031069 disparado automaticamente.
+- Build 1.0.0 (16) `14ff35da-4046-4c64-8094-d83ef7a4e359` concluida: https://expo.dev/accounts/wagnerassis/projects/go-champs-app/builds/14ff35da-4046-4c64-8094-d83ef7a4e359.
+- Submission `986f1c22-a981-4254-be0b-a6d6e09ebc72` FINISHED no EAS: envio ao App Store Connect confirmado. Processamento Apple e disponibilidade no TestFlight sao posteriores.
+- Atualizacoes de status mantidas locais, sem push documental na main para nao disparar builds extras.
+
 ## Estado em 2026-10-29
 
 - Projeto EAS: `wagnerassis/go-champs-app`, ID `07a87e62-c99e-4ceb-b2c4-0ff27a5544d5`.

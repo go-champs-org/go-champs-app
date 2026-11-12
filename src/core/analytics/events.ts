@@ -6,6 +6,7 @@ export const SCREEN_NAMES = {
   GameDetailScreen: true, TeamScreen: true, AthleteScreen: true,
   OrganizationScreen: true, OrganizationsScreen: true, AccountScreen: true,
   AthleteProfileEditScreen: true, AuthScreen: true, WebAuthFlowScreen: true,
+  GoChampsLinkScreen: true,
 } satisfies Record<Exclude<keyof RootStackParamList, 'MainTabs'> | keyof MainTabParamList, true>;
 
 export type ScreenName = keyof typeof SCREEN_NAMES;

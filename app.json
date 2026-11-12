@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "gochamps",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#FAFAEE",
     "ios": {
@@ -13,6 +13,9 @@
       "bundleIdentifier": "com.gochamps.app",
       "appleTeamId": "H859MRQ6UP",
       "supportsTablet": true,
+      "associatedDomains": [
+        "applinks:go-champs.com"
+      ],
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -24,7 +27,23 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "monochromeImage": "./assets/images/adaptive-icon-monochrome.png",
         "backgroundColor": "#1D1D1B"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "go-champs.com"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",

@@ -11,6 +11,8 @@ export interface TournamentRepository {
   getRecentTournaments(): Promise<Tournament[]>;
   // Tournaments whose name or organization match the term (GET /search).
   searchTournaments(term: string): Promise<Tournament[]>;
+  // The tournament a go-champs.com link names by its slugs, or null.
+  getTournamentBySlugs(organizationSlug: string, tournamentSlug: string): Promise<Tournament | null>;
   getTournamentHistory(id: string, apiBaseUrl?: string): Promise<TournamentHistory>;
   getPhase(phaseId: string, apiBaseUrl?: string): Promise<PhaseData>;
   getGamesByPhaseId(phaseId: string, apiBaseUrl?: string): Promise<Game[]>;

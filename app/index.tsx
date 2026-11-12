@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationIndependentTree } from '@react-navigation/core';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
@@ -20,30 +21,38 @@ import OrganizationsScreen from '../src/views/OrganizationsScreen';
 import AccountScreen from '../src/views/AccountScreen';
 import AthleteProfileEditScreen from '../src/views/AthleteProfileEditScreen';
 import WebAuthFlowScreen from '../src/webauth/WebAuthFlowScreen';
+import GoChampsLinkScreen from '../src/views/GoChampsLinkScreen';
+import { GO_CHAMPS_LINK_PREFIXES, stateForGoChampsPath } from '../src/navigation/goChampsLinkRoutes';
 import { MainTabParamList, RootStackParamList } from '../src/navigation/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: [],
-  config: {
-    screens: {
-      MainTabs: { path: '', screens: { HomeTab: '', MyGamesTab: 'my-games', ProfileTab: 'profile' } },
-      TournamentScreen: 'tournament/:tournamentId',
-      TournamentStatsScreen: 'tournament/:tournamentId/stats',
-      GameDetailScreen: 'game/:gameId',
-      TeamScreen: 'tournament/:tournamentId/team/:teamId',
-      AthleteScreen: 'tournament/:tournamentId/athlete/:playerId',
-      OrganizationScreen: 'organization/:organizationSlug',
-      OrganizationsScreen: 'organizations',
-      AccountScreen: 'my-account',
-      AthleteProfileEditScreen: 'profile/edit',
-      AuthScreen: 'auth',
-      WebAuthFlowScreen: 'account/:purpose',
-    },
+const config: LinkingOptions<RootStackParamList>['config'] = {
+  screens: {
+    MainTabs: { path: '', screens: { HomeTab: '', MyGamesTab: 'my-games', ProfileTab: 'profile' } },
+    TournamentScreen: 'tournament/:tournamentId',
+    TournamentStatsScreen: 'tournament/:tournamentId/stats',
+    GameDetailScreen: 'game/:gameId',
+    TeamScreen: 'tournament/:tournamentId/team/:teamId',
+    AthleteScreen: 'tournament/:tournamentId/athlete/:playerId',
+    OrganizationScreen: 'organization/:organizationSlug',
+    OrganizationsScreen: 'organizations',
+    AccountScreen: 'my-account',
+    AthleteProfileEditScreen: 'profile/edit',
+    AuthScreen: 'auth',
+    WebAuthFlowScreen: 'account/:purpose',
   },
 };
+
+// On the web the app's own paths above map the browser URL. On iOS and Android
+// the app opens go-champs.com links instead (universal links / App Links):
+// their paths are the site's, resolved by GoChampsLinkScreen. Expo Router
+// stays on this route for them (see ./+native-intent).
+const linking: LinkingOptions<RootStackParamList> =
+  Platform.OS === 'web'
+    ? { prefixes: [], config }
+    : { prefixes: GO_CHAMPS_LINK_PREFIXES, config, getStateFromPath: (path) => stateForGoChampsPath(path) };
 
 // React Navigation's own theme (screen backgrounds, transitions) from ours.
 const navigationThemeFor = (theme: Theme) => {
@@ -143,6 +152,7 @@ export default function App() {
           <Stack.Screen name="AthleteProfileEditScreen" component={AthleteProfileEditScreen} options={{ title: 'Editar perfil' }} />
           <Stack.Screen name="AuthScreen" component={AuthScreen} options={{ headerShown: false }} />
           <Stack.Screen name="WebAuthFlowScreen" component={WebAuthFlowScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="GoChampsLinkScreen" component={GoChampsLinkScreen} options={{ title: 'Go Champs' }} />
         </Stack.Navigator>
       </NavigationContainer>
     </NavigationIndependentTree>

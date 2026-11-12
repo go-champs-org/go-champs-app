@@ -66,6 +66,13 @@ Confirmar/atualizar App Store Connect: Usage Data > Product Interaction para ana
 
 Usuario autorizou merge e builds automaticas para TestFlight e testes internos do Google Play. Publicacao publica continua condicionada a revisao de privacidade. Nenhum payload real de producao foi validado ainda.
 
+PR #23 mergeado em `f215886245f50493298854051d8de11486c91cd7`, apos CI aprovado no PR e na main (43245597871). Builds automaticas criadas e IN_QUEUE na verificacao de 2026-11-12:
+
+- iOS 1.0.0 (17): https://expo.dev/accounts/wagnerassis/projects/go-champs-app/builds/24907508-2e49-413a-9f12-676371b99a11 (workflow 43246952426).
+- Android 1.0.0 (3): https://expo.dev/accounts/wagnerassis/projects/go-champs-app/builds/d3c1c69b-58aa-4cf7-90c2-9e8f580f5e86 (workflow 43246952383).
+
+Ambas correspondem ao SHA aprovado, com auto-submit para TestFlight/internal. Disparo confirmado nao significa compilacao/envio concluidos; consultar estes IDs antes de validar eventos. Este registro final permanece local para evitar outro push/build na main.
+
 ## Painel App Uso
 
 Criar o painel "App - Uso" e o cohort "compartilhou os dois" somente depois do primeiro build de producao e eventos reais, conforme a story. Confirmado pelo Chrome: organizacao `go-champs-org`, projeto `App`, descricao `Go Champs App`, Project ID `905259`, ainda sem eventos. MCP retorna Unknown tool; continuar validacao e criacao do painel pelo Chrome, conforme combinado com o usuario.

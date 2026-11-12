@@ -1,6 +1,20 @@
 # Go Champs - Handoff de continuidade
 
-Atualizado em: 2026-11-11
+Atualizado em: 2026-11-12
+
+## GC-12 Analytics nativo (2026-11-12)
+
+- Branch `feat/gc-12-native-analytics`, base main `b899e7e`. Preservadas as atualizacoes documentais locais do release anterior. Usuario autorizou commits agrupados, PR e merge na main para builds automaticas em TestFlight/testes internos; preparacao em andamento.
+- Implementacao em `src/core/analytics`: contrato fechado de eventos, contexto nativo, SDK com enrichment de privacidade, identidade SHA-256 e fila nao bloqueante. Navegacao centralizada, tempo excluindo background, ambos os stickers, jogo ao vivo e save do perfil integrados.
+- Amplitude 1.13.1 + AsyncStorage 2.2.0 (override restrito para evitar copia 1.x). `npm ci` e `npm ls` confirmaram uma unica copia 2.2.0. Lock regenerado sem atualizar versoes preexistentes de outras dependencias.
+- Compartilhar usa react-native-share 12.3.1 para distinguir cancelamento de sucesso. Copia e Photos continuam usando Expo. Ler a limitacao de confirmacao do destino Android em `docs/NATIVE_ANALYTICS.md`.
+- Chave fornecida cadastrada via EAS apenas em production como EXPO_PUBLIC_AMPLITUDE_API_KEY (sensitive). Nao esta no repositorio; nao puxar a chave para testes/simulador/web. Perfil EAS production ja apontava para o ambiente correto.
+- Validacao final: instalacao limpa, typecheck, lint e 87 suites / 617 testes aprovados. Cobertura configurada: statements 99,73%, branches 97,89%, funcoes 100%, linhas 99,79%; modulo analytics 100% nas quatro metricas. SDK real executado pela factory de producao com transporte local e fetch bloqueado, inclusive janela de diagnosticos.
+- E2E: 222 testes aprovados, 73/73 jornadas em Android Web, iOS WebKit e desktop, incluindo web com chave ficticia e zero requisicoes Amplitude. Nao confundir essa matriz web com E2E nativo em dispositivos.
+- iOS Release e Android Debug arm64 compilaram com as novas dependencias; export Android Hermes final aprovado apos npm ci. Release iOS final instalado no iPhone 18 Pro, navegacao Inicio/Perfil/Meus jogos validada sem crash. Chaves real e ficticia ausentes do bundle do simulador; analytics desativado. App deixado aberto sem Metro.
+- Amplitude confirmado pelo Chrome: organizacao `go-champs-org`, projeto `App`, descricao `Go Champs App`, ID `905259`, sem eventos na verificacao. MCP retorna Unknown tool, mas acesso pelo Chrome funciona; nao e pendencia de permissao do projeto. Nao gerar eventos falsos.
+- Pendente para fechar a story: revisar privacy label antes do release publico; receber eventos reais do primeiro build; criar painel App - Uso e cohort pelo Chrome, conforme combinado com o usuario.
+- Runbook e contrato: `docs/NATIVE_ANALYTICS.md`. Logs locais `/tmp/go-champs-gc12-check.log`, `/tmp/go-champs-gc12-lint.log`, `/tmp/go-champs-gc12-final-ios.log` e `/tmp/go-champs-gc12-android-export.log`. Implementacao local validada; proximos passos sao revisao/PR e pendencias de producao acima, nao reexecutar release anterior.
 
 ## Automacao Android (2026-11-11)
 
@@ -9,12 +23,16 @@ Atualizado em: 2026-11-11
 - CI tambem valida `check:fingerprint:android`. Secret GitHub `EXPO_TOKEN` existe, sessao Expo local tem acesso; lista EAS Android estava vazia nesta verificacao.
 - Usuario confirmou app novo. Chave Android criada com sucesso no EAS via `credentials:configure-build --platform android --profile production`, sem iniciar build e sem salvar chave privada no repositorio.
 - Validados: configuracao resolvida pelo EAS, fingerprint Android, lint, tipos, 77 suites / 548 testes unitarios e 219 E2E. Jornadas E2E: 72/72 em Android Web, iOS WebKit e desktop. Workflow conferido com parser YAML e assercoes dos filtros de origem/SHA, perfil de assinatura e track de envio.
-- PR em rascunho #21: https://github.com/go-champs-org/go-champs-app/pull/21. Commits separados para ajustes nativos/identidade e automacao; documentacao em commit separado. Nenhum merge ou build de loja disparado neste ciclo.
-- Pendente: usuario cadastrar/autorizar conta de servico Google no EAS para `com.gochamps.app` e concluir cadastro no Play Console. Ativacao exige merge do workflow na main. Nao disparar auto-submit sem essa chave atribuida ao app. Ver `docs/ANDROID_RELEASE.md`.
+- Usuario cadastrou a conta de servico Google no EAS. Associacao a Play Store Submissions de `com.gochamps.app` e keystore confirmadas pelo EAS CLI; nenhuma chave privada baixada.
+- PR #21 mergeado por squash em `b899e7e8bcaf1efc264f4e8790debfda612916e7`: https://github.com/go-champs-org/go-champs-app/pull/21. Checks Quality e Expo access aprovados antes do merge. Main local atualizada com fast-forward.
+- CI de push main aprovado: https://github.com/go-champs-org/go-champs-app/actions/runs/43100892545. Workflows disparados automaticamente: Android 43102030998 e iOS 43102031069.
+- EAS Android 1.0.0 (2): build `c58c7b09-d5a0-43a2-a70c-544b7d91a5bf`, SHA `b899e7e`, FINISHED. Submission `6df24b72-5f76-4c8b-8dcc-637099c62237` FINISHED para `internal`/`COMPLETED`. Workflow GitHub Android 43102030998 concluido com sucesso. Envio a testes internos confirmado; processamento/disponibilidade para testadores depende do Google Play. Ver `docs/ANDROID_RELEASE.md`.
+- iOS 1.0.0 (16): build `14ff35da-4046-4c64-8094-d83ef7a4e359` FINISHED; submission `986f1c22-a981-4254-be0b-a6d6e09ebc72` FINISHED. Envio ao App Store Connect confirmado pelo EAS; processamento/disponibilidade TestFlight depende da Apple.
+- Fluxo automatico validado de ponta a ponta para ambas as plataformas, sem publicacao publica. Nenhum processo local de acompanhamento permanece ativo. Atualizacoes documentais finais ficam locais, sem push adicional na main para evitar outra build.
 
 ## Correcao local de inicializacao iOS (2026-11-11)
 
-- Pull com fast-forward/autostash de `384c904` para `02813d6`, preservando as alteracoes documentais locais. Trabalho isolado em `fix/ios-crash-launch-branding`; sem push ou nova build EAS neste ciclo.
+- Pull inicial com fast-forward/autostash de `384c904` para `02813d6`, preservando as alteracoes documentais locais. Trabalho inicialmente isolado em `fix/ios-crash-launch-branding` e depois integrado pelo PR #21; resultados do release acima.
 - Crash reproduzido em Release no iPhone 18 Pro, iOS 27.0: DYLD `Symbol missing`, `AnyModule._classTypes`, referenciado por `ExpoMediaLibrary` e ausente no binario `ExpoModulesCore`. Relatorio local: `~/Library/Logs/DiagnosticReports/GoChamps-2026-11-11-090328.ips`.
 - `package.json`: autolinking iOS `buildFromSource` para `expo-modules-core` e `expo-media-library`, evitando ABI divergente dos binarios precompilados. A configuracao e consumida tambem pelo EAS; nao remover sem validar abertura de uma build Release.
 - Nome nativo `Go Champs`; splash clara/escura usa `assets/images/logo-white-name.png`, fundo `#1d1d1b`. Bundle ID e slug preservados.
@@ -23,7 +41,7 @@ Atualizado em: 2026-11-11
 - Repro/validacao: `CI=1 npx expo run:ios --configuration Release --device 961BFDA6-39C6-46D5-9FB7-53D6BA4F6987 --no-bundler`. No Xcode 27 o simulador aparece no Device Hub (`com.apple.dt.Devices`).
 - Typecheck, lint e 77 suites / 548 testes passaram. Cobertura do escopo configurado: linhas 99,77%, statements 99,71%, funcoes 100%, branches 97,70%. E2E web nao foi reexecutado neste ciclo.
 - Build Release nativa concluida (zero erros). Tres inicializacoes com processos novos (`94980`, `95012`, `95089`) carregaram a home com dados reais; nenhum novo relatorio de crash. Splash com logo e nome `Go Champs` conferidos no binario e na gravacao `/tmp/go-champs-launch-fixed.mp4` (quadros `/tmp/go-champs-launch-frames.png`). App deixado aberto no simulador, sem depender do Metro; captura de logs encerrada. Logs `/tmp/go-champs-release-fix.log` e `/tmp/go-champs-ios-startup.log`.
-- Configuracao `buildFromSource` documentada em https://docs.expo.dev/guides/prebuilt-expo-modules/. Ainda e necessario testar a proxima build de dispositivo/TestFlight; nenhuma nova versao foi enviada a Apple nesta tarefa.
+- Configuracao `buildFromSource` documentada em https://docs.expo.dev/guides/prebuilt-expo-modules/. Build iOS (16) enviada posteriormente pelo PR #21; validar tambem no dispositivo via TestFlight, alem das aberturas ja testadas no simulador.
 
 ## Preparacao para App Store
 
@@ -46,7 +64,7 @@ Figma de referência: https://www.figma.com/design/ejLZZAUH3CLh1PNsvjs4jp/Home?n
 
 ## Estado atual
 
-- Branch local de trabalho: `fix/ios-crash-launch-branding` (base `main`, `02813d6`).
+- Branch local de trabalho: `feat/gc-12-native-analytics`, criada de `main` apos merge do PR #21 (`b899e7e`). GC-12 em preparacao para commits/PR/merge autorizado; atualizacoes locais de status de release foram preservadas. Nao fazer push documental extra na main para nao disparar builds duplicadas.
 - Há alterações locais ainda não commitadas neste ciclo; não descarte nem reverta arquivos modificados.
 - **Expo SDK 58**: `expo@^58.0.5`, React Native `0.88.0-rc.3`, React `19.3.0`. A validacao atual e com binario nativo Release no simulador **iPhone 18 Pro**, nao Expo Go.
 - Navegação: `app/index.tsx` usa `NavigationIndependentTree` + `NavigationContainer` (necessário no SDK 58 com Expo Router + stack próprio).

@@ -6,8 +6,11 @@
 - Projeto EAS: `wagnerassis/go-champs-app` (`07a87e62-c99e-4ceb-b2c4-0ff27a5544d5`).
 - Perfil `production`: Android App Bundle (`.aab`), credenciais remotas e `versionCode` incrementado pelo EAS.
 - Secret GitHub existente: `EXPO_TOKEN`. Nenhuma chave privada Android deve ser commitada.
-- Em 2026-11-11: chave de assinatura criada no EAS para este app novo e perfil validado com `eas config`. Envio automatico ainda depende da chave da conta de servico Google atribuida ao app.
-- PR de ativacao em rascunho: https://github.com/go-champs-org/go-champs-app/pull/21. Validacao local: 548 testes unitarios e 219 E2E aprovados, alem de lint, tipos e fingerprint Android.
+- Em 2026-11-11: chave de assinatura criada no EAS para este app novo e perfil validado com `eas config`. Conta de servico Google cadastrada no EAS e envio automatico validado com sucesso.
+- PR de ativacao mergeado: https://github.com/go-champs-org/go-champs-app/pull/21, SHA `b899e7e`. Validacao local: 548 testes unitarios e 219 E2E aprovados, alem de lint, tipos e fingerprint Android. CI de push main 43100892545 aprovado.
+- Conta de servico de envio associada a `com.gochamps.app`, confirmada via EAS CLI. Workflow Android automatico: https://github.com/go-champs-org/go-champs-app/actions/runs/43102030998.
+- Primeira build Android 1.0.0 (2) FINISHED: https://expo.dev/accounts/wagnerassis/projects/go-champs-app/builds/c58c7b09-d5a0-43a2-a70c-544b7d91a5bf. Envio para internal FINISHED: https://expo.dev/accounts/wagnerassis/projects/go-champs-app/submissions/6df24b72-5f76-4c8b-8dcc-637099c62237, com releaseStatus COMPLETED. Workflow GitHub concluido com sucesso. Processamento e disponibilidade para os testadores sao posteriores ao upload.
+- Status final registrado localmente, sem push documental na main para nao gerar builds duplicadas.
 
 ## Assinatura inicial
 

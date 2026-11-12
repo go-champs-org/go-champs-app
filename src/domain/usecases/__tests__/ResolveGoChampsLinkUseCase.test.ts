@@ -15,6 +15,7 @@ describe('ResolveGoChampsLinkUseCase', () => {
     ['/', { kind: 'home' }],
     ['/acme', { kind: 'organization', organizationSlug: 'acme' }],
     ['/acme/liga/game/game-1', { kind: 'game', gameId: 'game-1' }],
+    ['/Invite/invite-1', { kind: 'invite', inviteId: 'invite-1' }],
     ['/About', { kind: 'external', url: 'https://go-champs.com/About' }],
   ])('opens %s without looking the tournament up', async (path, expected) => {
     const { useCase, getTournamentBySlugs } = useCaseWith(jest.fn());

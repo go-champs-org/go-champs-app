@@ -3,6 +3,8 @@ import { container } from '../di/container';
 import { ShareUnavailableError } from '../core/share/ImageSharer';
 import { ShareFormat, shareFormatById } from '../domain/usecases/shared/shareFormats';
 import { useFlashNotice } from './useFlashNotice';
+import { analytics } from '../core/analytics/analytics';
+import type { Sticker } from '../core/analytics/events';
 
 export type ShareAction = 'copy' | 'save' | 'share';
 
@@ -31,6 +33,7 @@ export type ShareStickerOptions<Format extends ShareFormat> = {
   formats: Format[];
   // The native share sheet's title: 'Compartilhar perfil'
   dialogTitle: string;
+  sticker: Sticker;
 };
 
 /**
@@ -41,6 +44,7 @@ export type ShareStickerOptions<Format extends ShareFormat> = {
 export const useShareStickerViewModel = <Payload, Format extends ShareFormat>({
   formats,
   dialogTitle,
+  sticker,
 }: ShareStickerOptions<Format>) => {
   // What the open sheet shows; null while it is closed.
   const [payload, setPayload] = useState<Payload | null>(null);
@@ -57,8 +61,9 @@ export const useShareStickerViewModel = <Payload, Format extends ShareFormat>({
       setError(null);
       clearNotice();
       setPayload(next);
+      analytics.track('Share Sheet Opened', { sticker });
     },
-    [clearNotice]
+    [clearNotice, sticker]
   );
 
   const close = useCallback(() => setPayload(null), []);
@@ -81,18 +86,25 @@ export const useShareStickerViewModel = <Payload, Format extends ShareFormat>({
     setBusy(action);
     setError(null);
     clearNotice();
+    const selectedFormat = shareFormatById(formats, formatId).id;
+    const hasPhoto = backgroundUri !== null;
     try {
+      let succeeded = false;
       if (action === 'copy') {
         await sharer.copy(await capture.toBase64());
+        succeeded = true;
         showNotice(SHARE_MESSAGES.copied);
       } else if (action === 'save') {
         const result = await sharer.saveToPhotos(await capture.toFile());
-        if (result === 'saved') showNotice(SHARE_MESSAGES.saved);
+        if (result === 'saved') { succeeded = true; showNotice(SHARE_MESSAGES.saved); }
         else setError(SHARE_MESSAGES.denied);
       } else {
         // The share sheet is its own feedback: nothing to say after it closes.
-        await sharer.share(await capture.toFile(), dialogTitle);
+        succeeded = await sharer.share(await capture.toFile(), dialogTitle) === 'shared';
       }
+      if (succeeded) analytics.track('Sticker Shared', {
+        sticker, action, format_id: selectedFormat, has_photo: hasPhoto,
+      });
     } catch (failure) {
       setError(failure instanceof ShareUnavailableError ? SHARE_MESSAGES.unavailable : SHARE_MESSAGES.failed[action]);
     } finally {

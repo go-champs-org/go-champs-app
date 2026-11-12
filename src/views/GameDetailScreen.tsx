@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -33,6 +33,7 @@ import {
 import { formatGameDateTime } from '../domain/usecases/shared/gameDateTime';
 import { LiveScore } from '../domain/usecases/shared/liveScore';
 import { BoxScoreColumn, BoxScoreRow, BoxScoreTeam, GameAsset, GameBoxScore } from '../models/GameDetail';
+import { analyticsScreens } from '../core/analytics/analytics';
 
 type Props = { route: RouteProp<RootStackParamList, 'GameDetailScreen'> };
 
@@ -53,6 +54,16 @@ const GameDetailScreen: React.FC<Props> = ({ route }) => {
     gameId,
     apiBaseUrl
   );
+
+  const liveTournamentId = game?.phase?.tournament?.id ?? null;
+  const liveGameId = game?.id;
+  const liveOrganizationId = game?.phase?.tournament?.organization?.id ?? null;
+  useEffect(() => {
+    if (!loading && !error && liveGameId === gameId && isLive) analyticsScreens.registerLive(route.key, {
+      game_id: liveGameId, tournament_id: liveTournamentId, organization_id: liveOrganizationId,
+    });
+    return () => analyticsScreens.forgetLive(route.key);
+  }, [route.key, gameId, loading, error, liveGameId, isLive, liveTournamentId, liveOrganizationId]);
 
   if (loading) {
     return (

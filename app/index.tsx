@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { AppState } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationIndependentTree } from '@react-navigation/core';
-import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import type { LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ import AccountScreen from '../src/views/AccountScreen';
 import AthleteProfileEditScreen from '../src/views/AthleteProfileEditScreen';
 import WebAuthFlowScreen from '../src/webauth/WebAuthFlowScreen';
 import { MainTabParamList, RootStackParamList } from '../src/navigation/types';
+import { analyticsScreens } from '../src/core/analytics/analytics';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -118,9 +120,18 @@ function MainTabs() {
 export default function App() {
   const theme = useTheme();
   const navigationTheme = useMemo(() => navigationThemeFor(theme), [theme]);
+  const navigationRef = useNavigationContainerRef<RootStackParamList>();
+  const trackScreen = () => analyticsScreens.navigate(navigationRef.getCurrentRoute());
+
+  useEffect(() => {
+    const update = (state: string | null | undefined) => analyticsScreens.setActive(state == null || state === 'active');
+    update(AppState.currentState);
+    const subscription = AppState.addEventListener('change', update);
+    return () => { subscription.remove(); analyticsScreens.dispose(); };
+  }, []);
   return (
     <NavigationIndependentTree>
-      <NavigationContainer linking={linking} theme={navigationTheme}>
+      <NavigationContainer ref={navigationRef} linking={linking} theme={navigationTheme} onReady={trackScreen} onStateChange={trackScreen}>
         <Stack.Navigator
           screenOptions={{
             headerStyle: { backgroundColor: theme.colors.primary },

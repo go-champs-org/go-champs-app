@@ -4,6 +4,10 @@ import { ShareUnavailableError } from '../../core/share/ImageSharer';
 import { PROFILE_SHARE_FORMATS, ProfileShareCard, ProfileShareFormat } from '../../domain/usecases/shared/profileShare';
 import { deferred } from '../../test/deferred';
 import { SHARE_MESSAGES, ShareAction, StickerCapture, useShareStickerViewModel } from '../ShareStickerViewModel';
+import { analytics } from '../../core/analytics/analytics';
+import { GAME_SHARE_FORMATS, GameShareFormat } from '../../domain/usecases/shared/gameShare';
+
+jest.mock('../../core/analytics/analytics', () => ({ analytics: { track: jest.fn() } }));
 
 jest.mock('../../di/container', () => ({
   container: {
@@ -38,6 +42,7 @@ const closed = () =>
     useShareStickerViewModel<ProfileShareCard, ProfileShareFormat>({
       formats: PROFILE_SHARE_FORMATS,
       dialogTitle: DIALOG_TITLE,
+      sticker: 'profile',
     })
   );
 
@@ -57,7 +62,7 @@ const run = async (result: ReturnType<typeof opened>['result'], action: ShareAct
 describe('useShareStickerViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    sharer.share.mockResolvedValue(undefined);
+    sharer.share.mockResolvedValue('shared');
     sharer.copy.mockResolvedValue(undefined);
     sharer.saveToPhotos.mockResolvedValue('saved');
   });
@@ -151,6 +156,7 @@ describe('useShareStickerViewModel', () => {
     await run(result, action, failing);
     expect(result.current.error).toBe(message);
     expect(result.current.busy).toBeNull();
+    expect(jest.mocked(analytics.track).mock.calls.filter(([event]) => event === 'Sticker Shared')).toHaveLength(0);
   });
 
   it('says when the device cannot share', async () => {
@@ -161,7 +167,7 @@ describe('useShareStickerViewModel', () => {
   });
 
   it('runs one action at a time and clears the error on a new pick', async () => {
-    const pending = deferred<void>();
+    const pending = deferred<'shared' | 'cancelled'>();
     sharer.share.mockReturnValue(pending.promise);
     const { result } = opened();
     let first: Promise<void> | undefined;
@@ -174,7 +180,7 @@ describe('useShareStickerViewModel', () => {
     expect(sharer.copy).not.toHaveBeenCalled();
 
     await act(async () => {
-      pending.resolve();
+      pending.resolve('shared');
       await first;
     });
     expect(result.current.busy).toBeNull();
@@ -184,5 +190,45 @@ describe('useShareStickerViewModel', () => {
     expect(result.current.error).toBe(SHARE_MESSAGES.denied);
     act(() => result.current.select('center-dark'));
     expect(result.current.error).toBeNull();
+  });
+
+  it('tracks opening without including the profile payload', () => {
+    opened();
+    expect(analytics.track).toHaveBeenCalledWith('Share Sheet Opened', { sticker: 'profile' });
+  });
+
+  it.each<ShareAction>(['copy', 'save', 'share'])('tracks %s only after success, with format and photo flag', async (action) => {
+    const { result } = opened();
+    act(() => { result.current.select('center-light'); result.current.selectBackground('file:///private-photo.jpg'); });
+    await run(result, action);
+    expect(analytics.track).toHaveBeenCalledWith('Sticker Shared', {
+      sticker: 'profile', action, format_id: 'center-light', has_photo: true,
+    });
+    expect(JSON.stringify(jest.mocked(analytics.track).mock.calls)).not.toContain('private-photo');
+    expect(JSON.stringify(jest.mocked(analytics.track).mock.calls)).not.toContain('Ana Silva');
+  });
+
+  it('does not count cancellation or denied photo access as a share', async () => {
+    sharer.share.mockResolvedValue('cancelled');
+    sharer.saveToPhotos.mockResolvedValue('denied');
+    const { result } = opened();
+    await run(result, 'share');
+    await run(result, 'save');
+    expect(jest.mocked(analytics.track).mock.calls.filter(([event]) => event === 'Sticker Shared')).toHaveLength(0);
+  });
+
+  it('uses the same success contract for profile and game stickers', async () => {
+    const profile = opened();
+    const game = renderHook(() => useShareStickerViewModel<{ id: string }, GameShareFormat>({
+      formats: GAME_SHARE_FORMATS, dialogTitle: 'Compartilhar jogo', sticker: 'game',
+    }));
+    act(() => game.result.current.open({ id: 'g1' }));
+    await run(profile.result, 'copy');
+    await act(async () => { await game.result.current.run('share', capture()); });
+    expect(jest.mocked(analytics.track).mock.calls.filter(([event]) => event === 'Sticker Shared').map(([, properties]) => properties))
+      .toEqual([
+        { sticker: 'profile', action: 'copy', format_id: 'bottom-dark', has_photo: false },
+        { sticker: 'game', action: 'share', format_id: 'bottom-left-dark', has_photo: false },
+      ]);
   });
 });

@@ -9,13 +9,17 @@ const repository = new GoChampsRegistrationRepository(new GoChampsApiClient(http
 
 const apiInvite = {
   id: 'invite-1',
-  invitee: { name: 'Goiás' },
+  invitee: { name: 'Goiás', logo_url: 'https://cdn/goias.png', players: [] },
   registration: {
     title: 'Inscrições 2026',
     start_date: '2026-11-01T00:00:00Z',
     end_date: '2026-11-30T00:00:00Z',
     auto_approve: true,
-    tournament: { name: 'CBSE Sub 16' },
+    tournament: {
+      name: 'CBSE Sub 16',
+      logo_url: null,
+      organization: { name: 'CBB', logo_url: 'https://cdn/cbb.png' },
+    },
     custom_fields: [
       { id: 'f-text', type: 'text', label: 'Posição', description: 'Ala, pivô...', required: true, properties: {} },
       { id: 'f-date', type: 'Date', label: 'Nascimento', description: null, required: false, properties: null },
@@ -54,8 +58,9 @@ describe('GoChampsRegistrationRepository', () => {
 
       await expect(repository.getInvite('invite-1')).resolves.toEqual({
         id: 'invite-1',
-        teamName: 'Goiás',
-        tournamentName: 'CBSE Sub 16',
+        team: { name: 'Goiás', logoUrl: 'https://cdn/goias.png' },
+        tournament: { name: 'CBSE Sub 16', logoUrl: null },
+        organization: { name: 'CBB', logoUrl: 'https://cdn/cbb.png' },
         registration: {
           title: 'Inscrições 2026',
           startDate: '2026-11-01T00:00:00Z',
@@ -79,7 +84,7 @@ describe('GoChampsRegistrationRepository', () => {
       expect(request).toHaveBeenCalledWith(
         expect.objectContaining({
           endpoint:
-            'https://api.go-champs.com/v1/registration-invites/invite-1?include=registration,registration.tournament',
+            'https://api.go-champs.com/v1/registration-invites/invite-1?include=registration,registration.tournament,registration.tournament.organization',
           method: 'GET',
         })
       );
@@ -90,8 +95,9 @@ describe('GoChampsRegistrationRepository', () => {
 
       await expect(repository.getInvite('invite-1')).resolves.toEqual({
         id: 'invite-1',
-        teamName: null,
-        tournamentName: null,
+        team: null,
+        tournament: null,
+        organization: null,
         registration: { title: '', startDate: null, endDate: null, autoApprove: false, customFields: [] },
       });
     });

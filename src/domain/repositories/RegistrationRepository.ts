@@ -13,11 +13,18 @@ export type RegistrationCustomField = {
   documentUrl: string | null;
 };
 
+/** A name with its logo, as the invite's header shows the team, tournament and organization. */
+export type RegistrationBrand = {
+  name: string;
+  logoUrl: string | null;
+};
+
 /** A team roster invite (`/Invite/:id`), with the registration it belongs to. */
 export type RegistrationInvite = {
   id: string;
-  teamName: string | null;
-  tournamentName: string | null;
+  team: RegistrationBrand | null;
+  tournament: RegistrationBrand | null;
+  organization: RegistrationBrand | null;
   registration: {
     title: string;
     /** ISO dates; null when the registration has no window. */

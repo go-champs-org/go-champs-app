@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,11 +17,12 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/layout/Screen';
 import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
+import { TeamBadge } from '../components/competition/TeamBadge';
 import { ProfileCard, ProfileField, RowDivider } from '../components/profile/ProfileSection';
 import { BootstrapLoader, LoadState } from '../components/profile/ProfileStatus';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { GO_CHAMPS_ORIGIN } from '../core/linking/goChampsLinks';
-import { RegistrationCustomField } from '../domain/repositories/RegistrationRepository';
+import { RegistrationBrand, RegistrationCustomField } from '../domain/repositories/RegistrationRepository';
 import { maskDate, maskDateTime } from '../domain/usecases/shared/registrationForm';
 import { RootStackParamList } from '../navigation/types';
 import { makeStyles, useTheme } from '../theme/theme';
@@ -58,7 +60,11 @@ const RegistrationInviteScreen: React.FC<Props> = ({ route }) => {
             <LoadState loading={model.loading} error={model.error} onRetry={model.retry}>
               {model.invite ? (
                 <>
-                  <InviteHeader tournamentName={model.invite.tournamentName} teamName={model.invite.teamName} />
+                  <InviteHeader
+                    organization={model.invite.organization}
+                    tournament={model.invite.tournament}
+                    team={model.invite.team}
+                  />
                   {model.submitted ? (
                     <SubmittedCard approved={model.approved} onDone={goHome} />
                   ) : model.window !== 'open' ? (
@@ -92,13 +98,51 @@ const RegistrationInviteScreen: React.FC<Props> = ({ route }) => {
   );
 };
 
-const InviteHeader = ({ tournamentName, teamName }: { tournamentName: string | null; teamName: string | null }) => {
+type HeaderProps = {
+  organization: RegistrationBrand | null;
+  tournament: RegistrationBrand | null;
+  team: RegistrationBrand | null;
+};
+
+// A logo that is missing, or fails to load, takes no room.
+const Logo = ({ brand, size, label }: { brand: RegistrationBrand; size: number; label: string }) => {
+  const styles = useStyles();
+  const [failed, setFailed] = useState(false);
+  if (!brand.logoUrl || failed) return null;
+  return (
+    <Image
+      accessibilityLabel={`${label} ${brand.name}`}
+      source={{ uri: brand.logoUrl }}
+      onError={() => setFailed(true)}
+      resizeMode="contain"
+      style={[styles.logo, { width: size, height: size }]}
+    />
+  );
+};
+
+const InviteHeader = ({ organization, tournament, team }: HeaderProps) => {
   const styles = useStyles();
   return (
     <View style={styles.header}>
       <Text style={styles.kicker}>FICHA DE INSCRIÇÃO</Text>
-      {tournamentName ? <Text style={styles.title}>{tournamentName}</Text> : null}
-      {teamName ? <Text style={styles.subtitle}>Time: {teamName}</Text> : null}
+      {organization ? (
+        <View style={styles.organization}>
+          <Logo brand={organization} size={24} label="Logo da organização" />
+          <Text style={styles.organizationName}>{organization.name}</Text>
+        </View>
+      ) : null}
+      {tournament ? (
+        <>
+          <Logo brand={tournament} size={64} label="Logo do campeonato" />
+          <Text style={styles.title}>{tournament.name}</Text>
+        </>
+      ) : null}
+      {team ? (
+        <View style={styles.team}>
+          <TeamBadge logoUrl={team.logoUrl} name={team.name} size={56} />
+          <Text style={styles.teamName}>{team.name}</Text>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -316,22 +360,46 @@ const useStyles = makeStyles((theme) => ({
     gap: theme.spacing.md,
   },
   header: {
-    gap: theme.spacing.xs,
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   kicker: {
     color: theme.colors.textSecondary,
     fontSize: theme.typography.caption,
     fontWeight: '900',
+    textAlign: 'center',
+  },
+  organization: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+  },
+  organizationName: {
+    color: theme.colors.mutedText,
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  logo: {
+    flexShrink: 0,
   },
   title: {
     color: theme.colors.textPrimary,
     fontSize: theme.typography.title,
     fontWeight: '900',
+    textAlign: 'center',
   },
-  subtitle: {
-    color: theme.colors.mutedText,
+  team: {
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
+  },
+  teamName: {
+    color: theme.colors.textPrimary,
     fontSize: theme.typography.body,
-    fontWeight: '600',
+    fontWeight: '800',
+    textAlign: 'center',
   },
   notice: {
     flexDirection: 'row',

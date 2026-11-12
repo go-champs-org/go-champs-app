@@ -20,8 +20,9 @@ const user: AuthenticatedUser = { username: 'ana', email: 'ana@example.com', tok
 
 const invite: RegistrationInvite = {
   id: 'invite-1',
-  teamName: 'Goiás',
-  tournamentName: 'CBSE Sub 16',
+  team: { name: 'Goiás', logoUrl: null },
+  tournament: { name: 'CBSE Sub 16', logoUrl: null },
+  organization: { name: 'CBB', logoUrl: null },
   registration: {
     title: 'Inscrições',
     startDate: null,

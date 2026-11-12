@@ -2,6 +2,7 @@ import { AppError } from '../../core/errors/AppError';
 import { GoChampsApiClient } from '../datasources/remote/GoChampsApiClient';
 import {
   RegistrationAnswers,
+  RegistrationBrand,
   RegistrationCustomField,
   RegistrationCustomFieldType,
   RegistrationInvite,
@@ -19,16 +20,18 @@ type ApiCustomField = {
   properties?: { public_url?: string | null } | null;
 };
 
+type ApiBrand = { name?: string | null; logo_url?: string | null } | null;
+
 type ApiRegistrationInvite = {
   id: string;
-  invitee?: { name?: string | null } | null;
+  invitee?: ApiBrand;
   registration?: {
     title: string;
     start_date?: string | null;
     end_date?: string | null;
     auto_approve?: boolean | null;
     custom_fields?: ApiCustomField[] | null;
-    tournament?: { name?: string | null } | null;
+    tournament?: (ApiBrand & { organization?: ApiBrand }) | null;
   } | null;
 };
 
@@ -58,10 +61,14 @@ const toCustomField = (field: ApiCustomField): RegistrationCustomField | null =>
   };
 };
 
+const toBrand = (brand: ApiBrand | undefined): RegistrationBrand | null =>
+  brand?.name ? { name: brand.name, logoUrl: brand.logo_url || null } : null;
+
 const toInvite = (invite: ApiRegistrationInvite): RegistrationInvite => ({
   id: invite.id,
-  teamName: invite.invitee?.name ?? null,
-  tournamentName: invite.registration?.tournament?.name ?? null,
+  team: toBrand(invite.invitee),
+  tournament: toBrand(invite.registration?.tournament),
+  organization: toBrand(invite.registration?.tournament?.organization),
   registration: {
     title: invite.registration?.title ?? '',
     startDate: invite.registration?.start_date ?? null,
@@ -101,7 +108,7 @@ export class GoChampsRegistrationRepository implements RegistrationRepository {
   async getInvite(inviteId: string): Promise<RegistrationInvite | null> {
     try {
       const response = await this.apiClient.get<{ data: ApiRegistrationInvite }>(
-        `/registration-invites/${encodeURIComponent(inviteId)}?include=registration,registration.tournament`
+        `/registration-invites/${encodeURIComponent(inviteId)}?include=registration,registration.tournament,registration.tournament.organization`
       );
       return toInvite(response.data);
     } catch (error) {

@@ -37,6 +37,9 @@
     "setupFilesAfterEnv": [
       "<rootDir>/jest.setup.ts"
     ],
+    "moduleNameMapper": {
+      "^react-native/react-private-interface$": "<rootDir>/node_modules/react-native/src/react-private-interface.js"
+    },
     "collectCoverageFrom": [
       "src/core/**/*.ts",
       "src/data/**/*.ts",
@@ -63,15 +66,19 @@
     }
   },
   "dependencies": {
+    "@amplitude/analytics-react-native": "^1.13.1",
     "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.2.0",
     "@react-navigation/stack": "^7.1.1",
     "expo": "^58.0.5",
+    "expo-application": "~58.1.2",
     "expo-blur": "~58.0.3",
     "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.10",
+    "expo-crypto": "~58.0.8",
     "expo-font": "~58.0.7",
     "expo-haptics": "~58.0.5",
     "expo-image-picker": "~58.0.10",
@@ -93,6 +100,7 @@
     "react-native-reanimated": "4.7.0",
     "react-native-safe-area-context": "~5.9.1",
     "react-native-screens": "~4.28.0",
+    "react-native-share": "^12.3.1",
     "react-native-vector-icons": "^10.2.0",
     "react-native-view-shot": "6.1.1",
     "react-native-web": "^0.21.0",
@@ -115,6 +123,9 @@
     "typescript": "~6.0.3"
   },
   "overrides": {
+    "@amplitude/analytics-react-native": {
+      "@react-native-async-storage/async-storage": "$@react-native-async-storage/async-storage"
+    },
     "@babel/helpers": "^7.29.7",
     "@babel/runtime": "^7.29.7",
     "@tootallnate/once": "^2.0.1",

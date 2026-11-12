@@ -15,6 +15,8 @@ export type RootStackParamList = {
   AthleteProfileEditScreen: undefined;
   AuthScreen: { initialMode?: 'signIn' | 'signUp' | 'recovery' };
   WebAuthFlowScreen: { purpose: WebAuthPurpose };
+  // A go-champs.com link the app was opened with, resolved to its screen.
+  GoChampsLinkScreen: { path: string };
 };
 
 export type MainTabParamList = {

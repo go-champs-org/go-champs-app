@@ -63,6 +63,26 @@ describe('GoChampsTournamentRepository', () => {
     await expect(repository.searchTournaments('copa')).resolves.toEqual([]);
   });
 
+  it('finds a tournament by its organization and tournament slugs', async () => {
+    const get = jest.fn().mockResolvedValue({ data: [tournamentFixture] });
+    const repository = new GoChampsTournamentRepository(createApiClient(get), createFallback());
+
+    await expect(repository.getTournamentBySlugs('acme', 'liga 2026')).resolves.toEqual({
+      ...tournamentFixture,
+      apiBaseUrl: API_CONFIG.goChampsBaseUrl,
+    });
+    expect(get).toHaveBeenCalledWith(
+      '/tournaments?where[organization_slug]=acme&where[slug]=liga%202026',
+      API_CONFIG.goChampsBaseUrl
+    );
+  });
+
+  it.each([{ data: [] }, {}])('answers null when no tournament has the slugs (%p)', async (payload) => {
+    const repository = new GoChampsTournamentRepository(createApiClient(jest.fn().mockResolvedValue(payload)), createFallback());
+
+    await expect(repository.getTournamentBySlugs('acme', 'missing')).resolves.toBeNull();
+  });
+
   it('keeps tournament history errors explicit', async () => {
     const repository = new GoChampsTournamentRepository(
       createApiClient(jest.fn().mockResolvedValue(tournamentHistoryFixture.data)),

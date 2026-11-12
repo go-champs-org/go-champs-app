@@ -27,6 +27,7 @@ import { GetOrganizationOverviewUseCase } from '../domain/usecases/GetOrganizati
 import { GetPhaseOverviewUseCase } from '../domain/usecases/GetPhaseOverviewUseCase';
 import { GetPinnedTournamentIdsUseCase } from '../domain/usecases/GetPinnedTournamentIdsUseCase';
 import { GetOrganizationDirectoryUseCase } from '../domain/usecases/GetOrganizationDirectoryUseCase';
+import { ResolveGoChampsLinkUseCase } from '../domain/usecases/ResolveGoChampsLinkUseCase';
 import { SaveAccountIdentityUseCase } from '../domain/usecases/SaveAccountIdentityUseCase';
 import { SaveAthleteProfileUseCase } from '../domain/usecases/SaveAthleteProfileUseCase';
 import { SearchTournamentsUseCase } from '../domain/usecases/SearchTournamentsUseCase';
@@ -66,6 +67,7 @@ export const container = {
   getTeamOverview: new GetTeamOverviewUseCase(tournamentRepository),
   getAthleteOverview: new GetAthleteOverviewUseCase(tournamentRepository),
   getOrganizationOverview: new GetOrganizationOverviewUseCase(organizationRepository),
+  resolveGoChampsLink: new ResolveGoChampsLinkUseCase(tournamentRepository),
   signIn: new SignInUseCase(accountRepository),
   getAccountProfile: new GetAccountProfileUseCase(accountRepository),
   deleteAccount: new DeleteAccountUseCase(accountRepository),

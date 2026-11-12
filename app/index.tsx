@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Platform } from 'react-native';
+import * as Linking from 'expo-linking';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationIndependentTree } from '@react-navigation/core';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
@@ -52,7 +53,13 @@ const config: LinkingOptions<RootStackParamList>['config'] = {
 const linking: LinkingOptions<RootStackParamList> =
   Platform.OS === 'web'
     ? { prefixes: [], config }
-    : { prefixes: GO_CHAMPS_LINK_PREFIXES, config, getStateFromPath: (path) => stateForGoChampsPath(path) };
+    : {
+        // Linking.createURL('/') adds Expo Go's exp://<host>/--/ during
+        // development; in the store build it is the app's own scheme.
+        prefixes: [...GO_CHAMPS_LINK_PREFIXES, Linking.createURL('/')],
+        config,
+        getStateFromPath: (path) => stateForGoChampsPath(path),
+      };
 
 // React Navigation's own theme (screen backgrounds, transitions) from ours.
 const navigationThemeFor = (theme: Theme) => {

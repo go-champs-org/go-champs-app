@@ -58,6 +58,17 @@ export class GoChampsTournamentRepository implements TournamentRepository {
     return (response.data ?? []).map((tournament) => ({ ...tournament, apiBaseUrl: API_CONFIG.goChampsBaseUrl }));
   }
 
+  // The lookup the public site does for /:org/:tournament (packages/api-client
+  // tournaments). A failure is left to the caller.
+  async getTournamentBySlugs(organizationSlug: string, tournamentSlug: string): Promise<Tournament | null> {
+    const response = await this.apiClient.get<ApiResponse<Tournament[]>>(
+      `/tournaments?where[organization_slug]=${encodeURIComponent(organizationSlug)}&where[slug]=${encodeURIComponent(tournamentSlug)}`,
+      API_CONFIG.goChampsBaseUrl
+    );
+    const tournament = response.data?.[0];
+    return tournament ? { ...tournament, apiBaseUrl: API_CONFIG.goChampsBaseUrl } : null;
+  }
+
   async getTournamentHistory(id: string, apiBaseUrl?: string): Promise<TournamentHistory> {
     const response = await this.apiClient.get<TournamentHistory | TournamentHistory['data']>(
       `/tournaments/${id}`,

@@ -19,11 +19,18 @@ import { ContentShell } from '../components/layout/ContentShell';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { TeamBadge } from '../components/competition/TeamBadge';
 import { ProfileCard, ProfileField, RowDivider } from '../components/profile/ProfileSection';
+import { DateTimeField } from '../components/forms/DateTimeField';
 import { BootstrapLoader, LoadState } from '../components/profile/ProfileStatus';
 import { useAuthSession } from '../auth/AuthSessionContext';
 import { GO_CHAMPS_ORIGIN } from '../core/linking/goChampsLinks';
 import { RegistrationBrand, RegistrationCustomField } from '../domain/repositories/RegistrationRepository';
-import { maskDate, maskDateTime } from '../domain/usecases/shared/registrationForm';
+import {
+  formatDate,
+  formatDateTime,
+  maskDate,
+  maskDateTime,
+  toPickerDate,
+} from '../domain/usecases/shared/registrationForm';
 import { RootStackParamList } from '../navigation/types';
 import { makeStyles, useTheme } from '../theme/theme';
 import { useRegistrationInviteViewModel } from '../viewmodels/RegistrationInviteViewModel';
@@ -271,27 +278,38 @@ const CustomField = ({ field, model }: { field: RegistrationCustomField; model: 
     case 'consent':
       return <ConsentField field={field} model={model} label={common.label} error={common.error} />;
     case 'date':
+    case 'datetime': {
+      const isDate = field.type === 'date';
+      const placeholder = isDate ? 'DD/MM/AAAA' : 'DD/MM/AAAA HH:mm';
+      // The system picker has no web version: there the athlete types it.
+      if (Platform.OS === 'web') {
+        const mask = isDate ? maskDate : maskDateTime;
+        return (
+          <ProfileField
+            {...common}
+            value={typed}
+            onChangeText={(text) => model.setCustomValue(field.id, mask(text))}
+            placeholder={placeholder}
+            keyboardType="number-pad"
+            maxLength={placeholder.length}
+          />
+        );
+      }
+      const format = isDate ? formatDate : formatDateTime;
       return (
-        <ProfileField
-          {...common}
-          value={typed}
-          onChangeText={(text) => model.setCustomValue(field.id, maskDate(text))}
-          placeholder="DD/MM/AAAA"
-          keyboardType="number-pad"
-          maxLength={10}
+        <DateTimeField
+          label={common.label}
+          hint={common.hint}
+          error={common.error}
+          disabled={!common.editable}
+          mode={field.type}
+          value={toPickerDate(typed)}
+          text={typed}
+          placeholder={isDate ? 'Selecione a data' : 'Selecione a data e a hora'}
+          onChange={(date) => model.setCustomValue(field.id, date ? format(date) : '')}
         />
       );
-    case 'datetime':
-      return (
-        <ProfileField
-          {...common}
-          value={typed}
-          onChangeText={(text) => model.setCustomValue(field.id, maskDateTime(text))}
-          placeholder="DD/MM/AAAA HH:mm"
-          keyboardType="number-pad"
-          maxLength={16}
-        />
-      );
+    }
     case 'text':
       return (
         <ProfileField

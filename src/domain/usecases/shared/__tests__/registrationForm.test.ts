@@ -1,5 +1,8 @@
 import { RegistrationCustomField } from '../../../repositories/RegistrationRepository';
 import {
+  formatDate,
+  formatDateTime,
+  toPickerDate,
   maskDate,
   maskDateTime,
   parseDate,
@@ -88,6 +91,23 @@ describe('parsers', () => {
     (typed) => {
       expect(parseDateTime(typed)).toBeNull();
     }
+  );
+});
+
+describe('picker dates', () => {
+  it('shows a picked day and moment in the field format', () => {
+    expect(formatDate(new Date(1997, 4, 1, 8, 5))).toBe('01/05/1997');
+    expect(formatDateTime(new Date(1997, 4, 1, 8, 5))).toBe('01/05/1997 08:05');
+  });
+
+  it('reads the field back as the moment for the picker to start on', () => {
+    expect(toPickerDate('21/05/1997')).toEqual(new Date(1997, 4, 21));
+    expect(toPickerDate(' 21/05/1997 18:30 ')).toEqual(new Date(1997, 4, 21, 18, 30));
+  });
+
+  it.each(['', '21/05', '31/02/1997', '21/05/1997 24:00', '21/05/1997 18:60', '1997-05-21'])(
+    'has no moment for %p',
+    (value) => expect(toPickerDate(value)).toBeNull()
   );
 });
 

@@ -84,6 +84,25 @@ export const parseDateTime = (value: string): string | null => {
   return new Date(year, month - 1, day, hour, minute).toISOString();
 };
 
+const pad = (value: number) => String(value).padStart(2, '0');
+
+/** A picked day as the field shows it: 21/05/1997. */
+export const formatDate = (date: Date): string =>
+  `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+
+/** A picked moment, in the device's time zone, as the field shows it: 21/05/1997 18:30. */
+export const formatDateTime = (date: Date): string =>
+  `${formatDate(date)} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
+/** "21/05/1997" or "21/05/1997 18:30" -> that moment in the device's time zone, for a picker to start on. */
+export const toPickerDate = (value: string): Date | null => {
+  const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{2}):(\d{2}))?$/);
+  if (!match) return null;
+  const [day, month, year, hour, minute] = match.slice(1).map((part) => Number(part ?? 0));
+  if (!realDate(day, month, year) || hour > 23 || minute > 59) return null;
+  return new Date(year, month - 1, day, hour, minute);
+};
+
 const text = (value: string | boolean | undefined) => (typeof value === 'string' ? value.trim() : '');
 
 const customFieldError = (field: RegistrationCustomField, value: string | boolean | undefined): string | null => {

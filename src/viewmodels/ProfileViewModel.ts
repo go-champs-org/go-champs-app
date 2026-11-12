@@ -13,6 +13,7 @@ import {
 } from '../domain/usecases/shared/athleteProfileForm';
 import { fieldsFromError, messageFromError, withoutField } from './formErrors';
 import { useFlashNotice } from './useFlashNotice';
+import { athleteChanges } from '../core/analytics/athleteChanges';
 
 type Options = {
   // The edit screen opens straight on the form once the profile is loaded.
@@ -143,6 +144,7 @@ export const useProfileViewModel = (username: string | undefined, { editOnLoad =
     notice,
     clearNotice,
     athlete: {
+      changedFields: athleteChanges(athlete, values, photo),
       data: athlete,
       editing,
       values,

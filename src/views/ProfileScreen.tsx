@@ -40,6 +40,7 @@ const ProfileScreen = () => {
   const model = useAthleteHomeViewModel(user?.username);
   const share = useShareStickerViewModel<ProfileShareCard, ProfileShareFormat>({
     formats: PROFILE_SHARE_FORMATS,
+    sticker: 'profile',
     dialogTitle: SHARE_TITLE,
   });
   const shareCard = model.shareCard;

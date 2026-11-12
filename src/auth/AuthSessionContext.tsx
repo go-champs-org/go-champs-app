@@ -4,6 +4,7 @@ import { AuthTokenStore } from '../core/auth/AuthTokenStore';
 import { SecureAuthTokenStore } from '../core/auth/SecureAuthTokenStore';
 import { AuthenticatedUser } from '../domain/repositories/AccountRepository';
 import { tokenProvider } from '../di/container';
+import { analytics } from '../core/analytics/analytics';
 
 type AuthSession = {
   user: AuthenticatedUser | null;
@@ -44,6 +45,7 @@ export const AuthSessionProvider = ({
       try {
         const session = await store.load();
         if (cancelled) return;
+        analytics.identify(session?.username ?? null);
         if (session) {
           authTokenProvider.setToken(session.token);
           setUserState({
@@ -52,6 +54,8 @@ export const AuthSessionProvider = ({
             email: session.email,
           });
         }
+      } catch {
+        if (!cancelled) analytics.identify(null);
       } finally {
         if (!cancelled) setBootstrapping(false);
       }
@@ -65,6 +69,7 @@ export const AuthSessionProvider = ({
 
   const setUser = useCallback(
     (next: AuthenticatedUser | null) => {
+      analytics.identify(next?.username ?? null);
       if (next) {
         authTokenProvider.setToken(next.token);
         setUserState(next);
@@ -82,6 +87,7 @@ export const AuthSessionProvider = ({
     async (next: AuthenticatedUser) => {
       authTokenProvider.setToken(next.token);
       await store.save({ token: next.token, username: next.username, email: next.email });
+      analytics.identify(next.username);
       setUserState(next);
     },
     [authTokenProvider, store]
@@ -90,6 +96,7 @@ export const AuthSessionProvider = ({
   const signOut = useCallback(async () => {
     authTokenProvider.setToken(null);
     await store.clear();
+    analytics.identify(null);
     setUserState(null);
   }, [authTokenProvider, store]);
 

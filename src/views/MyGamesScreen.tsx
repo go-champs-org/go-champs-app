@@ -34,6 +34,7 @@ const MyGamesScreen = () => {
   const model = useMyGamesViewModel(user?.username);
   const share = useShareStickerViewModel<GameShareCard, GameShareFormat>({
     formats: GAME_SHARE_FORMATS,
+    sticker: 'game',
     dialogTitle: SHARE_TITLE,
   });
   const openGame = (gameId: string) => navigation.navigate('GameDetailScreen', { gameId });

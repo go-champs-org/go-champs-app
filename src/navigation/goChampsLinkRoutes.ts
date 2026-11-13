@@ -37,6 +37,8 @@ export const routeForResolvedLink = (resolved: ResolvedGoChampsLink): ScreenRout
       };
     case 'game':
       return { name: 'GameDetailScreen', params: { gameId: resolved.gameId } };
+    case 'invite':
+      return { name: 'RegistrationInviteScreen', params: { inviteId: resolved.inviteId } };
     case 'external':
     case 'notFound':
       return null;

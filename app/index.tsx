@@ -23,6 +23,7 @@ import AccountScreen from '../src/views/AccountScreen';
 import AthleteProfileEditScreen from '../src/views/AthleteProfileEditScreen';
 import WebAuthFlowScreen from '../src/webauth/WebAuthFlowScreen';
 import GoChampsLinkScreen from '../src/views/GoChampsLinkScreen';
+import RegistrationInviteScreen from '../src/views/RegistrationInviteScreen';
 import { GO_CHAMPS_LINK_PREFIXES, stateForGoChampsPath } from '../src/navigation/goChampsLinkRoutes';
 import { MainTabParamList, RootStackParamList } from '../src/navigation/types';
 import { analyticsScreens } from '../src/core/analytics/analytics';
@@ -44,6 +45,7 @@ const config: LinkingOptions<RootStackParamList>['config'] = {
     AthleteProfileEditScreen: 'profile/edit',
     AuthScreen: 'auth',
     WebAuthFlowScreen: 'account/:purpose',
+    RegistrationInviteScreen: 'invite/:inviteId',
   },
 };
 
@@ -170,6 +172,7 @@ export default function App() {
           <Stack.Screen name="AuthScreen" component={AuthScreen} options={{ headerShown: false }} />
           <Stack.Screen name="WebAuthFlowScreen" component={WebAuthFlowScreen} options={{ headerShown: false }} />
           <Stack.Screen name="GoChampsLinkScreen" component={GoChampsLinkScreen} options={{ title: 'Go Champs' }} />
+          <Stack.Screen name="RegistrationInviteScreen" component={RegistrationInviteScreen} options={{ title: 'Inscrição' }} />
         </Stack.Navigator>
       </NavigationContainer>
     </NavigationIndependentTree>

@@ -28,6 +28,9 @@ import { GetPhaseOverviewUseCase } from '../domain/usecases/GetPhaseOverviewUseC
 import { GetPinnedTournamentIdsUseCase } from '../domain/usecases/GetPinnedTournamentIdsUseCase';
 import { GetOrganizationDirectoryUseCase } from '../domain/usecases/GetOrganizationDirectoryUseCase';
 import { ResolveGoChampsLinkUseCase } from '../domain/usecases/ResolveGoChampsLinkUseCase';
+import { GetRegistrationInviteUseCase } from '../domain/usecases/GetRegistrationInviteUseCase';
+import { RespondToRegistrationInviteUseCase } from '../domain/usecases/RespondToRegistrationInviteUseCase';
+import { GoChampsRegistrationRepository } from '../data/repositories/GoChampsRegistrationRepository';
 import { SaveAccountIdentityUseCase } from '../domain/usecases/SaveAccountIdentityUseCase';
 import { SaveAthleteProfileUseCase } from '../domain/usecases/SaveAthleteProfileUseCase';
 import { SearchTournamentsUseCase } from '../domain/usecases/SearchTournamentsUseCase';
@@ -50,6 +53,7 @@ const organizationRepository = new GoChampsOrganizationRepository(apiClient);
 const accountRepository = new GoChampsAccountRepository(apiClient);
 const athleteProfileRepository = new GoChampsAthleteProfileRepository(apiClient);
 const accountIdentityRepository = new GoChampsAccountIdentityRepository(apiClient);
+const registrationRepository = new GoChampsRegistrationRepository(apiClient);
 const mediaUploadRepository = new GoChampsMediaUploadRepository(apiClient, new FetchFileTransport());
 const scoreboardRepository = new GoChampsScoreboardRepository(httpClient);
 const pinnedTournamentsRepository = new LocalPinnedTournamentsRepository(pinnedTournamentsStore);
@@ -68,6 +72,8 @@ export const container = {
   getAthleteOverview: new GetAthleteOverviewUseCase(tournamentRepository),
   getOrganizationOverview: new GetOrganizationOverviewUseCase(organizationRepository),
   resolveGoChampsLink: new ResolveGoChampsLinkUseCase(tournamentRepository),
+  getRegistrationInvite: new GetRegistrationInviteUseCase(registrationRepository),
+  respondToRegistrationInvite: new RespondToRegistrationInviteUseCase(registrationRepository),
   signIn: new SignInUseCase(accountRepository),
   getAccountProfile: new GetAccountProfileUseCase(accountRepository),
   deleteAccount: new DeleteAccountUseCase(accountRepository),

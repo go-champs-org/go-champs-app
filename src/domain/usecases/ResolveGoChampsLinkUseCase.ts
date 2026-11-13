@@ -13,6 +13,7 @@ export type ResolvedGoChampsLink =
   | ({ kind: 'team'; teamId: string } & InTournament)
   | ({ kind: 'athlete'; playerId: string } & InTournament)
   | { kind: 'game'; gameId: string }
+  | { kind: 'invite'; inviteId: string }
   // The app has no screen for it: open it on the site.
   | { kind: 'external'; url: string }
   // No tournament has the link's slugs.
@@ -30,6 +31,7 @@ export class ResolveGoChampsLinkUseCase {
     switch (link.kind) {
       case 'home':
       case 'organization':
+      case 'invite':
       case 'external':
         return link;
       // A game page needs only the game.

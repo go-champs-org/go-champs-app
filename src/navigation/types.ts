@@ -17,6 +17,8 @@ export type RootStackParamList = {
   WebAuthFlowScreen: { purpose: WebAuthPurpose };
   // A go-champs.com link the app was opened with, resolved to its screen.
   GoChampsLinkScreen: { path: string };
+  // A team roster invite (go-champs.com/Invite/:id), answered with the account.
+  RegistrationInviteScreen: { inviteId: string };
 };
 
 export type MainTabParamList = {

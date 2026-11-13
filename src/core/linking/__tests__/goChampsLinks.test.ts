@@ -60,8 +60,10 @@ describe('parseGoChampsPath', () => {
     '/AccountReset',
     '/Organization/acme',
     '/Organization/acme/liga-2026',
-    '/Invite/invite-1',
-    '/invite/invite-1',
+    '/Invite',
+    '/Invite/invite-1/extra',
+    '/Invite/Not_A_Slug',
+    '/invite',
     '/api/search',
     '/pt/acme/liga-2026',
     '/en',
@@ -86,10 +88,19 @@ describe('parseGoChampsPath', () => {
     expect(parseGoChampsPath(path)).toEqual({ kind: 'external', url: `https://go-champs.com${path}` });
   });
 
+  it.each([
+    '/Invite/8b0a7a4e-1f3c-4c35-9f53-2b1d3c4e5f60',
+    '/invite/8b0a7a4e-1f3c-4c35-9f53-2b1d3c4e5f60',
+    '/Invite/8b0a7a4e-1f3c-4c35-9f53-2b1d3c4e5f60/',
+    '/Invite/8b0a7a4e-1f3c-4c35-9f53-2b1d3c4e5f60?utm_source=wa',
+  ])('reads %s as a registration invite', (path) => {
+    expect(parseGoChampsPath(path)).toEqual({ kind: 'invite', inviteId: '8b0a7a4e-1f3c-4c35-9f53-2b1d3c4e5f60' });
+  });
+
   it('keeps the query and hash on a link left to the site', () => {
-    expect(parseGoChampsPath('/Invite/abc?x=1#y')).toEqual({
+    expect(parseGoChampsPath('/About?x=1#y')).toEqual({
       kind: 'external',
-      url: 'https://go-champs.com/Invite/abc?x=1#y',
+      url: 'https://go-champs.com/About?x=1#y',
     });
   });
 

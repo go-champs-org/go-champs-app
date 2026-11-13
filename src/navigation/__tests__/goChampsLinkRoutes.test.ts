@@ -27,6 +27,7 @@ describe('routeForResolvedLink', () => {
       { name: 'AthleteScreen', params: { tournamentId: 't1', playerId: 'p1', apiBaseUrl: API } },
     ],
     [{ kind: 'game', gameId: 'g1' }, { name: 'GameDetailScreen', params: { gameId: 'g1' } }],
+    [{ kind: 'invite', inviteId: 'i1' }, { name: 'RegistrationInviteScreen', params: { inviteId: 'i1' } }],
   ] as const)('opens %p on its screen', (resolved, expected) => {
     expect(routeForResolvedLink(resolved)).toEqual(expected);
   });

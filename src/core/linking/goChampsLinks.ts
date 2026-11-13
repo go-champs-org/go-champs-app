@@ -18,6 +18,8 @@ export type GoChampsLink =
   | ({ kind: 'team'; teamId: string } & TournamentRef)
   | ({ kind: 'athlete'; playerId: string } & TournamentRef)
   | ({ kind: 'game'; gameId: string } & TournamentRef)
+  // A team roster invite (`/Invite/:id`), answered in the app.
+  | { kind: 'invite'; inviteId: string }
   | { kind: 'external'; url: string };
 
 // Same shape as the edge table's SLUG: organization and tournament slugs, and
@@ -120,6 +122,9 @@ export const parseGoChampsPath = (path: string): GoChampsLink => {
   if (segments.length === 0) return { kind: 'home' };
 
   const [organizationSlug, tournamentSlug, ...rest] = segments;
+  if (organizationSlug.toLowerCase() === 'invite') {
+    return rest.length === 0 && isSlug(tournamentSlug) ? { kind: 'invite', inviteId: tournamentSlug } : external;
+  }
   if (isReserved(organizationSlug) || !isSlug(organizationSlug)) return external;
 
   if (tournamentSlug === undefined) return { kind: 'organization', organizationSlug };

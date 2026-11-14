@@ -62,17 +62,10 @@ describe('useMyGamesViewModel', () => {
   it('filters the loaded games locally, without asking the API again', async () => {
     const { result } = await loaded();
 
-    act(() => result.current.selectView('upcoming'));
-    expect(result.current.view).toBe('upcoming');
-    expect(result.current.previous).toEqual([]);
-    expect(result.current.next?.id).toBe('copa-game');
-
     act(() => result.current.selectTournament('liga'));
     expect(result.current.tournamentId).toBe('liga');
     expect(result.current.next?.id).toBe('liga-game');
     expect(result.current.upcoming).toEqual([]);
-
-    act(() => result.current.selectView('all'));
     expect(result.current.previous.map((recent) => recent.game.id)).toEqual(['liga-result']);
 
     act(() => result.current.selectTournament(null));
@@ -85,6 +78,31 @@ describe('useMyGamesViewModel', () => {
     const { result } = renderHook(() => useMyGamesViewModel('ana'));
     await waitFor(() => expect(result.current.needsAthleteProfile).toBe(true));
     expect(result.current.hasGames).toBe(false);
+  });
+
+  it('loads again on a recheck once the athlete profile was missing', async () => {
+    execute().mockResolvedValueOnce({ profile: null, teamGames: [], recentGames: [] });
+    const { result } = renderHook(() => useMyGamesViewModel('ana'));
+    await waitFor(() => expect(result.current.needsAthleteProfile).toBe(true));
+
+    const pending = deferred<typeof games>();
+    execute().mockReturnValueOnce(pending.promise);
+    act(() => result.current.recheckAthleteProfile());
+    // The loader replaces the "create your profile" prompt while it loads.
+    expect(result.current.loading).toBe(true);
+    expect(result.current.needsAthleteProfile).toBe(false);
+
+    await act(async () => pending.resolve(games));
+    expect(result.current.needsAthleteProfile).toBe(false);
+    expect(result.current.next?.id).toBe('copa-game');
+    expect(execute()).toHaveBeenCalledTimes(2);
+  });
+
+  it('skips the recheck when the athlete profile was already there', async () => {
+    const { result } = await loaded();
+    act(() => result.current.recheckAthleteProfile());
+    expect(result.current.loading).toBe(false);
+    expect(execute()).toHaveBeenCalledTimes(1);
   });
 
   it('shows an error when the first load fails, and retries', async () => {

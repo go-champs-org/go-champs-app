@@ -7,18 +7,15 @@ import { gameDateKey, localDateKey } from './gameDateTime';
 import { formatStatValue } from './tournamentStats';
 
 // Meus jogos (Figma 1143:12192): the next game of the athlete's teams, the
-// other upcoming ones and the latest results. The filters only narrow the
-// games already loaded; they never ask the API again.
-
-export type MyGamesView = 'all' | 'upcoming';
+// other upcoming ones and the latest results. The tournament filter only
+// narrows the games already loaded; it never asks the API again.
 
 export type MyGamesFilter = {
-  view: MyGamesView;
   // null reads every tournament.
   tournamentId: string | null;
 };
 
-export const DEFAULT_MY_GAMES_FILTER: MyGamesFilter = { view: 'all', tournamentId: null };
+export const DEFAULT_MY_GAMES_FILTER: MyGamesFilter = { tournamentId: null };
 
 export type MyGamesData = {
   teamGames: AthleteTeamGame[];
@@ -70,8 +67,7 @@ export const filterMyGames = (data: MyGamesData, filter: MyGamesFilter, now: Dat
   const upcoming = data.teamGames
     .filter((game) => isUpcoming(game, todayKey) && inTournament(game.tournament))
     .sort(byKickoff);
-  const previous =
-    filter.view === 'all' ? data.recentGames.filter((recent) => inTournament(recent.game.tournament)) : [];
+  const previous = data.recentGames.filter((recent) => inTournament(recent.game.tournament));
 
   return { next: upcoming[0] ?? null, upcoming: upcoming.slice(1), previous };
 };

@@ -62,17 +62,10 @@ describe('useMyGamesViewModel', () => {
   it('filters the loaded games locally, without asking the API again', async () => {
     const { result } = await loaded();
 
-    act(() => result.current.selectView('upcoming'));
-    expect(result.current.view).toBe('upcoming');
-    expect(result.current.previous).toEqual([]);
-    expect(result.current.next?.id).toBe('copa-game');
-
     act(() => result.current.selectTournament('liga'));
     expect(result.current.tournamentId).toBe('liga');
     expect(result.current.next?.id).toBe('liga-game');
     expect(result.current.upcoming).toEqual([]);
-
-    act(() => result.current.selectView('all'));
     expect(result.current.previous.map((recent) => recent.game.id)).toEqual(['liga-result']);
 
     act(() => result.current.selectTournament(null));

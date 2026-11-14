@@ -12,7 +12,6 @@ import {
   kickoffTime,
   longDate,
   MyGamesTournament,
-  MyGamesView,
   resultHeading,
   resultLabel,
   resultMatchup,
@@ -25,27 +24,14 @@ import {
   venueLabel,
 } from '../../domain/usecases/shared/myGames';
 
-const VIEWS: { view: MyGamesView; label: string }[] = [
-  { view: 'all', label: 'Todos os jogos' },
-  { view: 'upcoming', label: 'Próximos' },
-];
-
 type HeaderProps = {
-  view: MyGamesView;
   tournamentId: string | null;
   tournaments: MyGamesTournament[];
-  onSelectView: (view: MyGamesView) => void;
   onSelectTournament: (id: string | null) => void;
 };
 
-// The dark band under the header: the title and the filters, which only narrow the games already loaded.
-export const MyGamesHeader = ({
-  view,
-  tournamentId,
-  tournaments,
-  onSelectView,
-  onSelectTournament,
-}: HeaderProps) => {
+// The dark band under the header: the title and the tournament filter, which only narrows the games already loaded.
+export const MyGamesHeader = ({ tournamentId, tournaments, onSelectTournament }: HeaderProps) => {
   const styles = useStyles();
   const options: SelectOption[] = [
     { id: null, label: 'Todos os campeonatos' },
@@ -57,22 +43,6 @@ export const MyGamesHeader = ({
         <Text accessibilityRole="header" style={styles.title}>
           Meus jogos
         </Text>
-        <View accessibilityRole="tablist" style={styles.pills}>
-          {VIEWS.map((option) => {
-            const selected = option.view === view;
-            return (
-              <TouchableOpacity
-                key={option.view}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-                onPress={() => onSelectView(option.view)}
-                style={[styles.pill, selected && styles.pillSelected]}
-              >
-                <Text style={[styles.pillText, selected && styles.pillTextSelected]}>{option.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
         <SelectField
           label="Campeonato"
           tone="onDark"
@@ -270,30 +240,6 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.onDark,
     fontSize: 32,
     fontWeight: '800',
-  },
-  pills: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  pill: {
-    flex: 1,
-    minHeight: 38,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.chromeField,
-  },
-  pillSelected: {
-    backgroundColor: theme.colors.accent,
-  },
-  pillText: {
-    color: theme.colors.onDark,
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  pillTextSelected: {
-    color: theme.colors.onAccent,
   },
   sectionHeading: {
     flexDirection: 'row',

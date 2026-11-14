@@ -1,5 +1,4 @@
 import {
-  copa,
   liga,
   recentGame,
   teamGame,
@@ -74,29 +73,15 @@ describe('filterMyGames', () => {
     expect(filterMyGames({ teamGames: [today], recentGames: [] }, DEFAULT_MY_GAMES_FILTER, now).next?.id).toBe('today');
   });
 
-  it('shows only upcoming games in the upcoming view', () => {
-    const sections = filterMyGames(data, { view: 'upcoming', tournamentId: null }, now);
-    expect(sections.next?.id).toBe('next');
-    expect(sections.upcoming).toHaveLength(2);
-    expect(sections.previous).toEqual([]);
-  });
-
   it('narrows every section to the selected tournament', () => {
-    const sections = filterMyGames(data, { view: 'all', tournamentId: liga.id }, now);
+    const sections = filterMyGames(data, { tournamentId: liga.id }, now);
     expect(sections.next?.id).toBe('liga-game');
     expect(sections.upcoming).toEqual([]);
     expect(sections.previous.map((recent) => recent.game.id)).toEqual(['liga-result']);
   });
 
-  it('combines the upcoming view with a tournament', () => {
-    const sections = filterMyGames(data, { view: 'upcoming', tournamentId: copa.id }, now);
-    expect(sections.next?.id).toBe('next');
-    expect(sections.upcoming.map((game) => game.id)).toEqual(['later']);
-    expect(sections.previous).toEqual([]);
-  });
-
   it('reads a tournament no longer among the games as all of them', () => {
-    const sections = filterMyGames(data, { view: 'all', tournamentId: 'gone' }, now);
+    const sections = filterMyGames(data, { tournamentId: 'gone' }, now);
     expect(sections.next?.id).toBe('next');
     expect(sections.previous).toHaveLength(2);
   });

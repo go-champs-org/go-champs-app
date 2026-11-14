@@ -9,7 +9,6 @@ import {
   filterMyGames,
   MyGamesFilter,
   myGamesTournaments,
-  MyGamesView,
 } from '../domain/usecases/shared/myGames';
 import { useLoadRequest } from './useLoadRequest';
 
@@ -76,11 +75,7 @@ export const useMyGamesViewModel = (username: string | undefined) => {
   const tournamentId = effectiveTournamentId(data, filter.tournamentId);
   const sections = useMemo(() => filterMyGames(data, filter, now), [data, filter, now]);
 
-  const selectView = useCallback((view: MyGamesView) => setFilter((current) => ({ ...current, view })), []);
-  const selectTournament = useCallback(
-    (id: string | null) => setFilter((current) => ({ ...current, tournamentId: id })),
-    []
-  );
+  const selectTournament = useCallback((id: string | null) => setFilter({ tournamentId: id }), []);
 
   // The athlete profile may be created elsewhere (the Perfil tab) while this
   // tab stays mounted: when it comes back into view without one, load again.
@@ -104,10 +99,8 @@ export const useMyGamesViewModel = (username: string | undefined) => {
     needsAthleteProfile: Boolean(!loading && games && !games.profile),
     recheckAthleteProfile,
     now,
-    view: filter.view,
     tournamentId,
     tournaments,
-    selectView,
     selectTournament,
     ...sections,
     hasGames: Boolean(sections.next || sections.previous.length),

@@ -698,10 +698,6 @@ test('[myGamesFilters] filtra os jogos carregados sem chamar a API de novo', asy
   await openMyGames(page);
   await expect(page.getByText('84–76')).toBeVisible();
   const loaded = listRequests;
-  await page.getByRole('tab', { name: 'Próximos' }).click();
-  await expect(page.getByText('Jogos anteriores')).toBeHidden();
-  await expect(page.getByText('Gama', { exact: true })).toBeVisible();
-  await page.getByRole('tab', { name: 'Todos os jogos' }).click();
   await page.getByRole('button', { name: 'Campeonato: Todos os campeonatos' }).click();
   await page.getByRole('radio', { name: 'Copa Classificação' }).click();
   await expect(page.getByTestId('next-game').filter({ visible: true }).getByText('Gama', { exact: true })).toBeVisible();

@@ -93,10 +93,8 @@ const MyGamesScreen = () => {
         >
           {!model.loading && !model.error ? (
             <MyGamesHeader
-              view={model.view}
               tournamentId={model.tournamentId}
               tournaments={model.tournaments}
-              onSelectView={model.selectView}
               onSelectTournament={model.selectTournament}
             />
           ) : null}
@@ -106,7 +104,7 @@ const MyGamesScreen = () => {
               {!model.next && model.previous.length === 0 ? (
                 <EmptyState
                   icon="calendar-outline"
-                  title={model.view === 'upcoming' ? 'Nenhum jogo próximo' : 'Nenhum jogo por aqui ainda'}
+                  title="Nenhum jogo por aqui ainda"
                   description={
                     model.tournaments.length === 0
                       ? 'Os jogos aparecem quando a organização vincula seu usuário ao elenco de um time.'

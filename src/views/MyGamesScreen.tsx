@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Screen } from '../components/layout/Screen';
 import { AppHeader } from '../components/layout/AppHeader';
 import { ContentShell } from '../components/layout/ContentShell';
@@ -32,6 +32,9 @@ const MyGamesScreen = () => {
   const navigation = useNavigation<any>();
   const { user, bootstrapping } = useAuthSession();
   const model = useMyGamesViewModel(user?.username);
+  const { recheckAthleteProfile } = model;
+  // Back on this tab after creating the athlete profile: load the games.
+  useFocusEffect(useCallback(() => recheckAthleteProfile(), [recheckAthleteProfile]));
   const share = useShareStickerViewModel<GameShareCard, GameShareFormat>({
     formats: GAME_SHARE_FORMATS,
     sticker: 'game',

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { container } from '../di/container';
 import { AthleteRecentGame } from '../domain/repositories/AthleteProfileRepository';
 import { AthleteGames } from '../domain/usecases/GetAthleteGamesUseCase';
@@ -26,12 +26,16 @@ export const useMyGamesViewModel = (username: string | undefined) => {
   // "Now" for what is upcoming, taken on each load, so a render never moves it.
   const [now, setNow] = useState(() => new Date());
   const { request, refreshing, refreshError, retry, refresh, settleRefresh } = useLoadRequest(username ?? '');
+  // Whether the last load found no athlete profile. A ref, so the callback
+  // below stays stable and a focus effect keyed on it never loops.
+  const missingProfile = useRef(false);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       if (!username) {
         setGames(null);
+        missingProfile.current = false;
         setError(null);
         setLoading(false);
         return;
@@ -44,6 +48,7 @@ export const useMyGamesViewModel = (username: string | undefined) => {
         const next = await container.getAthleteGames.execute(username);
         if (!mounted) return;
         setGames(next);
+        missingProfile.current = !next.profile;
         setNow(new Date());
         if (request.refresh) settleRefresh(false);
       } catch {
@@ -54,6 +59,7 @@ export const useMyGamesViewModel = (username: string | undefined) => {
           return;
         }
         setGames(null);
+        missingProfile.current = false;
         setError(MY_GAMES_ERROR);
       } finally {
         if (mounted) setLoading(false);
@@ -76,6 +82,12 @@ export const useMyGamesViewModel = (username: string | undefined) => {
     []
   );
 
+  // The athlete profile may be created elsewhere (the Perfil tab) while this
+  // tab stays mounted: when it comes back into view without one, load again.
+  const recheckAthleteProfile = useCallback(() => {
+    if (missingProfile.current) retry();
+  }, [retry]);
+
   const profile = games?.profile ?? null;
   /** What goes on the "Compartilhar jogo" sticker of one result. */
   const shareCard = useCallback((recent: AthleteRecentGame) => gameShareCard(recent, profile), [profile]);
@@ -88,7 +100,9 @@ export const useMyGamesViewModel = (username: string | undefined) => {
     refreshError,
     refresh,
     needsAuth: !username,
-    needsAthleteProfile: Boolean(games && !games.profile),
+    // Hidden while loading, so a recheck shows the loader, not the old prompt.
+    needsAthleteProfile: Boolean(!loading && games && !games.profile),
+    recheckAthleteProfile,
     now,
     view: filter.view,
     tournamentId,

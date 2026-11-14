@@ -87,6 +87,31 @@ describe('useMyGamesViewModel', () => {
     expect(result.current.hasGames).toBe(false);
   });
 
+  it('loads again on a recheck once the athlete profile was missing', async () => {
+    execute().mockResolvedValueOnce({ profile: null, teamGames: [], recentGames: [] });
+    const { result } = renderHook(() => useMyGamesViewModel('ana'));
+    await waitFor(() => expect(result.current.needsAthleteProfile).toBe(true));
+
+    const pending = deferred<typeof games>();
+    execute().mockReturnValueOnce(pending.promise);
+    act(() => result.current.recheckAthleteProfile());
+    // The loader replaces the "create your profile" prompt while it loads.
+    expect(result.current.loading).toBe(true);
+    expect(result.current.needsAthleteProfile).toBe(false);
+
+    await act(async () => pending.resolve(games));
+    expect(result.current.needsAthleteProfile).toBe(false);
+    expect(result.current.next?.id).toBe('copa-game');
+    expect(execute()).toHaveBeenCalledTimes(2);
+  });
+
+  it('skips the recheck when the athlete profile was already there', async () => {
+    const { result } = await loaded();
+    act(() => result.current.recheckAthleteProfile());
+    expect(result.current.loading).toBe(false);
+    expect(execute()).toHaveBeenCalledTimes(1);
+  });
+
   it('shows an error when the first load fails, and retries', async () => {
     execute().mockRejectedValueOnce(new AppError('offline', 500)).mockResolvedValue(games);
     const { result } = renderHook(() => useMyGamesViewModel('ana'));

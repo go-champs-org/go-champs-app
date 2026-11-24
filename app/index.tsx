@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo } from 'react';
-import { AppState, Platform } from 'react-native';
+import { AppState, Platform, Pressable } from 'react-native';
 import * as Linking from 'expo-linking';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationIndependentTree } from '@react-navigation/core';
 import { DarkTheme, DefaultTheme, NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import type { LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, useTheme } from '../src/theme/theme';
 import TournamentsScreen from '../src/views/TournamentsScreen';
@@ -146,6 +147,15 @@ export default function App() {
     const subscription = AppState.addEventListener('change', update);
     return () => { subscription.remove(); analyticsScreens.dispose(); };
   }, []);
+  const detailHeader = (title: string, navigation: NativeStackNavigationProp<RootStackParamList>) => ({
+    title, headerBackVisible: false,
+    headerLeft: ({ canGoBack }: { canGoBack?: boolean }) => canGoBack ? (
+      <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => navigation.goBack()}
+        style={{ width: 44, height: 44, justifyContent: 'center' }}>
+        <Ionicons name="arrow-back" size={24} color={theme.colors.onPrimary} />
+      </Pressable>
+    ) : null,
+  });
   return (
     <NavigationIndependentTree>
       <NavigationContainer ref={navigationRef} linking={linking} theme={navigationTheme} onReady={trackScreen} onStateChange={trackScreen}>
@@ -160,8 +170,8 @@ export default function App() {
           }}
         >
           <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-          <Stack.Screen name="TournamentScreen" component={TournamentScreen} options={{ title: 'Campeonato' }} />
-          <Stack.Screen name="TournamentStatsScreen" component={TournamentStatsScreen} options={{ title: 'Estatísticas' }} />
+          <Stack.Screen name="TournamentScreen" component={TournamentScreen} options={({ navigation }) => detailHeader('Campeonato', navigation)} />
+          <Stack.Screen name="TournamentStatsScreen" component={TournamentStatsScreen} options={({ navigation }) => detailHeader('Estatísticas', navigation)} />
           <Stack.Screen name="GameDetailScreen" component={GameDetailScreen} options={{ title: 'Jogo' }} />
           <Stack.Screen name="TeamScreen" component={TeamScreen} options={{ title: 'Time' }} />
           <Stack.Screen name="AthleteScreen" component={AthleteScreen} options={{ title: 'Atleta' }} />

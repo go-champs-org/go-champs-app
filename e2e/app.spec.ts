@@ -44,7 +44,10 @@ test('[catalogue] carrega identidade e campeonatos', async ({ page }) => {
   await openHome(page);
   await expect(page.getByLabel('Logo Go Champs')).toBeVisible();
   await expect(page.getByText('Copa Completa', { exact: true })).toBeVisible();
-  await expect(page.getByText('Campeonatos em andamento')).toBeHidden();
+  await expect(page.getByText('Campeonatos em andamento')).toBeVisible();
+  await expect(page.getByText('Copa Sem Fases', { exact: true })).toBeHidden();
+  await page.getByRole('button', { name: 'Ver todos', exact: true }).click();
+  await expect(page.getByText('Copa Sem Fases', { exact: true })).toBeVisible();
   await expect(page.getByText('GO CHAMPS', { exact: true })).toBeHidden();
 });
 
@@ -76,8 +79,8 @@ test('[sideMenu] abre o menu com links e redes sociais', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Minha conta' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Perguntas frequentes' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Instagram da Go Champs' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeHidden();
-  await expect(page.getByText('Campeonatos', { exact: true })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible();
+  await expect(page.getByText('Campeonatos', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Fechar menu' }).first().click();
   await expect(page.getByRole('button', { name: 'Perguntas frequentes' })).toBeHidden();
 });
@@ -140,14 +143,14 @@ test('[organizationsEmpty] mostra lista de organizações vazia', async ({ page 
 test('[pinTournament] fixa um campeonato no topo da lista', async ({ page }) => {
   await openHome(page);
   const pinButtons = page.getByRole('button', { name: 'Fixar campeonato', exact: true });
-  await expect(pinButtons).toHaveCount(tournaments.length);
+  await expect(pinButtons).toHaveCount(4);
   await pinButtons.nth(2).click();
   await expect(page.getByRole('button', { name: 'Desafixar campeonato', exact: true })).toHaveCount(1);
   await expect(page.getByText('Fixado', { exact: true })).toBeVisible();
   const names = page.getByText(/^Copa /);
   await expect(names.first()).toHaveText('Copa Grupos');
   await page.getByRole('button', { name: 'Desafixar campeonato', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Fixar campeonato', exact: true })).toHaveCount(tournaments.length);
+  await expect(page.getByRole('button', { name: 'Fixar campeonato', exact: true })).toHaveCount(4);
   await expect(names.first()).toHaveText('Copa Completa');
 });
 
@@ -345,7 +348,9 @@ test('[statsRanking] troca estatística, escopo e filtros do ranking', async ({ 
 });
 
 test('[noPhases] informa campeonato sem fases', async ({ page }) => {
-  await openTournament(page, 'Copa Sem Fases');
+  await openHome(page);
+  await page.getByRole('button', { name: 'Ver todos', exact: true }).click();
+  await page.getByText('Copa Sem Fases', { exact: true }).click();
   await expect(page.getByText('Este campeonato ainda não possui fases disponíveis.')).toBeVisible();
 });
 
@@ -1213,4 +1218,27 @@ test('capturas para validação visual responsiva', async ({ page }, testInfo) =
   await page.getByText('Copa Classificação', { exact: true }).click();
   await expect(page.getByText('Tabela de classificação')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('tournament.png'), fullPage: true });
+});
+
+test('[bannerCreate] visitante entra e continua no formulário de atleta', async ({ page }) => {
+  await page.route('**/athlete-profiles/username/ana', route => fulfillJson(route, {}, 404));
+  await openHome(page);
+  await page.getByRole('button', { name: 'Criar meu perfil', exact: true }).click();
+  await page.getByLabel('Usuário/E-mail').fill('ana');
+  await page.getByRole('textbox', { name: 'Senha', exact: true }).fill('secret');
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await expect(page.getByLabel('Nome de atleta')).toBeVisible();
+});
+
+test('[bannerAthlete] atleta abre o card e a evolução pela home', async ({ page }) => {
+  await signInAsAna(page);
+  await page.getByRole('tab', { name: /Início/ }).click();
+  await expect(page.getByRole('button', { name: 'Criar meu perfil', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Criar meu card', exact: true }).click();
+  const sheet = page.getByTestId('home-share-sheet');
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole('button', { name: 'Fechar' }).click();
+  await page.getByRole('button', { name: 'Mostrar banner: Ver minha evolução' }).click();
+  await page.getByRole('button', { name: 'Ver minha evolução', exact: true }).click();
+  await expect(page.getByText('Resumo · Basquete 5x5')).toBeVisible();
 });

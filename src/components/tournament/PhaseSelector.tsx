@@ -10,9 +10,6 @@ type Props = {
   onSelect: (phaseId: string) => void;
 };
 
-// Collapsed it shows only the phase on screen. The whole row is the trigger,
-// with a "Trocar" chip so it reads as something to change; a tournament with
-// a single phase has nothing to expand and shows no chip.
 export const PhaseSelector = ({ phases, selected, onSelect }: Props) => {
   const theme = useTheme();
   const styles = useStyles();
@@ -33,18 +30,10 @@ export const PhaseSelector = ({ phases, selected, onSelect }: Props) => {
         disabled={!canExpand}
         activeOpacity={0.7}
         onPress={() => setOpen((value) => !value)}
-        style={[styles.selected, canExpand && styles.selectedTappable]}
+        style={styles.selected}
       >
-        <View style={styles.selectedText}>
-          <Text numberOfLines={1} style={styles.selectedTitle}>✓  {selected.title}</Text>
-          {selected.isInProgress ? <Text style={styles.current}>Fase atual</Text> : null}
-        </View>
-        {canExpand ? (
-          <View style={styles.chip}>
-            <Text style={styles.chipText}>{open ? 'Fechar' : 'Trocar'}</Text>
-            <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={theme.colors.onOlive} />
-          </View>
-        ) : null}
+        <Text numberOfLines={2} style={styles.selectedTitle}>{selected.title}</Text>
+        {canExpand && <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={theme.colors.ink} />}
       </TouchableOpacity>
       {open ? (
         <View style={styles.options}>
@@ -97,54 +86,17 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: theme.spacing.sm,
     paddingVertical: theme.spacing.sm,
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: theme.colors.cardBorder,
     borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.oliveSoft,
+    backgroundColor: theme.colors.card,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
   },
-  selectedTappable: {
-    borderColor: theme.colors.olive,
-  },
-  selectedText: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  selectedTitle: {
-    color: theme.colors.olive,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  current: {
-    color: theme.colors.onOliveSoft,
-    fontSize: 12,
-  },
-  chip: {
-    minHeight: 32,
-    paddingLeft: 12,
-    paddingRight: 10,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.olive,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  chipText: {
-    color: theme.colors.onOlive,
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  options: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-  },
+  selectedTitle: { flex: 1, color: theme.colors.ink, fontSize: 15, fontWeight: '700' },
+  options: { gap: 4 },
   option: {
-    flexGrow: 1,
-    flexBasis: '45%',
-    minHeight: 40,
+    minHeight: 44,
     paddingHorizontal: 10,
     paddingVertical: theme.spacing.sm,
     justifyContent: 'center',

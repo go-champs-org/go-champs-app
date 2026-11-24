@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Image, TouchableOpacity, View } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { makeStyles, useTheme } from '../../theme/theme';
 import { SideMenu } from './SideMenu';
+
+import { useAuthSession } from '../../auth/AuthSessionContext';
 
 type Props = {
   // Only the home has a search; without these the header shows no search icon.
@@ -17,6 +19,8 @@ export const AppHeader = ({ searchOpen = false, onSearchPress }: Props) => {
   const theme = useTheme();
   const styles = useStyles();
   const navigation = useNavigation<any>();
+  const { user, bootstrapping } = useAuthSession();
+  const signIn = () => navigation.navigate('AuthScreen', { initialMode: 'signIn' });
   const route = useRoute();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -25,6 +29,8 @@ export const AppHeader = ({ searchOpen = false, onSearchPress }: Props) => {
       <View style={[styles.container, searchOpen && styles.containerJoined]}>
         <Image accessibilityLabel="Logo Go Champs" source={require('../../../assets/images/logo-white-name.png')} style={styles.logo} />
         <View style={styles.actions}>
+          {!bootstrapping && !user && onSearchPress && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Entrar na conta"
+            onPress={signIn} style={styles.login}><Text style={styles.loginText}>Entrar</Text></TouchableOpacity>}
           {onSearchPress ? (
             <TouchableOpacity
               accessibilityRole="button"
@@ -50,7 +56,10 @@ export const AppHeader = ({ searchOpen = false, onSearchPress }: Props) => {
         visible={menuOpen}
         activeItem={route.name === 'HomeTab' ? 'home' : undefined}
         onClose={() => setMenuOpen(false)}
-        onOpenHome={() => navigation.navigate('MainTabs', { screen: 'HomeTab' })}
+        onOpenHome={() => navigation.navigate('MainTabs', { screen: 'HomeTab', params: { showAll: false } })}
+        onOpenTournaments={() => navigation.navigate('MainTabs', { screen: 'HomeTab', params: { showAll: true } })}
+        onOpenProfile={() => navigation.navigate('MainTabs', { screen: 'ProfileTab' })}
+        onSignIn={!bootstrapping && !user ? signIn : undefined}
         onOpenOrganizations={() => navigation.navigate('OrganizationsScreen')}
         onOpenAccount={() => navigation.navigate('AccountScreen')}
       />
@@ -83,6 +92,8 @@ const useStyles = makeStyles((theme) => ({
     width: 72,
     resizeMode: 'contain',
   },
+  login: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
+  loginText: { color: theme.colors.onPrimary, fontSize: 14, fontWeight: '700' },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',

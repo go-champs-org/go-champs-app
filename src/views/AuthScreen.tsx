@@ -46,7 +46,9 @@ const AuthScreen: React.FC<Props> = ({ route }) => {
 
   const submitSignIn = async () => {
     const authenticated = await signIn({ username, password });
-    if (authenticated) navigation.goBack();
+    if (!authenticated) return;
+    if (route.params?.afterSignIn === 'athleteProfile') navigation.replace('AthleteProfileEditScreen');
+    else navigation.goBack();
   };
 
   const openWebAuth = (purpose: WebAuthPurpose) => {

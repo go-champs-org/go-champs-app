@@ -13,7 +13,7 @@ export type RootStackParamList = {
   OrganizationsScreen: undefined;
   AccountScreen: undefined;
   AthleteProfileEditScreen: undefined;
-  AuthScreen: { initialMode?: 'signIn' | 'signUp' | 'recovery' };
+  AuthScreen: { initialMode?: 'signIn' | 'signUp' | 'recovery'; afterSignIn?: 'athleteProfile' };
   WebAuthFlowScreen: { purpose: WebAuthPurpose };
   // A go-champs.com link the app was opened with, resolved to its screen.
   GoChampsLinkScreen: { path: string };
@@ -22,7 +22,7 @@ export type RootStackParamList = {
 };
 
 export type MainTabParamList = {
-  HomeTab: undefined;
+  HomeTab: { showAll?: boolean } | undefined;
   MyGamesTab: undefined;
   // Back from the edit screen with what was saved.
   ProfileTab: { savedNotice?: string } | undefined;

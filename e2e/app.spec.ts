@@ -1223,11 +1223,23 @@ test('capturas para validação visual responsiva', async ({ page }, testInfo) =
 test('[bannerCreate] visitante entra e continua no formulário de atleta', async ({ page }) => {
   await page.route('**/athlete-profiles/username/ana', route => fulfillJson(route, {}, 404));
   await openHome(page);
+  await expect(page.getByRole('button', { name: /^Mostrar banner:/ })).toHaveCount(3);
   await page.getByRole('button', { name: 'Criar meu perfil', exact: true }).click();
   await page.getByLabel('Usuário/E-mail').fill('ana');
   await page.getByRole('textbox', { name: 'Senha', exact: true }).fill('secret');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page.getByLabel('Nome de atleta')).toBeVisible();
+});
+
+test('atleta sem estatísticas pode trocar o banner e abrir Meus jogos', async ({ page }) => {
+  await page.route('**/athlete-profiles/username/ana/recent-games', route => fulfillJson(route, { data: [] }));
+  await signInAsAna(page);
+  await page.getByRole('tab', { name: /Início/ }).click();
+  await expect(page.getByRole('button', { name: /^Mostrar banner:/ })).toHaveCount(2);
+  await page.getByRole('button', { name: 'Mostrar banner: Ver minha evolução' }).click();
+  await page.getByRole('button', { name: 'Mostrar banner: Ver meus jogos' }).click();
+  await page.getByRole('button', { name: 'Ver meus jogos', exact: true }).click();
+  await expect(page.getByRole('tab', { name: /Meus jogos/, selected: true })).toBeVisible();
 });
 
 test('[bannerAthlete] atleta abre o card e a evolução pela home', async ({ page }) => {

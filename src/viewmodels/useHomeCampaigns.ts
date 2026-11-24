@@ -10,11 +10,11 @@ export function useHomeCampaigns(username: string | undefined, bootstrapping: bo
   const [loaded, setLoaded] = useState<{ username: string; home: AthleteHome }>();
   useFocusEffect(useCallback(() => {
     let active = true;
-    setLoaded(undefined);
+    if (!username) setLoaded(undefined);
     if (username) {
       void container.getAthleteHome.execute(username).then(home => {
         if (active) setLoaded({ username, home });
-      }).catch(() => { /* Unknown profile: do not guess which campaign applies. */ });
+      }).catch(() => { if (active) setLoaded(undefined); });
     }
     return () => { active = false; };
   }, [username]));
@@ -32,8 +32,7 @@ export function useHomeCampaigns(username: string | undefined, bootstrapping: bo
   const campaigns: Campaign[] = [];
   if (!bootstrapping) {
     if (!username || profile === null) campaigns.push('create');
-    if (card) campaigns.push('share');
-    if (profile) campaigns.push('progress');
+    campaigns.push('share', 'progress');
   }
   return { campaigns, card };
 }

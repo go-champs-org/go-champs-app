@@ -25,6 +25,7 @@ export function HomeCampaigns() {
         break;
       case 'share':
         if (card) share.open(card);
+        else navigation.navigate('MainTabs', { screen: 'MyGamesTab' });
         break;
       case 'progress':
         navigation.navigate('MainTabs', { screen: 'ProfileTab' });
@@ -33,7 +34,7 @@ export function HomeCampaigns() {
   };
   if (!campaigns.length) return null;
   return <>
-    <CampaignCarousel key={campaigns.join(':')} campaigns={campaigns} onOpen={open} />
+    <CampaignCarousel key={campaigns.join(':')} campaigns={campaigns} canShare={Boolean(card)} onOpen={open} />
     {card && <ShareStickerSheet model={share} title="Compartilhar jogo" testID="home-share-sheet"
       renderSticker={(data, format, backgroundUri) => <GameSticker card={data} format={format} backgroundUri={backgroundUri} />} />}
   </>;

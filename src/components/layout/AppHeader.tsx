@@ -56,8 +56,7 @@ export const AppHeader = ({ searchOpen = false, onSearchPress }: Props) => {
         visible={menuOpen}
         activeItem={route.name === 'HomeTab' ? 'home' : undefined}
         onClose={() => setMenuOpen(false)}
-        onOpenHome={() => navigation.navigate('MainTabs', { screen: 'HomeTab', params: { showAll: false } })}
-        onOpenTournaments={() => navigation.navigate('MainTabs', { screen: 'HomeTab', params: { showAll: true } })}
+        onOpenHome={() => navigation.navigate('MainTabs', { screen: 'HomeTab' })}
         onOpenProfile={() => navigation.navigate('MainTabs', { screen: 'ProfileTab' })}
         onSignIn={!bootstrapping && !user ? signIn : undefined}
         onOpenOrganizations={() => navigation.navigate('OrganizationsScreen')}

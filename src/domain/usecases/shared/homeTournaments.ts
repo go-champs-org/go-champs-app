@@ -1,9 +1,11 @@
 import { Tournament } from '../../../models/Tournament';
 
-// The public home shows at most 15 tournaments, in the recent list and in the
-// search results alike (go-champs-web apps/public orderRecentlyViews and
-// SearchIsland MAX_RESULTS).
-export const MAX_HOME_TOURNAMENTS = 15;
+// The home lists at most 12 recent tournaments.
+export const MAX_HOME_TOURNAMENTS = 12;
+
+// Search shows at most 15 results, like the public search (go-champs-web
+// apps/public SearchIsland MAX_RESULTS).
+export const MAX_SEARCH_RESULTS = 15;
 
 /**
  * Pinned tournaments head the list in the order they were pinned and the API
@@ -21,9 +23,9 @@ export const sortWithPinnedFirst = (tournaments: Tournament[], pinnedIds: string
   return [...tournaments].sort((left, right) => rank(left) - rank(right));
 };
 
-/** The recent tournaments the home lists: pinned first, capped like the public home. */
+/** The recent tournaments the home lists: pinned first, capped at MAX_HOME_TOURNAMENTS. */
 export const homeTournaments = (tournaments: Tournament[], pinnedIds: string[]): Tournament[] =>
   sortWithPinnedFirst(tournaments, pinnedIds).slice(0, MAX_HOME_TOURNAMENTS);
 
 /** Search results keep the API order, capped like the public search. */
-export const searchResults = (tournaments: Tournament[]): Tournament[] => tournaments.slice(0, MAX_HOME_TOURNAMENTS);
+export const searchResults = (tournaments: Tournament[]): Tournament[] => tournaments.slice(0, MAX_SEARCH_RESULTS);

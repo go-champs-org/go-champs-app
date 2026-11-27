@@ -111,8 +111,8 @@ function MainTabs() {
         name="HomeTab"
         component={TournamentsScreen}
         options={{
-          title: 'Início',
-          tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={22} color={color} />,
+          title: 'Campeonatos',
+          tabBarIcon: ({ color }) => <Ionicons name="basketball-outline" size={22} color={color} />,
         }}
       />
       <Tab.Screen

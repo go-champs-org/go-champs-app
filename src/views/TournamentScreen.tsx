@@ -91,7 +91,7 @@ const TournamentScreen: React.FC<Props> = ({ route }) => {
           {selectedPhase ? (
             <>
               <PhaseSelector phases={viewModel.phases} selected={selectedPhase} onSelect={viewModel.selectPhase} />
-              <ViewSwitch value={viewModel.activeView} onChange={viewModel.setActiveView} />
+              <ViewSwitch value={viewModel.activeView} phaseKind={selectedPhase.kind} onChange={viewModel.setActiveView} />
               {renderPhaseContent()}
             </>
           ) : (

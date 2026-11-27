@@ -16,7 +16,6 @@ type Props = {
   onClose: () => void;
   onOpenHome: () => void;
   onOpenOrganizations: () => void;
-  onOpenTournaments: () => void;
   onOpenProfile: () => void;
   onSignIn?: () => void;
   onOpenAccount: () => void;
@@ -107,7 +106,7 @@ const AppearancePicker = () => {
 };
 
 // The app menu, sliding in from the right over the current tab.
-export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrganizations, onOpenAccount, onOpenTournaments, onOpenProfile, onSignIn }: Props) => {
+export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrganizations, onOpenAccount, onOpenProfile, onSignIn }: Props) => {
   const theme = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
@@ -190,12 +189,11 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
               <View style={styles.section}>
                 {onSignIn && <MenuRow label="Entrar" icon={({ color }) => <Ionicons name="log-in-outline" size={22} color={color} />} onPress={() => run(onSignIn)} />}
                 <MenuRow
-                  label="Início"
+                  label="Campeonatos"
                   active={activeItem === 'home'}
-                  icon={({ color }) => <Ionicons name="home-outline" size={24} color={color} />}
+                  icon={({ color }) => <Ionicons name="basketball-outline" size={24} color={color} />}
                   onPress={() => run(onOpenHome)}
                 />
-                <MenuRow label="Campeonatos" icon={({ color }) => <Ionicons name="basketball-outline" size={24} color={color} />} onPress={() => run(onOpenTournaments)} />
                 <MenuRow
                   label="Organizações"
                   active={activeItem === 'organizations'}

@@ -2,24 +2,33 @@ import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TournamentView } from '../../viewmodels/TournamentViewModel';
+import { PhaseKind } from '../../domain/usecases/shared/phasePresentation';
 import { makeStyles, useTheme } from '../../theme/theme';
 
 type Props = {
   value: TournamentView;
+  phaseKind: PhaseKind;
   onChange: (value: TournamentView) => void;
 };
 
-const VIEWS: { key: TournamentView; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { key: 'home', label: 'Início', icon: 'home-outline' },
-  { key: 'games', label: 'Jogos', icon: 'basketball-outline' },
-];
+type ViewTab = { key: TournamentView; label: string; icon: keyof typeof Ionicons.glyphMap };
 
-export const ViewSwitch = ({ value, onChange }: Props) => {
+// The first tab names what the selected phase shows: its standings tables or
+// its bracket.
+const PHASE_TABS: Record<PhaseKind, ViewTab> = {
+  standings: { key: 'home', label: 'Tabelas', icon: 'grid-outline' },
+  bracket: { key: 'home', label: 'Chaveamentos', icon: 'git-network-outline' },
+};
+
+const GAMES_TAB: ViewTab = { key: 'games', label: 'Jogos', icon: 'basketball-outline' };
+
+export const ViewSwitch = ({ value, phaseKind, onChange }: Props) => {
   const theme = useTheme();
   const styles = useStyles();
+  const views = [PHASE_TABS[phaseKind], GAMES_TAB];
   return (
     <View accessibilityRole="tablist" style={styles.container}>
-      {VIEWS.map((view) => {
+      {views.map((view) => {
         const selected = view.key === value;
         return (
           <TouchableOpacity

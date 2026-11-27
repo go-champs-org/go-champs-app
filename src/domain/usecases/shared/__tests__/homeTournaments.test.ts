@@ -1,5 +1,5 @@
 import { Tournament } from '../../../../models/Tournament';
-import { homeTournaments, MAX_HOME_TOURNAMENTS, searchResults, sortWithPinnedFirst } from '../homeTournaments';
+import { homeTournaments, MAX_HOME_TOURNAMENTS, MAX_SEARCH_RESULTS, searchResults, sortWithPinnedFirst } from '../homeTournaments';
 
 const tournament = (id: string): Tournament => ({
   id,
@@ -23,7 +23,8 @@ describe('sortWithPinnedFirst', () => {
 });
 
 describe('homeTournaments', () => {
-  it('caps the list like the public home', () => {
+  it('caps the list at 12 tournaments', () => {
+    expect(MAX_HOME_TOURNAMENTS).toBe(12);
     const list = Array.from({ length: 20 }, (_, index) => tournament(`t${index}`));
     const result = homeTournaments(list, []);
     expect(result).toHaveLength(MAX_HOME_TOURNAMENTS);
@@ -39,8 +40,9 @@ describe('homeTournaments', () => {
 });
 
 describe('searchResults', () => {
-  it('keeps the API order and caps the results', () => {
+  it('keeps the API order and caps the results at 15', () => {
+    expect(MAX_SEARCH_RESULTS).toBe(15);
     const list = Array.from({ length: 20 }, (_, index) => tournament(`t${index}`));
-    expect(ids(searchResults(list))).toEqual(ids(list.slice(0, MAX_HOME_TOURNAMENTS)));
+    expect(ids(searchResults(list))).toEqual(ids(list.slice(0, MAX_SEARCH_RESULTS)));
   });
 });

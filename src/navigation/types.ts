@@ -22,7 +22,7 @@ export type RootStackParamList = {
 };
 
 export type MainTabParamList = {
-  HomeTab: { showAll?: boolean } | undefined;
+  HomeTab: undefined;
   MyGamesTab: undefined;
   // Back from the edit screen with what was saved.
   ProfileTab: { savedNotice?: string } | undefined;

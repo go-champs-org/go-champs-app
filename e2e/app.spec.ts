@@ -45,9 +45,8 @@ test('[catalogue] carrega identidade e campeonatos', async ({ page }) => {
   await expect(page.getByLabel('Logo Go Champs')).toBeVisible();
   await expect(page.getByText('Copa Completa', { exact: true })).toBeVisible();
   await expect(page.getByText('Campeonatos em andamento')).toBeVisible();
-  await expect(page.getByText('Copa Sem Fases', { exact: true })).toBeHidden();
-  await page.getByRole('button', { name: 'Ver todos', exact: true }).click();
   await expect(page.getByText('Copa Sem Fases', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ver todos', exact: true })).toHaveCount(0);
   await expect(page.getByText('GO CHAMPS', { exact: true })).toBeHidden();
 });
 
@@ -74,13 +73,13 @@ test('[searchOrganization] busca campeonatos pelo nome da organização', async 
 test('[sideMenu] abre o menu com links e redes sociais', async ({ page }) => {
   await openHome(page);
   await page.getByRole('button', { name: 'Abrir menu' }).click();
-  await expect(page.getByRole('button', { name: 'Início' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Campeonatos', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Início' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Organizações' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Minha conta' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Perguntas frequentes' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Instagram da Go Champs' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible();
-  await expect(page.getByText('Campeonatos', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Fechar menu' }).first().click();
   await expect(page.getByRole('button', { name: 'Perguntas frequentes' })).toBeHidden();
 });
@@ -143,14 +142,14 @@ test('[organizationsEmpty] mostra lista de organizações vazia', async ({ page 
 test('[pinTournament] fixa um campeonato no topo da lista', async ({ page }) => {
   await openHome(page);
   const pinButtons = page.getByRole('button', { name: 'Fixar campeonato', exact: true });
-  await expect(pinButtons).toHaveCount(4);
+  await expect(pinButtons).toHaveCount(5);
   await pinButtons.nth(2).click();
   await expect(page.getByRole('button', { name: 'Desafixar campeonato', exact: true })).toHaveCount(1);
   await expect(page.getByText('Fixado', { exact: true })).toBeVisible();
   const names = page.getByText(/^Copa /);
   await expect(names.first()).toHaveText('Copa Grupos');
   await page.getByRole('button', { name: 'Desafixar campeonato', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Fixar campeonato', exact: true })).toHaveCount(4);
+  await expect(page.getByRole('button', { name: 'Fixar campeonato', exact: true })).toHaveCount(5);
   await expect(names.first()).toHaveText('Copa Completa');
 });
 
@@ -349,7 +348,6 @@ test('[statsRanking] troca estatística, escopo e filtros do ranking', async ({ 
 
 test('[noPhases] informa campeonato sem fases', async ({ page }) => {
   await openHome(page);
-  await page.getByRole('button', { name: 'Ver todos', exact: true }).click();
   await page.getByText('Copa Sem Fases', { exact: true }).click();
   await expect(page.getByText('Este campeonato ainda não possui fases disponíveis.')).toBeVisible();
 });
@@ -1090,7 +1088,7 @@ test('[profileEdit] Editar perfil abre o formulário e volta ao perfil salvo', a
   await expect(page.getByLabel('Nome de atleta')).toBeHidden();
   await expect(page.getByText('Perfil de atleta atualizado.')).toBeVisible();
   await expect(page.getByTestId('athlete-home-hero').filter({ visible: true }).getByText('Ana Atualizada')).toBeVisible();
-  await page.getByRole('tab', { name: /Início/ }).click();
+  await page.getByRole('tab', { name: /Campeonatos/ }).click();
   await page.getByRole('tab', { name: /Perfil/ }).click();
   await expect(page.getByText('Perfil de atleta atualizado.')).toBeHidden();
 });
@@ -1234,7 +1232,7 @@ test('[bannerCreate] visitante entra e continua no formulário de atleta', async
 test('atleta sem estatísticas pode trocar o banner e abrir Meus jogos', async ({ page }) => {
   await page.route('**/athlete-profiles/username/ana/recent-games', route => fulfillJson(route, { data: [] }));
   await signInAsAna(page);
-  await page.getByRole('tab', { name: /Início/ }).click();
+  await page.getByRole('tab', { name: /Campeonatos/ }).click();
   await expect(page.getByRole('button', { name: /^Mostrar banner:/ })).toHaveCount(2);
   await page.getByRole('button', { name: 'Mostrar banner: Ver minha evolução' }).click();
   await page.getByRole('button', { name: 'Mostrar banner: Ver meus jogos' }).click();
@@ -1244,7 +1242,7 @@ test('atleta sem estatísticas pode trocar o banner e abrir Meus jogos', async (
 
 test('[bannerAthlete] atleta abre o card e a evolução pela home', async ({ page }) => {
   await signInAsAna(page);
-  await page.getByRole('tab', { name: /Início/ }).click();
+  await page.getByRole('tab', { name: /Campeonatos/ }).click();
   await expect(page.getByRole('button', { name: 'Criar meu perfil', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Criar meu card', exact: true }).click();
   const sheet = page.getByTestId('home-share-sheet');

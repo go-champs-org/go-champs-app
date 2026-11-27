@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Animated, Easing, Keyboard, TextInput, Pressable } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Animated, Easing, Keyboard, TextInput } from 'react-native';
 import { makeStyles, useTheme } from '../theme/theme';
 import { useTournamentsViewModel } from '../viewmodels/TournamentsViewModel';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import type { MainTabParamList } from '../navigation/types';
+import { useNavigation } from '@react-navigation/native';
 import { HomeCampaigns } from '../components/home/HomeCampaigns';
 import { AppHeader } from '../components/layout/AppHeader';
 import { SearchBar } from '../components/search/SearchBar';
@@ -31,8 +30,6 @@ const TournamentsScreen = () => {
     refresh,
   } = useTournamentsViewModel();
   const navigation = useNavigation<any>();
-  const route = useRoute<RouteProp<MainTabParamList, 'HomeTab'>>();
-  const showAll = route.params?.showAll === true;
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchProgress] = useState(() => new Animated.Value(0));
   // The input stays mounted until the closing slide ends.
@@ -91,7 +88,7 @@ const TournamentsScreen = () => {
         </View>
       ) : (
         <FlatList
-          data={showAll || isSearchMode ? tournaments : tournaments.slice(0, 4)}
+          data={tournaments}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
@@ -100,16 +97,12 @@ const TournamentsScreen = () => {
           ListHeaderComponent={
             isSearchMode ? undefined : <>
               <RefreshNotice message={refreshError} style={styles.refreshNotice} />
-              {!showAll && <HomeCampaigns />}
+              <HomeCampaigns />
               <View style={styles.heading}>
                 <View style={styles.headingText}>
                   <Text accessibilityRole="header" style={styles.emptyTitle}>Campeonatos em andamento</Text>
                   <Text style={styles.emptyText}>Acompanhe os jogos e resultados mais recentes</Text>
                 </View>
-                {(tournaments.length > 4 || showAll) && <Pressable accessibilityRole="button" style={styles.toggle}
-                  onPress={() => navigation.setParams({ showAll: !showAll })}>
-                  <Text style={styles.toggleText}>{showAll ? 'Ver menos' : 'Ver todos'}</Text>
-                </Pressable>}
               </View>
             </>
           }
@@ -160,8 +153,6 @@ const useStyles = makeStyles((theme) => ({
   },
   heading: { marginVertical: 16, flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   headingText: { flex: 1 },
-  toggle: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 },
-  toggleText: { color: theme.colors.textSecondary, fontSize: 13, fontWeight: '700' },
   refreshNotice: {
     marginBottom: theme.spacing.md,
   },

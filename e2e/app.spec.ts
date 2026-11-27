@@ -198,6 +198,7 @@ test('[singleClassification] abre o campeonato na tabela de classificação', as
   await expect(page.getByText('Fase do campeonato')).toBeVisible();
   await expect(page.getByText('TIME', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('ALP', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Tabelas$/ })).toBeVisible();
 });
 
 test('[singleGroups] abre o campeonato nos grupos', async ({ page }) => {
@@ -208,16 +209,20 @@ test('[singleGroups] abre o campeonato nos grupos', async ({ page }) => {
 
 test('[singlePlayoffs] abre o campeonato no chaveamento', async ({ page }) => {
   await openTournament(page, 'Copa Playoffs');
-  await expect(page.getByText('Chaveamento')).toBeVisible();
+  await expect(page.getByText('Chaveamento', { exact: true })).toBeVisible();
   await expect(page.getByText('Decisão')).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Chaveamentos$/ })).toBeVisible();
 });
 
 test('[multiplePhases] troca de fase pelo seletor do campeonato', async ({ page }) => {
   await openTournament(page, 'Copa Completa');
   await expect(page.getByText('Tabela de classificação')).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Tabelas$/ })).toBeVisible();
   await page.getByLabel('Fase do campeonato').click();
   await page.getByText('Playoffs', { exact: true }).click();
-  await expect(page.getByText('Chaveamento')).toBeVisible();
+  await expect(page.getByText('Chaveamento', { exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Chaveamentos$/ })).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Tabelas$/ })).toHaveCount(0);
 });
 
 test('[tournamentSummary] mostra identidade e times do campeonato', async ({ page }) => {

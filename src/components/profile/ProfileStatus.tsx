@@ -37,7 +37,6 @@ export const SignInPrompt = ({ message }: SignInPromptProps = {}) => {
           onPress={() => navigation.navigate('AuthScreen', { initialMode: 'signIn' })}
           style={styles.button}
         >
-          <Ionicons name="log-in-outline" size={18} color={theme.colors.onAccent} />
           <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>
       </View>

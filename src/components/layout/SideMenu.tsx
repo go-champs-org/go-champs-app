@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
@@ -16,6 +16,9 @@ type Props = {
   onClose: () => void;
   onOpenHome: () => void;
   onOpenOrganizations: () => void;
+  onOpenTournaments: () => void;
+  onOpenProfile: () => void;
+  onSignIn?: () => void;
   onOpenAccount: () => void;
 };
 
@@ -80,7 +83,7 @@ const AppearancePicker = () => {
   const preference = useThemePreference();
   return (
     <View style={styles.appearance}>
-      <Text style={styles.sectionTitle}>Tema</Text>
+
       <View accessibilityRole="radiogroup" accessibilityLabel="Tema" style={styles.segments}>
         {APPEARANCE_OPTIONS.map((option) => {
           const selected = option.value === preference;
@@ -95,7 +98,6 @@ const AppearancePicker = () => {
               style={[styles.segment, selected && styles.segmentSelected]}
             >
               <Ionicons name={option.icon} size={16} color={color} />
-              <Text style={[styles.segmentText, { color }]}>{option.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -105,9 +107,10 @@ const AppearancePicker = () => {
 };
 
 // The app menu, sliding in from the right over the current tab.
-export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrganizations, onOpenAccount }: Props) => {
+export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrganizations, onOpenAccount, onOpenTournaments, onOpenProfile, onSignIn }: Props) => {
   const theme = useTheme();
   const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const panelWidth = Math.min(width * 0.82, PANEL_MAX_WIDTH);
   const [progress] = useState(() => new Animated.Value(0));
@@ -170,8 +173,9 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
             { transform: [{ translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [panelWidth, 0] }) }] },
           ]}
         >
-          <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
+          <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: insets.bottom, paddingRight: insets.right }]}>
             <View style={styles.topBar}>
+              <AppearancePicker />
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel="Fechar menu"
@@ -184,18 +188,21 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
             </View>
             <ScrollView contentContainerStyle={styles.content} bounces={false}>
               <View style={styles.section}>
+                {onSignIn && <MenuRow label="Entrar" icon={({ color }) => <Ionicons name="log-in-outline" size={22} color={color} />} onPress={() => run(onSignIn)} />}
                 <MenuRow
                   label="Início"
                   active={activeItem === 'home'}
                   icon={({ color }) => <Ionicons name="home-outline" size={24} color={color} />}
                   onPress={() => run(onOpenHome)}
                 />
+                <MenuRow label="Campeonatos" icon={({ color }) => <Ionicons name="basketball-outline" size={24} color={color} />} onPress={() => run(onOpenTournaments)} />
                 <MenuRow
                   label="Organizações"
                   active={activeItem === 'organizations'}
                   icon={({ color }) => <MaterialCommunityIcons name="handshake-outline" size={24} color={color} />}
                   onPress={() => run(onOpenOrganizations)}
                 />
+                <MenuRow label="Perfil" icon={({ color }) => <Ionicons name="person-outline" size={24} color={color} />} onPress={() => run(onOpenProfile)} />
                 <MenuRow
                   label="Minha conta"
                   active={activeItem === 'account'}
@@ -220,7 +227,6 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
                   onPress={() => openSitePage(SITE_LINKS.contact)}
                 />
               </View>
-              <AppearancePicker />
             </ScrollView>
             <View style={styles.footer}>
               <View style={styles.socials}>
@@ -230,7 +236,7 @@ export const SideMenu = ({ visible, activeItem, onClose, onOpenHome, onOpenOrgan
               </View>
               {version ? <Text style={styles.version}>Go Champs - Versão {version}</Text> : null}
             </View>
-          </SafeAreaView>
+          </View>
         </Animated.View>
       </View>
     </Modal>
@@ -259,7 +265,7 @@ const useStyles = makeStyles((theme) => ({
   topBar: {
     minHeight: 56,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
     borderBottomWidth: 1,
@@ -293,15 +299,7 @@ const useStyles = makeStyles((theme) => ({
     fontSize: 15,
     fontWeight: '500',
   },
-  appearance: {
-    gap: theme.spacing.sm,
-    padding: theme.spacing.md,
-  },
-  sectionTitle: {
-    color: theme.colors.subtleText,
-    fontSize: 12,
-    fontWeight: '700',
-  },
+  appearance: { flex: 1, maxWidth: 170 },
   segments: {
     flexDirection: 'row',
     gap: theme.spacing.xs,
@@ -320,10 +318,6 @@ const useStyles = makeStyles((theme) => ({
   },
   segmentSelected: {
     backgroundColor: theme.colors.olive,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '700',
   },
   footer: {
     gap: theme.spacing.sm,

@@ -1,4 +1,6 @@
 export const journeys = {
+  bannerCreate: 'Criar o perfil pelo banner após autenticação',
+  bannerAthlete: 'Abrir o card e a evolução pelos banners de atleta',
   catalogue: 'Carregar o catalogo e a identidade do app',
   pinTournament: 'Fixar e desafixar um campeonato no topo da lista',
   searchToggle: 'Abrir e fechar a busca pelo topo da home',
